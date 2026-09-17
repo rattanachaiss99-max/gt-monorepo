@@ -75,7 +75,14 @@ export async function fetchYokServices() {
 export function matchProvince(locationStr, province) {
   if (!locationStr || !province) return false;
 
-  const normalize = (s) => (s || "").toLowerCase().replace(/[^a-z0-9\u0E00-\u0E7F]/g, "");
+  const normalize = (s) => {
+    if (typeof s === "object" && s !== null) {
+      s = s.city || s.district || s.province || s.address_label || "";
+    }
+    return String(s || "")
+      .toLowerCase()
+      .replace(/[^a-z0-9\u0E00-\u0E7F]/g, "");
+  };
 
   const cleanLoc = normalize(locationStr);
   const cleanNameEn = normalize(province.nameEn);
@@ -86,7 +93,9 @@ export function matchProvince(locationStr, province) {
     cleanLoc === cleanNameEn ||
     cleanLoc === cleanNameTh ||
     cleanLoc === cleanSlug ||
-    cleanLoc.includes(cleanNameEn) ||
-    (cleanNameEn && cleanNameEn.includes(cleanLoc))
+    (cleanLoc && cleanNameEn && cleanLoc.includes(cleanNameEn)) ||
+    (cleanLoc && cleanNameEn && cleanNameEn.includes(cleanLoc)) ||
+    (cleanLoc && cleanNameTh && cleanLoc.includes(cleanNameTh)) ||
+    (cleanLoc && cleanNameTh && cleanNameTh.includes(cleanLoc))
   );
 }
