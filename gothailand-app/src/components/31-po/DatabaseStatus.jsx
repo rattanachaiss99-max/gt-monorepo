@@ -2,6 +2,7 @@ export default function DatabaseStatus({
   provincesCount = 0,
   apiUrl = "",
   error = null,
+  yokStatus = null,
 }) {
   const isConnected = provincesCount > 0;
 
@@ -51,6 +52,28 @@ export default function DatabaseStatus({
           <span className="font-bold text-blue-600 text-sm">
             {provincesCount} / 77 จังหวัด
           </span>
+        </div>
+      </div>
+
+      {/* Partner Services Status (Yok API on Render) */}
+      <div className="mt-3 pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2 text-xs">
+        <div className="flex items-center gap-2">
+          <span
+            className={`w-2 h-2 rounded-full ${
+              yokStatus?.isOnline ? "bg-emerald-500" : "bg-amber-400 animate-pulse"
+            }`}
+          ></span>
+          <span className="text-slate-500">
+            Partner API (Render - Yok):
+          </span>
+          <span className="font-semibold text-slate-700">
+            {yokStatus?.isOnline ? "เชื่อมต่อสำเร็จ" : "กำลังปลุก Server / รอเชื่อมต่อ"}
+          </span>
+        </div>
+        <div className="flex items-center gap-3 text-[11px] text-slate-500 font-medium">
+          <span>🏨 ที่พัก: <b className="text-slate-800">{yokStatus?.accommodationsCount ?? 0}</b></span>
+          <span>🧭 ไกด์: <b className="text-slate-800">{yokStatus?.guidesCount ?? 0}</b></span>
+          <span>🚗 รถเช่า: <b className="text-slate-800">{yokStatus?.carsCount ?? 0}</b></span>
         </div>
       </div>
 
