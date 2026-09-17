@@ -144,7 +144,7 @@ export default function ProvinceSvgViewer({
                     >
                       <span className="truncate">{acc.name}</span>
                       <span className="font-medium text-emerald-600 ml-2 whitespace-nowrap">
-                        ฿{acc.price?.toLocaleString()}
+                        ฿{(acc.price ?? acc.base_price_per_night ?? acc.basePrice)?.toLocaleString()}
                       </span>
                     </li>
                   ))}
