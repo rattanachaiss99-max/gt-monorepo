@@ -1,12 +1,11 @@
-import ProvinceMapDemo from './components/31-po/ProvinceMapDemo';
-import { AccommodationDemo } from './components/36-yok';
+// import ProvinceMapDemo from './components/31-po/ProvinceMapDemo';
+import { AccommodationDemo } from "./components/36-yok";
 
 export default function App() {
   return (
     <div className="min-h-screen bg-slate-50">
-      <ProvinceMapDemo />
+      {/* <ProvinceMapDemo /> */}
       <AccommodationDemo />
     </div>
   );
 }
-
