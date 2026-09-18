@@ -12,18 +12,8 @@ import {
   ShieldCheck,
   AlertCircle,
 } from 'lucide-react';
-import { Guide, BookingState } from '../types';
 
-interface Page4CheckoutProps {
-  guide: Guide;
-  bookingState: BookingState;
-  onUpdateBooking: (updates: Partial<BookingState>) => void;
-  onConfirmPayment: () => Promise<void>;
-  onBackToDetails: () => void;
-  isProcessing: boolean;
-}
-
-export const Page4Checkout: React.FC<Page4CheckoutProps> = ({
+export const Page4Checkout = ({
   guide,
   bookingState,
   onUpdateBooking,
@@ -36,7 +26,7 @@ export const Page4Checkout: React.FC<Page4CheckoutProps> = ({
   const [email, setEmail] = useState(bookingState.traveler.email || 'alex.smith@email.com');
   const [phone, setPhone] = useState(bookingState.traveler.phone || '+1 234 567 8900');
 
-  const [paymentMethod, setPaymentMethod] = useState<'card' | 'promptpay'>(
+  const [paymentMethod, setPaymentMethod] = useState(
     bookingState.payment.method || 'card'
   );
   const [cardNumber, setCardNumber] = useState(bookingState.payment.cardNumber || '4242 •••• •••• 4242');
@@ -45,9 +35,9 @@ export const Page4Checkout: React.FC<Page4CheckoutProps> = ({
   const [cvv, setCvv] = useState(bookingState.payment.cvv || '888');
   const [agreedToTerms, setAgreedToTerms] = useState(bookingState.payment.agreedToTerms ?? true);
 
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [errorMsg, setErrorMsg] = useState(null);
 
-  const handlePay = async (e: React.FormEvent) => {
+  const handlePay = async (e) => {
     e.preventDefault();
     if (!agreedToTerms) {
       setErrorMsg('Please agree to the Terms and Conditions and Privacy Policy to proceed.');
@@ -417,7 +407,7 @@ export const Page4Checkout: React.FC<Page4CheckoutProps> = ({
                   {guide.specialties.join(' & ')}
                 </p>
                 <div className="text-[11px] text-stone-700 flex items-center gap-1 pt-0.5">
-                  <span className="text-amber-500 font-bold">★ {guide.rating.toFixed(1)}</span>
+                  <span className="text-amber-500 font-bold">★ {Number(guide.rating).toFixed(1)}</span>
                   <span>({guide.reviewCount} reviews)</span>
                 </div>
               </div>

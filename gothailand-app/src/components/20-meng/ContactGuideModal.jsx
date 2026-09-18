@@ -1,26 +1,12 @@
 import React, { useState } from 'react';
-import { X, Send, User, CheckCheck, Clock } from 'lucide-react';
-import { Guide, BookingState } from '../types';
+import { X, Send } from 'lucide-react';
 
-interface ContactGuideModalProps {
-  guide: Guide;
-  bookingState: BookingState;
-  onClose: () => void;
-}
-
-interface Message {
-  id: string;
-  sender: 'guide' | 'user';
-  text: string;
-  time: string;
-}
-
-export const ContactGuideModal: React.FC<ContactGuideModalProps> = ({
+export const ContactGuideModal = ({
   guide,
   bookingState,
   onClose,
 }) => {
-  const [messages, setMessages] = useState<Message[]>([
+  const [messages, setMessages] = useState([
     {
       id: '1',
       sender: 'guide',
@@ -30,11 +16,11 @@ export const ContactGuideModal: React.FC<ContactGuideModalProps> = ({
   ]);
   const [inputText, setInputText] = useState('');
 
-  const handleSend = (e: React.FormEvent) => {
+  const handleSend = (e) => {
     e.preventDefault();
     if (!inputText.trim()) return;
 
-    const newMsg: Message = {
+    const newMsg = {
       id: Date.now().toString(),
       sender: 'user',
       text: inputText.trim(),

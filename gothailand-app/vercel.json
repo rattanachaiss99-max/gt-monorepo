@@ -1,6 +1,10 @@
 {
   "rewrites": [
     {
+      "source": "/api/yok/:path*",
+      "destination": "https://gothailand-api.onrender.com/api/:path*"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }

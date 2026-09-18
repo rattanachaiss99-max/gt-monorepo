@@ -1,11 +1,6 @@
 import React from 'react';
-import { PageStep } from '../types';
 
-interface FooterProps {
-  onSelectStep?: (step: PageStep) => void;
-}
-
-export const Footer: React.FC<FooterProps> = ({ onSelectStep }) => {
+export const Footer = ({ onSelectStep }) => {
   return (
     <footer className="bg-[#0b1a30] text-stone-300 pt-16 pb-12 mt-20 border-t border-stone-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

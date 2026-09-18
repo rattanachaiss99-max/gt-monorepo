@@ -11,14 +11,8 @@ import {
   MessageSquare,
   ChevronDown,
 } from 'lucide-react';
-import { Guide } from '../types';
 
-interface Page1GuideListProps {
-  guides: Guide[];
-  onSelectGuide: (guide: Guide) => void;
-}
-
-export const Page1GuideList: React.FC<Page1GuideListProps> = ({
+export const Page1GuideList = ({
   guides,
   onSelectGuide,
 }) => {
@@ -27,10 +21,10 @@ export const Page1GuideList: React.FC<Page1GuideListProps> = ({
   const [guestsCount, setGuestsCount] = useState('2 Guests');
 
   // Filters
-  const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
-  const [selectedLanguage, setSelectedLanguage] = useState<string>('');
-  const [priceMax, setPriceMax] = useState<number>(5000);
-  const [sortBy, setSortBy] = useState<string>('recommended');
+  const [selectedTypes, setSelectedTypes] = useState([]);
+  const [selectedLanguage, setSelectedLanguage] = useState('');
+  const [priceMax, setPriceMax] = useState(5000);
+  const [sortBy, setSortBy] = useState('recommended');
 
   const guideTypes = [
     'Cultural Expert',
@@ -41,7 +35,7 @@ export const Page1GuideList: React.FC<Page1GuideListProps> = ({
 
   const languages = ['English', 'Mandarin', 'French', 'German', 'Thai', 'Spanish', 'Japanese', 'Korean'];
 
-  const toggleType = (type: string) => {
+  const toggleType = (type) => {
     setSelectedTypes((prev) =>
       prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type]
     );
@@ -344,7 +338,7 @@ export const Page1GuideList: React.FC<Page1GuideListProps> = ({
                     />
                     <div className="absolute top-3 left-3 bg-white/95 backdrop-blur-sm px-2.5 py-1 rounded-full text-xs font-semibold text-stone-800 flex items-center gap-1 shadow-sm">
                       <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-                      <span>{guide.rating.toFixed(1)}</span>
+                      <span>{Number(guide.rating).toFixed(1)}</span>
                       <span className="text-stone-500 font-normal">({guide.reviewCount} reviews)</span>
                     </div>
                   </div>

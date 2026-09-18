@@ -1,15 +1,7 @@
 import React from 'react';
-import { X, Printer, Download, CheckCircle2, QrCode, MapPin, Calendar, Clock, Users, ShieldCheck } from 'lucide-react';
-import { Guide, BookingState } from '../types';
+import { X, Printer, Download, CheckCircle2, QrCode } from 'lucide-react';
 
-interface ViewBookingModalProps {
-  guide: Guide;
-  bookingState: BookingState;
-  onClose: () => void;
-  onDownloadPdf: () => void;
-}
-
-export const ViewBookingModal: React.FC<ViewBookingModalProps> = ({
+export const ViewBookingModal = ({
   guide,
   bookingState,
   onClose,
@@ -64,7 +56,7 @@ export const ViewBookingModal: React.FC<ViewBookingModalProps> = ({
                 <div>
                   <h4 className="font-serif-luxury font-bold text-stone-900">{guide.name}</h4>
                   <p className="text-xs text-stone-500">{guide.location}</p>
-                  <p className="text-xs text-amber-600 font-medium">★ {guide.rating.toFixed(1)} Verified Guide</p>
+                  <p className="text-xs text-amber-600 font-medium">★ {Number(guide.rating).toFixed(1)} Verified Guide</p>
                 </div>
               </div>
             </div>

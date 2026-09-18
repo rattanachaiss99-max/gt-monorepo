@@ -4,36 +4,50 @@ import DatabaseStatus from "./DatabaseStatus";
 import ProvinceSvgViewer from "./ProvinceSvgViewer";
 import ProvinceTable from "./ProvinceTable";
 import Footer from "./Footer";
+import { fetchYokServices } from "../../services/yokService";
 
 export default function ProvinceMapDemo() {
   const [count, setCount] = useState(0);
   const [provinces, setProvinces] = useState([]);
   const [selectedSlug, setSelectedSlug] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+  // ข้อมูลบริการจาก Yok API (Render)
+  const [yokData, setYokData] = useState({
+    accommodations: [],
+    guides: [],
+    cars: [],
+    users: [],
+    isOnline: false,
+  });
 
-  // ฟังก์ชันยิงดึงข้อมูลจาก Express Backend ที่เชื่อมกับ MongoDB Atlas
-  const loadProvincesFromMongo = async () => {
+  const API_URL = import.meta.env.VITE_API_URL || "https://gothailand-api.onrender.com";
+
+  // ฟังก์ชันรีเฟรชข้อมูลทั้งสองฝั่งพร้อมกัน
+  const handleRefreshAll = async () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`${API_URL}/api/provinces`);
-      if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
-      const data = await res.json();
-      if (data.success && data.provinces) {
-        setProvinces(data.provinces);
-        // ตั้งค่าจังหวัดเริ่มต้น เช่น เชียงใหม่ หรือจังหวัดแรกในรายการ
-        const defaultItem =
-          data.provinces.find((p) => p.slug === "chiang-mai") ||
-          data.provinces[0];
-        if (defaultItem) setSelectedSlug(defaultItem.slug);
-      } else {
-        throw new Error(data.error || "ไม่พบข้อมูลจังหวัด");
+      const [provRes, yokRes] = await Promise.allSettled([
+        fetch(`${API_URL}/api/provinces`).then(async (res) => {
+          if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+          return res.json();
+        }),
+        fetchYokServices(),
+      ]);
+
+      if (provRes.status === "fulfilled" && provRes.value?.success && provRes.value?.provinces) {
+        setProvinces(provRes.value.provinces);
+      } else if (provRes.status === "rejected") {
+        setError(provRes.reason?.message || "ไม่สามารถเชื่อมต่อ Backend ได้");
+      }
+
+      if (yokRes.status === "fulfilled") {
+        setYokData(yokRes.value);
       }
     } catch (err) {
-      setError(err.message || "ไม่สามารถเชื่อมต่อ Backend ได้");
+      setError(err.message || "เกิดข้อผิดพลาดในการโหลดข้อมูล");
     } finally {
       setLoading(false);
     }
@@ -41,8 +55,47 @@ export default function ProvinceMapDemo() {
 
   // โหลดข้อมูลเมื่อเปิดหน้าเว็บครั้งแรก
   useEffect(() => {
-    loadProvincesFromMongo();
-  }, []);
+    let ignore = false;
+
+    const loadInitialData = async () => {
+      try {
+        const [provRes, yokRes] = await Promise.allSettled([
+          fetch(`${API_URL}/api/provinces`).then(async (res) => {
+            if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+            return res.json();
+          }),
+          fetchYokServices(),
+        ]);
+
+        if (ignore) return;
+
+        if (provRes.status === "fulfilled" && provRes.value?.success && provRes.value?.provinces) {
+          setProvinces(provRes.value.provinces);
+          const defaultItem =
+            provRes.value.provinces.find((p) => p.slug === "chiang-mai") ||
+            provRes.value.provinces[0];
+          if (defaultItem) setSelectedSlug(defaultItem.slug);
+          setError(null);
+        } else if (provRes.status === "rejected") {
+          setError(provRes.reason?.message || "ไม่สามารถเชื่อมต่อ Backend ได้");
+        }
+
+        if (yokRes.status === "fulfilled") {
+          setYokData(yokRes.value);
+        }
+      } catch (err) {
+        if (!ignore) setError(err.message || "เกิดข้อผิดพลาดในการโหลดข้อมูล");
+      } finally {
+        if (!ignore) setLoading(false);
+      }
+    };
+
+    loadInitialData();
+
+    return () => {
+      ignore = true;
+    };
+  }, [API_URL]);
 
   // หาจังหวัดที่กำลังเลือกดูอยู่
   const currentProvince =
@@ -55,24 +108,32 @@ export default function ProvinceMapDemo() {
         <Header
           count={count}
           onIncrement={() => setCount((c) => c + 1)}
-          onRefresh={loadProvincesFromMongo}
+          onRefresh={handleRefreshAll}
           loading={loading}
         />
 
-        {/* 2. สถานะการเชื่อมต่อ Database (MongoDB Atlas) */}
+        {/* 2. สถานะการเชื่อมต่อ Database (MongoDB Atlas + Yok API) */}
         <DatabaseStatus
           provincesCount={provinces.length}
           apiUrl={API_URL}
           error={error}
+          yokStatus={{
+            isOnline: yokData.isOnline,
+            accommodationsCount: yokData.accommodations.length,
+            guidesCount: yokData.guides.length,
+            carsCount: yokData.cars.length,
+          }}
         />
 
-        {/* 3. กล่องวาดแผนที่ SVG สดจากฟิลด์ vectorData.d ของ MongoDB */}
+        {/* 3. กล่องวาดแผนที่ SVG สดจากฟิลด์ vectorData.d ของ MongoDB พร้อมข้อมูลเสริมของ Yok */}
         {currentProvince && (
           <ProvinceSvgViewer
             province={currentProvince}
             provinces={provinces}
             selectedSlug={selectedSlug}
             onSelectProvince={setSelectedSlug}
+            accommodations={yokData.accommodations}
+            guides={yokData.guides}
           />
         )}
 
@@ -81,6 +142,8 @@ export default function ProvinceMapDemo() {
           provinces={provinces}
           selectedSlug={selectedSlug}
           onSelectProvince={setSelectedSlug}
+          accommodations={yokData.accommodations}
+          guides={yokData.guides}
         />
 
         {/* 5. Footer */}

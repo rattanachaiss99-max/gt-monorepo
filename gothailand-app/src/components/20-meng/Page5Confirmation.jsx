@@ -11,21 +11,10 @@ import {
   Download,
   ArrowRight,
   MessageSquare,
-  X,
   MapPin,
 } from 'lucide-react';
-import { Guide, BookingState } from '../types';
 
-interface Page5ConfirmationProps {
-  guide: Guide;
-  bookingState: BookingState;
-  onRestart: () => void;
-  onOpenContactModal: () => void;
-  onOpenBookingModal: () => void;
-  onDownloadReceipt: () => void;
-}
-
-export const Page5Confirmation: React.FC<Page5ConfirmationProps> = ({
+export const Page5Confirmation = ({
   guide,
   bookingState,
   onRestart,
@@ -111,7 +100,7 @@ export const Page5Confirmation: React.FC<Page5ConfirmationProps> = ({
                   </h3>
                   <div className="flex items-center text-xs font-semibold text-stone-700 bg-amber-50 px-2 py-0.5 rounded-md">
                     <span className="text-amber-500 mr-1">★</span>
-                    <span>{guide.rating.toFixed(1)}</span>
+                    <span>{Number(guide.rating).toFixed(1)}</span>
                     <span className="text-stone-600 ml-0.5">({guide.reviewCount})</span>
                   </div>
                 </div>

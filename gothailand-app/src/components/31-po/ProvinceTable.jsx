@@ -1,9 +1,12 @@
-import React, { useState } from "react";
+import { useState } from "react";
+import { matchProvince } from "../../services/yokService";
 
 export default function ProvinceTable({
   provinces = [],
   selectedSlug = "",
   onSelectProvince,
+  accommodations = [],
+  guides = [],
 }) {
   const [search, setSearch] = useState("");
   const [selectedRegion, setSelectedRegion] = useState("all");
@@ -66,11 +69,15 @@ export default function ProvinceTable({
               <th className="py-2.5 px-3">ชื่ออังกฤษ (Slug)</th>
               <th className="py-2.5 px-3">ภาค</th>
               <th className="py-2.5 px-3">SVG Status</th>
+              <th className="py-2.5 px-3">บริการ (Yok API)</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 text-slate-700">
             {filteredProvinces.map((prov) => {
               const isSelected = prov.slug === selectedSlug;
+              const hasAcc = accommodations.some((a) => matchProvince(a.location, prov));
+              const hasGuide = guides.some((g) => matchProvince(g.province, prov));
+
               return (
                 <tr
                   key={prov.slug}
@@ -95,6 +102,24 @@ export default function ProvinceTable({
                       </span>
                     ) : (
                       <span className="text-slate-400">ไม่มีข้อมูล</span>
+                    )}
+                  </td>
+                  <td className="py-2 px-3">
+                    {hasAcc || hasGuide ? (
+                      <div className="flex items-center gap-1.5">
+                        {hasAcc && (
+                          <span className="bg-blue-50 text-blue-700 border border-blue-200 px-1.5 py-0.5 rounded text-[10px] font-medium">
+                            🏨 ที่พัก
+                          </span>
+                        )}
+                        {hasGuide && (
+                          <span className="bg-emerald-50 text-emerald-700 border border-emerald-200 px-1.5 py-0.5 rounded text-[10px] font-medium">
+                            🧭 ไกด์
+                          </span>
+                        )}
+                      </div>
+                    ) : (
+                      <span className="text-slate-300">-</span>
                     )}
                   </td>
                 </tr>

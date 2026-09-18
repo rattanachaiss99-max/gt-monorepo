@@ -1,21 +1,13 @@
 import React from 'react';
 import { Search, ChevronRight, CheckCircle2, ArrowRight } from 'lucide-react';
-import { PageStep } from '../types';
 
-interface HeaderNavProps {
-  currentStep: PageStep;
-  onSelectStep: (step: PageStep) => void;
-  activeNav?: string;
-  isConfirmedPage?: boolean;
-}
-
-export const HeaderNav: React.FC<HeaderNavProps> = ({
+export const HeaderNav = ({
   currentStep,
   onSelectStep,
   activeNav = 'Local Guide',
   isConfirmedPage = false,
 }) => {
-  const stepsList: { step: PageStep; label: string; pageLabel: string }[] = [
+  const stepsList = [
     { step: 0, label: 'Home Page', pageLabel: 'GoThailandHomePage.png' },
     { step: 1, label: 'Guide Directory', pageLabel: 'Guide_Page1.png' },
     { step: 2, label: 'Guide Profile', pageLabel: 'Guide_Page2.png' },

@@ -11,21 +11,11 @@ import {
   Headphones,
   CreditCard,
   Crown,
-  ChevronRight,
   ArrowRight,
   ChevronDown,
 } from 'lucide-react';
-import { Guide, BookingState } from '../types';
 
-interface Page3BookingDetailsProps {
-  guide: Guide;
-  bookingState: BookingState;
-  onUpdateBooking: (updates: Partial<BookingState>) => void;
-  onProceedToCheckout: () => void;
-  onBackToProfile: () => void;
-}
-
-export const Page3BookingDetails: React.FC<Page3BookingDetailsProps> = ({
+export const Page3BookingDetails = ({
   guide,
   bookingState,
   onUpdateBooking,
@@ -142,7 +132,7 @@ export const Page3BookingDetails: React.FC<Page3BookingDetailsProps> = ({
                   </div>
 
                   <div className="flex items-center text-xs text-stone-600 pt-1">
-                    <span className="text-amber-500 font-bold mr-1">★ {guide.rating.toFixed(1)}</span>
+                    <span className="text-amber-500 font-bold mr-1">★ {Number(guide.rating).toFixed(1)}</span>
                     <span>({guide.reviewCount} reviews)</span>
                   </div>
                 </div>
