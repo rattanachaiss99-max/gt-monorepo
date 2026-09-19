@@ -1,7 +1,8 @@
-export { default as Button } from './Button';
-export { default as AccommodationCard } from './AccommodationCard';
-export { default as AccommodationHero } from './AccommodationHero';
-export { default as FilterSidebar } from './FilterSidebar';
-export { default as AccommodationList } from './AccommodationList';
-export { default as BrowseByProperty } from './BrowseByProperty';
-export { default as GetInspired } from './GetInspired';
+export * from '../../features/accommodations/components';
+export { default as Button } from '../../features/accommodations/components/Button';
+export { default as AccommodationCard } from '../../features/accommodations/components/AccommodationCard';
+export { default as AccommodationHero } from '../../features/accommodations/components/AccommodationHero';
+export { default as FilterSidebar } from '../../features/accommodations/components/FilterSidebar';
+export { default as AccommodationList } from '../../features/accommodations/components/AccommodationList';
+export { default as BrowseByProperty } from '../../features/accommodations/components/BrowseByProperty';
+export { default as GetInspired } from '../../features/accommodations/components/GetInspired';

@@ -1,11 +1,12 @@
 import { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   AccommodationHero,
   FilterSidebar,
   AccommodationList,
   BrowseByProperty,
   GetInspired,
-} from '../../../components/36-yok';
+} from '../components';
 
 const API_ENDPOINT = 'https://gothailand-api.onrender.com/api/accommodations';
 
@@ -131,6 +132,7 @@ function matchesSearch(item, rawQuery) {
  * -------------------------------------------------------------
  */
 export default function AccommodationPage() {
+  const navigate = useNavigate();
   const [accommodations, setAccommodations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -138,6 +140,11 @@ export default function AccommodationPage() {
 
   // View Mode: 'landing' (Page 1) or 'results' (Page 2)
   const [viewMode, setViewMode] = useState('landing');
+
+  const handleViewAccommodation = (item) => {
+    const slugId = item.slug || item.id || item._id;
+    navigate(`/accommodations/${slugId}`, { state: { accommodation: item } });
+  };
 
   // Search & Filter States
   const [selectedRegion, setSelectedRegion] = useState('central'); // default ภาคกลาง
@@ -155,6 +162,7 @@ export default function AccommodationPage() {
 
   // Fetch real accommodation data from API
   useEffect(() => {
+    window.scrollTo(0, 0);
     let ignore = false;
     const controller = new AbortController();
 
@@ -308,7 +316,7 @@ export default function AccommodationPage() {
       setSelectedProvince('');
     }
     setViewMode('results');
-    window.scrollTo({ top: 320, behavior: 'smooth' });
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
   };
 
   const handleSelectPropertyType = (category) => {
@@ -316,7 +324,7 @@ export default function AccommodationPage() {
     setSelectedProvince('');
     setSelectedCategories([category]);
     setViewMode('results');
-    window.scrollTo({ top: 320, behavior: 'smooth' });
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
   };
 
   const handleSelectDestination = (city, region) => {
@@ -324,7 +332,7 @@ export default function AccommodationPage() {
     setSelectedProvince(city);
     setSelectedCategories([]);
     setViewMode('results');
-    window.scrollTo({ top: 320, behavior: 'smooth' });
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
   };
 
   // Filter and Sort accommodations
@@ -534,12 +542,8 @@ export default function AccommodationPage() {
               onSortChange={setSortBy}
               onRetry={() => setReloadKey((prev) => prev + 1)}
               onResetFilters={handleResetFilters}
-              onViewDetails={(item) => {
-                console.log('View details for stay:', item.name);
-              }}
-              onBookNow={(item) => {
-                console.log('Book stay:', item.name);
-              }}
+              onViewDetails={handleViewAccommodation}
+              onBookNow={handleViewAccommodation}
             />
           </div>
         </div>
