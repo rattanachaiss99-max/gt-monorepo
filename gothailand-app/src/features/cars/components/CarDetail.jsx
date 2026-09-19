@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { getDefaultDateRange, calculateDateSpan } from '../../../utils/date';
+import Button from './Button';
 
 /**
  * CarDetail Component (Presentation Component)
@@ -7,7 +9,7 @@ import { useNavigate } from 'react-router-dom';
  * แสดงรายละเอียดเฉพาะของรถเช่าแต่ละคัน:
  * - แกลเลอรีรูปภาพ (ภาพหลัก + รูปย่อย) พร้อมระบบ Fallback
  * - สเปกรถ (เกียร์, ที่นั่ง, น้ำมัน, กระเป๋า)
- * - การเลือกสถานที่รับรถและคำนวณราคา 3 วัน
+ * - การเลือกสถานที่รับรถและคำนวณราคาตามจำนวนวันเช่าจริง
  * - ปุ่มจอง (Book Now)
  */
 export default function CarDetail({ car = {}, onBookNow }) {
@@ -35,10 +37,15 @@ export default function CarDetail({ car = {}, onBookNow }) {
     ? car.availableLocations 
     : ['Bangkok (BKK) Suvarnabhumi Airport', 'Don Mueang Airport (DMK)', 'Chiang Mai International Airport (CNX)'];
 
+  const defaultRentalDates = getDefaultDateRange(1, 4);
   const [selectedLocation, setSelectedLocation] = useState(locations[0]);
   const [activeImage, setActiveImage] = useState(mainImage);
-  const [pickupDate, setPickupDate] = useState("2026-10-15");
+  const [pickupDate, setPickupDate] = useState(defaultRentalDates.start);
+  const [returnDate, setReturnDate] = useState(defaultRentalDates.end);
   const [pickupTime, setPickupTime] = useState("10:00 AM");
+
+  const rentalDays = calculateDateSpan(pickupDate, returnDate);
+  const totalPrice = dailyPrice * rentalDays;
 
   const handleBookClick = () => {
     if (onBookNow) {
@@ -46,8 +53,9 @@ export default function CarDetail({ car = {}, onBookNow }) {
         car,
         pickupLocation: selectedLocation || locations[0],
         pickupDate,
+        returnDate,
         pickupTime,
-        rentalDays: 3,
+        rentalDays,
       });
       const carId = car.slug || car._id || car.id;
       navigate(`/cars/${carId}/booking`, {
@@ -55,8 +63,9 @@ export default function CarDetail({ car = {}, onBookNow }) {
           car,
           pickupLocation: selectedLocation || locations[0],
           pickupDate,
+          returnDate,
           pickupTime,
-          rentalDays: 3,
+          rentalDays,
         }
       });
     }
@@ -179,9 +188,9 @@ export default function CarDetail({ car = {}, onBookNow }) {
               <span className="text-[11px] text-slate-400 block uppercase font-medium">Per Day</span>
             </div>
             <div className="text-right">
-              <span className="text-[10px] text-slate-400 uppercase font-bold block tracking-wider">Total (3 Days)</span>
+              <span className="text-[10px] text-slate-400 uppercase font-bold block tracking-wider">Total ({rentalDays} {rentalDays === 1 ? 'Day' : 'Days'})</span>
               <span className="text-xl font-serif font-bold text-amber-600">
-                ฿{(dailyPrice * 3).toLocaleString()}
+                ฿{totalPrice.toLocaleString()}
               </span>
             </div>
           </div>
@@ -206,34 +215,48 @@ export default function CarDetail({ car = {}, onBookNow }) {
               <label className="text-[11px] font-bold text-slate-500 uppercase block mb-1.5 tracking-wider">
                 Pick-up Date
               </label>
-              <input 
-                type="date" 
+              <input
+                type="date"
                 value={pickupDate}
                 onChange={(e) => setPickupDate(e.target.value)}
-                className="border border-slate-200 rounded-xl p-2.5 text-xs w-full bg-slate-50 focus:bg-white outline-none focus:border-[#0a192f] transition" 
+                className="border border-slate-200 rounded-xl p-2.5 text-xs w-full bg-slate-50 focus:bg-white outline-none focus:border-[#0a192f] transition"
               />
             </div>
             <div>
               <label className="text-[11px] font-bold text-slate-500 uppercase block mb-1.5 tracking-wider">
-                Time
+                Return Date
               </label>
-              <input 
-                type="text" 
-                value={pickupTime}
-                onChange={(e) => setPickupTime(e.target.value)}
-                className="border border-slate-200 rounded-xl p-2.5 text-xs w-full bg-slate-50 focus:bg-white outline-none focus:border-[#0a192f] transition" 
+              <input
+                type="date"
+                value={returnDate}
+                onChange={(e) => setReturnDate(e.target.value)}
+                className="border border-slate-200 rounded-xl p-2.5 text-xs w-full bg-slate-50 focus:bg-white outline-none focus:border-[#0a192f] transition"
               />
             </div>
           </div>
 
-          <button 
+          <div>
+            <label className="text-[11px] font-bold text-slate-500 uppercase block mb-1.5 tracking-wider">
+              Pick-up Time
+            </label>
+            <input
+              type="text"
+              value={pickupTime}
+              onChange={(e) => setPickupTime(e.target.value)}
+              className="border border-slate-200 rounded-xl p-2.5 text-xs w-full bg-slate-50 focus:bg-white outline-none focus:border-[#0a192f] transition"
+            />
+          </div>
+
+          <Button
             type="button"
             onClick={handleBookClick}
-            className="w-full bg-[#0a192f] hover:bg-amber-400 hover:text-slate-900 text-white py-3.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all duration-200 shadow-md hover:shadow-lg cursor-pointer flex items-center justify-center gap-2"
+            variant="navy"
+            size="none"
+            className="w-full py-3.5 font-bold text-xs uppercase tracking-wider transition-all duration-200 shadow-md hover:shadow-lg gap-2"
           >
             <span>Book Now</span>
             <span aria-hidden="true">→</span>
-          </button>
+          </Button>
 
           <div className="text-[11px] text-center text-slate-400 leading-relaxed">
             ✓ Free cancellation up to 48h before pick-up<br />

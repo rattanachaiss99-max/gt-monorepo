@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { formatDateLabel, calculateDateSpan } from '../../../utils/date';
 
 /**
  * CarHero Component (Yok Search Bar Pattern)
@@ -37,37 +38,7 @@ export default function CarHero({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // ฟังก์ชันจัดรูปแบบวันที่ให้อ่านง่าย เช่น "Thu, Oct 15"
-  const formatDateLabel = (dateStr) => {
-    if (!dateStr) return '';
-    try {
-      const d = new Date(dateStr);
-      if (isNaN(d.getTime())) return dateStr;
-      return d.toLocaleDateString('en-US', {
-        weekday: 'short',
-        month: 'short',
-        day: 'numeric',
-      });
-    } catch {
-      return dateStr;
-    }
-  };
-
-  // คำนวณจำนวนวันเช่า
-  const calculateDays = () => {
-    if (!pickupDate || !returnDate) return 3;
-    try {
-      const d1 = new Date(pickupDate);
-      const d2 = new Date(returnDate);
-      const diffTime = d2.getTime() - d1.getTime();
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      return diffDays > 0 ? diffDays : 1;
-    } catch {
-      return 3;
-    }
-  };
-
-  const rentalDays = calculateDays();
+  const rentalDays = calculateDateSpan(pickupDate, returnDate);
 
   const categories = [
     { id: 'all', label: 'All Types' },
@@ -91,7 +62,7 @@ export default function CarHero({
 
   return (
     <section className="-mx-4 sm:-mx-6 lg:-mx-8 -mt-6 mb-8 bg-[#0a192f] text-white pt-12 pb-16 px-4 sm:px-6 lg:px-8 shadow-md relative overflow-hidden">
-      {/* Background Graphic Pattern */}
+      {/* ลวดลายพื้นหลัง */}
       <img
         src="https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=1800&q=80"
         alt="Scenic Highway Drive"
@@ -100,7 +71,7 @@ export default function CarHero({
       <div className="absolute inset-0 bg-gradient-to-b from-[#0a192f]/70 via-[#0a192f]/85 to-[#0a192f] pointer-events-none" />
 
       <div className="max-w-7xl mx-auto relative z-10">
-        {/* Title & Subtitle */}
+        {/* หัวข้อ & คำอธิบายย่อย */}
         <div className="mb-8 text-center max-w-3xl mx-auto">
           <span className="text-[11px] font-bold tracking-widest text-amber-400 uppercase bg-amber-400/10 px-3 py-1 rounded-full border border-amber-400/20 mb-3 inline-block">
             Premium Car Rentals in Thailand
@@ -113,12 +84,12 @@ export default function CarHero({
           </p>
         </div>
 
-        {/* Floating Search Bar Card (Yok Pattern) */}
+        {/* กล่องค้นหาแบบลอย (สไตล์ Yok) */}
         <form
           onSubmit={handleSubmit}
           className="bg-white rounded-2xl shadow-xl p-2 sm:p-2.5 border border-slate-200/90 flex flex-col md:flex-row items-center gap-2 md:gap-3 text-slate-800 max-w-5xl mx-auto"
         >
-          {/* Section 1: Pick-up & Return Location */}
+          {/* ส่วนที่ 1: จุดรับ & คืนรถ */}
           <div className="w-full md:flex-1 bg-[#f1f5f9]/70 hover:bg-[#f1f5f9] transition-colors rounded-xl px-3.5 py-2.5 flex items-center gap-3">
             <svg
               className="w-5 h-5 text-slate-600 shrink-0"
@@ -163,10 +134,10 @@ export default function CarHero({
             )}
           </div>
 
-          {/* Divider */}
+          {/* เส้นคั่น */}
           <div className="hidden md:block w-px h-8 bg-slate-200" />
 
-          {/* Section 2: Dates (Pick-up - Return + Days Pill) */}
+          {/* ส่วนที่ 2: วันที่ (รับรถ - คืนรถ + ป้ายจำนวนวัน) */}
           <div className="relative w-full md:w-auto shrink-0" ref={datePickerRef}>
             <button
               type="button"
@@ -201,13 +172,13 @@ export default function CarHero({
                 </div>
               </div>
 
-              {/* Rental days badge */}
+              {/* ป้ายจำนวนวันเช่า */}
               <span className="bg-slate-100 text-slate-700 text-xs font-semibold px-2.5 py-1 rounded-full whitespace-nowrap ml-1">
                 {rentalDays} {rentalDays === 1 ? 'day' : 'days'}
               </span>
             </button>
 
-            {/* Date Picker Popover */}
+            {/* Popover เลือกวันที่ */}
             {datePickerOpen && (
               <div className="absolute top-full left-0 mt-2 bg-white rounded-2xl shadow-xl border border-slate-200 p-4 z-50 min-w-[280px]">
                 <div className="space-y-3">
@@ -255,10 +226,10 @@ export default function CarHero({
             )}
           </div>
 
-          {/* Divider */}
+          {/* เส้นคั่น */}
           <div className="hidden md:block w-px h-8 bg-slate-200" />
 
-          {/* Section 3: Vehicle Type */}
+          {/* ส่วนที่ 3: ประเภทรถ */}
           <div className="relative w-full md:w-auto shrink-0" ref={typePickerRef}>
             <button
               type="button"
@@ -297,7 +268,7 @@ export default function CarHero({
               </div>
             </button>
 
-            {/* Vehicle Type Dropdown */}
+            {/* Dropdown ประเภทรถ */}
             {typePickerOpen && (
               <div className="absolute top-full left-0 md:right-0 md:left-auto mt-2 bg-white rounded-2xl shadow-xl border border-slate-200 p-2 z-50 min-w-[200px]">
                 <div className="space-y-1">
@@ -326,7 +297,7 @@ export default function CarHero({
             )}
           </div>
 
-          {/* Section 4: Search Button */}
+          {/* ส่วนที่ 4: ปุ่มค้นหา */}
           <div className="w-full md:w-auto shrink-0 md:ml-auto">
             <button
               type="submit"

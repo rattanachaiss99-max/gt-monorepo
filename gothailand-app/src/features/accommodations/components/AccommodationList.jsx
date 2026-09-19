@@ -3,25 +3,25 @@ import AccommodationCard from './AccommodationCard';
 import Button from './Button';
 
 /**
- * Intelligent pagination numbers generator with ellipsis
- * Example: [1, 2, 3, 4, 5, '...', 54] or [1, '...', 10, 11, 12, '...', 54]
+ * ตัวสร้างเลขหน้า pagination อัจฉริยะพร้อมจุดไข่ปลา (ellipsis)
+ * ตัวอย่าง: [1, 2, 3, 4, 5, '...', 54] หรือ [1, '...', 10, 11, 12, '...', 54]
  */
 function getPaginationItems(current, total) {
   if (total <= 7) {
     return Array.from({ length: total }, (_, i) => i + 1);
   }
 
-  // Near the beginning
+  // ใกล้หน้าแรก
   if (current <= 4) {
     return [1, 2, 3, 4, 5, '...', total];
   }
 
-  // Near the end
+  // ใกล้หน้าสุดท้าย
   if (current >= total - 3) {
     return [1, '...', total - 4, total - 3, total - 2, total - 1, total];
   }
 
-  // In the middle
+  // อยู่ตรงกลาง
   return [1, '...', current - 1, current, current + 1, '...', total];
 }
 
@@ -59,17 +59,19 @@ export default function AccommodationList({
   onBookNow,
 }) {
   const [currentPage, setCurrentPage] = useState(1);
-  const [prevCount, setPrevCount] = useState(accommodations.length);
+  const [prevAccommodations, setPrevAccommodations] = useState(accommodations);
   const [prevSort, setPrevSort] = useState(sortBy);
   const [prevPageSize, setPrevPageSize] = useState(pageSize);
 
-  // Reset to page 1 whenever list count, sort, or page size changes
+  // รีเซ็ตกลับหน้า 1 ทุกครั้งที่ list ที่กรองแล้ว, การเรียงลำดับ หรือขนาดหน้าเปลี่ยน
+  // เทียบด้วย reference (ไม่ใช่ length) เพราะ parent จะสร้าง array ใหม่เสมอ
+  // เมื่อฟิลเตอร์เปลี่ยน แม้ว่าจำนวนผลลัพธ์จะเท่าเดิมก็ตาม
   if (
-    prevCount !== accommodations.length ||
+    prevAccommodations !== accommodations ||
     prevSort !== sortBy ||
     prevPageSize !== pageSize
   ) {
-    setPrevCount(accommodations.length);
+    setPrevAccommodations(accommodations);
     setPrevSort(sortBy);
     setPrevPageSize(pageSize);
     setCurrentPage(1);
@@ -78,7 +80,7 @@ export default function AccommodationList({
   const totalCount = accommodations.length;
   const totalPages = Math.ceil(totalCount / pageSize);
 
-  // Paginated slice
+  // ตัดข้อมูลตามหน้าปัจจุบัน
   const startIndex = (currentPage - 1) * pageSize;
   const endIndex = Math.min(startIndex + pageSize, totalCount);
   const displayedAccommodations = accommodations.slice(startIndex, endIndex);
@@ -91,7 +93,7 @@ export default function AccommodationList({
 
   const paginationItems = getPaginationItems(currentPage, totalPages);
 
-  // Determine location label
+  // กำหนดข้อความชื่อสถานที่ที่จะแสดง
   const locationLabel = selectedProvince
     ? selectedProvince
     : selectedRegion !== 'all'
@@ -100,7 +102,7 @@ export default function AccommodationList({
 
   return (
     <section className="flex-1 min-w-0 space-y-5">
-      {/* Top Header Controls: Count, Page Size Selector, & Sort */}
+      {/* แถบควบคุมด้านบน: จำนวนผลลัพธ์, ตัวเลือกขนาดหน้า, & การเรียงลำดับ */}
       <div className="bg-white rounded-2xl border border-slate-200/80 px-5 py-3.5 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-2xs">
         <div className="text-sm sm:text-base font-semibold text-slate-800">
           {loading ? (
@@ -131,9 +133,9 @@ export default function AccommodationList({
           )}
         </div>
 
-        {/* Controls: Page Size & Sort */}
+        {/* ตัวควบคุม: ขนาดหน้า & การเรียงลำดับ */}
         <div className="flex flex-wrap items-center gap-3 text-xs sm:text-sm self-end md:self-auto">
-          {/* Page Size Selector */}
+          {/* ตัวเลือกขนาดหน้า */}
           <div className="flex items-center gap-1.5">
             <label
               htmlFor="page-size-select"
@@ -154,7 +156,7 @@ export default function AccommodationList({
             </select>
           </div>
 
-          {/* Sort Dropdown */}
+          {/* ตัวเลือกการเรียงลำดับ */}
           <div className="flex items-center gap-1.5">
             <label
               htmlFor="sort-select"
@@ -177,7 +179,7 @@ export default function AccommodationList({
         </div>
       </div>
 
-      {/* Loading Skeleton State */}
+      {/* สถานะกำลังโหลด (Skeleton) */}
       {loading && (
         <div className="space-y-4">
           {[1, 2, 3].map((n) => (
@@ -207,7 +209,7 @@ export default function AccommodationList({
         </div>
       )}
 
-      {/* Error State */}
+      {/* สถานะข้อผิดพลาด */}
       {error && !loading && (
         <div className="bg-red-50 border border-red-200 text-red-900 p-8 rounded-3xl text-center space-y-3">
           <div className="text-3xl">⚠️</div>
@@ -221,7 +223,7 @@ export default function AccommodationList({
         </div>
       )}
 
-      {/* Empty State */}
+      {/* สถานะไม่มีข้อมูล */}
       {!loading && !error && totalCount === 0 && (
         <div className="bg-white border border-slate-200/80 rounded-3xl p-12 text-center space-y-4 shadow-xs">
           <div className="text-4xl">🏝️</div>
@@ -239,7 +241,7 @@ export default function AccommodationList({
         </div>
       )}
 
-      {/* Accommodation Cards List (Paginated) */}
+      {/* รายการการ์ดที่พัก (แบ่งหน้าแล้ว) */}
       {!loading && !error && displayedAccommodations.length > 0 && (
         <div className="space-y-5">
           {displayedAccommodations.map((item) => (
@@ -253,7 +255,7 @@ export default function AccommodationList({
         </div>
       )}
 
-      {/* Intelligent Pagination Controls (Ellipsis layout preventing overflow) */}
+      {/* ตัวควบคุม Pagination อัจฉริยะ (เลย์เอาต์แบบ ellipsis ป้องกันล้นจอ) */}
       {!loading && !error && totalPages > 1 && (
         <div className="bg-white rounded-2xl border border-slate-200/80 px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-2xs mt-6">
           <div className="text-xs sm:text-sm text-slate-500">
@@ -263,7 +265,7 @@ export default function AccommodationList({
           </div>
 
           <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap justify-center">
-            {/* Previous Page Button */}
+            {/* ปุ่มหน้าก่อนหน้า */}
             <button
               type="button"
               onClick={() => handlePageChange(currentPage - 1)}
@@ -274,7 +276,7 @@ export default function AccommodationList({
               <span className="hidden xs:inline">Prev</span>
             </button>
 
-            {/* Pagination Items (Numbers + Ellipsis) */}
+            {/* เลขหน้า (ตัวเลข + จุดไข่ปลา) */}
             {paginationItems.map((item, index) => {
               if (item === '...') {
                 return (
@@ -306,7 +308,7 @@ export default function AccommodationList({
               );
             })}
 
-            {/* Next Page Button */}
+            {/* ปุ่มหน้าถัดไป */}
             <button
               type="button"
               onClick={() => handlePageChange(currentPage + 1)}

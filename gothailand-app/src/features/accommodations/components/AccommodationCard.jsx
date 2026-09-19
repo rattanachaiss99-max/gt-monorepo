@@ -1,84 +1,17 @@
 import { useNavigate } from 'react-router-dom';
 import Button from './Button';
-
-// Dynamically load all accommodation images from the assets folder using Vite
-const accommodationImages = import.meta.glob(
-  '../../../assets/accommodations/*.{jpg,jpeg,png,webp}',
-  { eager: true, import: 'default' }
-);
-
-// Curated list of high-resolution local asset keys
-const ASSET_KEYS = [
-  'siam-heritage-sanctuary',
-  'skyline-executive-suites',
-  'ayutthaya-heritage-riverside',
-  'river-kwai-jungle-raft',
-  'hua-hin-royal-beachfront',
-  'four-seasons-samui-cove',
-  'railay-cliff-beach-villas',
-  'amanpuri-retreat-villas',
-  'lanna-riverside-boutique',
-  'emerald-jungle-retreat',
-  'doi-mist-mountain-lodge',
-  'khaoyai-vineyard-villas',
-  'mekong-riverside-retreat',
-  'isan-ricefield-homestay',
-];
-
-const CATEGORY_FALLBACK = {
-  'Luxury Resort': 'lanna-riverside-boutique',
-  'Private Villa': 'amanpuri-retreat-villas',
-  'Luxury Hotel': 'skyline-executive-suites',
-  'Bed & Breakfast': 'doi-mist-mountain-lodge',
-  'Guest House': 'isan-ricefield-homestay',
-  'Budget Hotel': 'ayutthaya-heritage-riverside',
-};
-
-function getAssetUrl(name) {
-  if (!name) return null;
-  return (
-    accommodationImages[`../../../assets/accommodations/${name}.jpg`] ||
-    accommodationImages[`../../../assets/accommodations/${name}.png`] ||
-    accommodationImages[`../../../assets/accommodations/${name}.webp`] ||
-    null
-  );
-}
-
-/**
- * Helper to resolve image asset by accommodation ID or category
- */
-function getImageForAccommodation(accommodation) {
-  if (!accommodation) return null;
-  const id = accommodation.id || '';
-  
-  // 1. Direct ID match
-  const directMatch = getAssetUrl(id);
-  if (directMatch) return directMatch;
-
-  // 2. Partial ID match
-  const matchedKey = ASSET_KEYS.find((k) => id.includes(k) || (accommodation.name && accommodation.name.toLowerCase().includes(k.replace(/-/g, ' '))));
-  if (matchedKey) return getAssetUrl(matchedKey);
-
-  // 3. Category match fallback
-  const catKey = CATEGORY_FALLBACK[accommodation.category];
-  if (catKey && getAssetUrl(catKey)) return getAssetUrl(catKey);
-
-  // 4. Deterministic fallback based on numeric _id or id hash
-  const numericId = typeof accommodation._id === 'number' ? accommodation._id : (id.length || 0);
-  const fallbackKey = ASSET_KEYS[Math.abs(numericId) % ASSET_KEYS.length];
-  return getAssetUrl(fallbackKey);
-}
+import { getImageForAccommodation } from '../utils/accommodationImages';
 
 /**
  * AccommodationCard Component
- * Displays accommodation details with photo, tags, pricing, and action buttons.
- * Strictly adheres to API data schema without mock data.
+ * แสดงรายละเอียดที่พักพร้อมรูปภาพ ป้ายกำกับ ราคา และปุ่มดำเนินการ
+ * ยึดตาม data schema ของ API เท่านั้น ไม่มีการใช้ mock data
  *
  * @param {Object} props
- * @param {Object} props.accommodation - Accommodation data item from API
- * @param {string} [props.imageSrc] - Optional image override
- * @param {Function} [props.onViewDetails] - Callback when "View Details" is clicked
- * @param {Function} [props.onBookNow] - Callback when "Book Now" is clicked
+ * @param {Object} props.accommodation - ข้อมูลที่พักจาก API
+ * @param {string} [props.imageSrc] - รูปภาพที่ต้องการ override (ถ้ามี)
+ * @param {Function} [props.onViewDetails] - Callback เมื่อกด "View Details"
+ * @param {Function} [props.onBookNow] - Callback เมื่อกด "Book Now"
  */
 export default function AccommodationCard({
   accommodation,
@@ -119,13 +52,13 @@ export default function AccommodationCard({
     rooms,
   } = accommodation;
 
-  // Resolve image from local assets, category fallback, or override
+  // หารูปจาก local assets, fallback ตามหมวดหมู่ หรือรูปที่ override มา
   const resolvedImage =
     imageSrc ||
     getImageForAccommodation(accommodation) ||
     '';
 
-  // Extract map coordinates if available
+  // ดึงพิกัดแผนที่ถ้ามีข้อมูล
   const lat = location?.map_coordinates?.lat;
   const lng = location?.map_coordinates?.lng;
   const hasCoordinates = lat !== undefined && lng !== undefined;
@@ -135,14 +68,14 @@ export default function AccommodationCard({
       location?.address_label || name || 'Thailand'
     )}`;
 
-  // Guest info strictly derived from data schema (rooms[0].max_guests)
+  // ข้อมูลจำนวนผู้เข้าพักอ้างอิงจาก data schema เท่านั้น (rooms[0].max_guests)
   const firstRoomGuests = rooms?.[0]?.max_guests;
   const adultCount = firstRoomGuests?.adults;
   const childCount = firstRoomGuests?.children;
 
   return (
     <article className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200/80 shadow-xs hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col md:flex-row md:h-[340px] group">
-      {/* Left Column: Image with Overlays (Fixed uniform dimensions) */}
+      {/* คอลัมน์ซ้าย: รูปภาพพร้อม Overlay (ขนาดคงที่เท่ากันทุกการ์ด) */}
       <div className="relative w-full h-64 sm:h-72 md:h-full md:w-[360px] lg:w-[380px] shrink-0 overflow-hidden bg-slate-100">
         {resolvedImage ? (
           <img
@@ -177,10 +110,10 @@ export default function AccommodationCard({
           </div>
         )}
 
-        {/* Gradient shadow overlay for bottom text */}
+        {/* เงา gradient ด้านล่างเพื่อให้ข้อความอ่านง่าย */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent pointer-events-none" />
 
-        {/* Top-Left Category Badge */}
+        {/* ป้ายหมวดหมู่มุมซ้ายบน */}
         {category && (
           <div className="absolute top-4 left-4 z-10">
             <span className="inline-block bg-white/95 backdrop-blur-xs text-slate-900 text-xs font-semibold px-3 py-1.5 rounded-full shadow-sm">
@@ -189,7 +122,7 @@ export default function AccommodationCard({
           </div>
         )}
 
-        {/* Bottom-Left Location Label */}
+        {/* ป้ายสถานที่มุมซ้ายล่าง */}
         {location?.address_label && (
           <div className="absolute bottom-4 left-4 right-4 z-10 pointer-events-none">
             <span className="text-[11px] font-bold tracking-wider text-white/95 uppercase drop-shadow-sm block truncate">
@@ -199,10 +132,10 @@ export default function AccommodationCard({
         )}
       </div>
 
-      {/* Right Column: Accommodation Details */}
+      {/* คอลัมน์ขวา: รายละเอียดที่พัก */}
       <div className="flex-1 p-5 sm:p-6 flex flex-col justify-between overflow-hidden">
         <div className="space-y-2.5">
-          {/* Header Row: Title & Rating Badge */}
+          {/* แถวหัวข้อ: ชื่อที่พัก & ป้ายคะแนน */}
           <div className="flex items-start justify-between gap-4">
             <h3
               onClick={handleDetailClick}
@@ -222,10 +155,10 @@ export default function AccommodationCard({
             )}
           </div>
 
-          {/* Location & "Show on map" link */}
+          {/* สถานที่ & ลิงก์ "Show on map" */}
           {location?.address_label && (
             <div className="flex items-center flex-wrap gap-1.5 text-slate-500 text-sm">
-              {/* Map pin icon */}
+              {/* ไอคอนหมุดแผนที่ */}
               <span className="text-red-500 shrink-0 text-base" aria-hidden="true">
                 📍
               </span>
@@ -242,14 +175,14 @@ export default function AccommodationCard({
             </div>
           )}
 
-          {/* Description */}
+          {/* คำอธิบาย */}
           {description && (
             <p className="text-slate-600 text-sm leading-relaxed line-clamp-3 pt-0.5">
               {description}
             </p>
           )}
 
-          {/* Special Options Badges */}
+          {/* ป้ายตัวเลือกพิเศษ */}
           {Array.isArray(special_options) && special_options.length > 0 && (
             <div className="flex flex-wrap gap-2 pt-1.5">
               {special_options.map((option, index) => (
@@ -264,11 +197,11 @@ export default function AccommodationCard({
           )}
         </div>
 
-        {/* Footer Area */}
+        {/* ส่วนท้าย */}
         <div className="pt-4 mt-3 border-t border-slate-100 flex flex-col sm:flex-row sm:items-end justify-between gap-3">
-          {/* Price & Guest Info */}
+          {/* ราคา & ข้อมูลผู้เข้าพัก */}
           <div>
-            {/* Display adult count if provided by schema (no mock nights) */}
+            {/* แสดงจำนวนผู้ใหญ่เฉพาะเมื่อ schema มีข้อมูลจริง (ไม่ใช้ mock) */}
             {adultCount && (
               <p className="text-xs text-slate-500 font-medium mb-1">
                 {adultCount} adult{adultCount > 1 ? 's' : ''}
@@ -284,7 +217,7 @@ export default function AccommodationCard({
             </div>
           </div>
 
-          {/* Action Buttons */}
+          {/* ปุ่มดำเนินการ */}
           <div className="flex items-center gap-2.5 sm:self-end">
             <Button
               variant="outline"

@@ -8,7 +8,7 @@ export default function DatabaseStatus({
 
   return (
     <section className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs">
-      {/* Header bar */}
+      {/* แถบหัวข้อ */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
         <div className="flex items-center gap-2.5">
           <span
@@ -23,11 +23,11 @@ export default function DatabaseStatus({
           </h2>
         </div>
         <span className="text-xs font-mono px-2.5 py-1 rounded bg-slate-100 text-slate-700">
-          API: {apiUrl}/api/provinces
+          API: {apiUrl}/provinces
         </span>
       </div>
 
-      {/* Connection Info Grid */}
+      {/* กริดข้อมูลการเชื่อมต่อ */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-4 text-xs">
         <div>
           <span className="text-slate-400 block">Cluster</span>
@@ -55,7 +55,7 @@ export default function DatabaseStatus({
         </div>
       </div>
 
-      {/* Partner Services Status (Yok API on Render) */}
+      {/* สถานะบริการพาร์ทเนอร์ (Yok API บน Render) */}
       <div className="mt-3 pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2 text-xs">
         <div className="flex items-center gap-2">
           <span
@@ -77,7 +77,7 @@ export default function DatabaseStatus({
         </div>
       </div>
 
-      {/* Error alert if any */}
+      {/* แจ้งเตือนข้อผิดพลาด (ถ้ามี) */}
       {error && (
         <div className="mt-4 p-3 bg-rose-50 border border-rose-200 rounded-lg text-rose-700 text-xs">
           ⚠️ ข้อผิดพลาด: {error} (กรุณาเปิดรัน Backend: <code>npm run dev</code>{" "}

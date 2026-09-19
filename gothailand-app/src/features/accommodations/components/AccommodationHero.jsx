@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { formatDateLabel, calculateDateSpan } from '../../../utils/date';
 
 /**
  * AccommodationHero Component
@@ -22,7 +23,7 @@ export default function AccommodationHero({
   const [adults, setAdults] = useState(guestCount);
   const [children, setChildren] = useState(0);
 
-  // Keep internal adults state in sync when parent resets or updates guestCount
+  // ทำให้ state adults ภายในตรงกับ guestCount ที่ parent reset หรืออัปเดต
   const [prevGuestCount, setPrevGuestCount] = useState(guestCount);
   if (prevGuestCount !== guestCount) {
     setPrevGuestCount(guestCount);
@@ -35,7 +36,7 @@ export default function AccommodationHero({
   const datePickerRef = useRef(null);
   const guestPickerRef = useRef(null);
 
-  // Close dropdowns on outside click
+  // ปิด dropdown เมื่อคลิกนอกกล่อง
   useEffect(() => {
     function handleClickOutside(event) {
       if (datePickerRef.current && !datePickerRef.current.contains(event.target)) {
@@ -49,44 +50,14 @@ export default function AccommodationHero({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Sync adult count with parent guest count filter
+  // ซิงก์จำนวนผู้ใหญ่กับตัวกรอง guest count ของ parent
   const handleAdultsChange = (val) => {
     const newAdults = Math.max(1, val);
     setAdults(newAdults);
     onGuestCountChange?.(newAdults);
   };
 
-  // Helper to format date string like "Fri, Sep 18"
-  const formatDateLabel = (dateStr) => {
-    if (!dateStr) return '';
-    try {
-      const d = new Date(dateStr);
-      if (isNaN(d.getTime())) return dateStr;
-      return d.toLocaleDateString('en-US', {
-        weekday: 'short',
-        month: 'short',
-        day: 'numeric',
-      });
-    } catch {
-      return dateStr;
-    }
-  };
-
-  // Calculate number of nights
-  const calculateNights = () => {
-    if (!checkIn || !checkOut) return 1;
-    try {
-      const d1 = new Date(checkIn);
-      const d2 = new Date(checkOut);
-      const diffTime = d2.getTime() - d1.getTime();
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      return diffDays > 0 ? diffDays : 1;
-    } catch {
-      return 1;
-    }
-  };
-
-  const nights = calculateNights();
+  const nights = calculateDateSpan(checkIn, checkOut);
 
   const handleSubmit = (e) => {
     if (e && e.preventDefault) e.preventDefault();
@@ -96,24 +67,35 @@ export default function AccommodationHero({
   };
 
   return (
-    <section className="-mx-4 sm:-mx-6 lg:-mx-8 -mt-6 mb-8 bg-[#0a192f] text-white pt-10 pb-14 px-4 sm:px-6 lg:px-8 shadow-md">
-      <div className="max-w-7xl mx-auto">
-        {/* Title & Subtitle */}
-        <div className="mb-8">
-          <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-white">
-            Curated stays across Thailand
+    <section className="-mx-4 sm:-mx-6 lg:-mx-8 -mt-6 mb-8 bg-[#0a192f] text-white pt-12 pb-16 px-4 sm:px-6 lg:px-8 shadow-md relative overflow-hidden">
+      {/* รูปพื้นหลัง — สไตล์เดียวกับ CarHero */}
+      <img
+        src="https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1800&q=80"
+        alt="Thailand hotel resort"
+        className="absolute inset-0 w-full h-full object-cover opacity-20 pointer-events-none"
+      />
+      <div className="absolute inset-0 bg-gradient-to-b from-[#0a192f]/70 via-[#0a192f]/85 to-[#0a192f] pointer-events-none" />
+
+      <div className="max-w-7xl mx-auto relative z-10">
+        {/* หัวข้อ & คำอธิบายย่อย */}
+        <div className="mb-8 text-center max-w-3xl mx-auto">
+          <span className="text-[11px] font-bold tracking-widest text-amber-400 uppercase bg-amber-400/10 px-3 py-1 rounded-full border border-amber-400/20 mb-3 inline-block">
+            Handpicked Hotels, Villas & Resorts
+          </span>
+          <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-white leading-tight">
+            Curated Stays Across Thailand
           </h1>
-          <p className="mt-2 text-sm sm:text-base text-slate-300 max-w-2xl font-normal leading-relaxed">
+          <p className="mt-2.5 text-sm sm:text-base text-slate-300 font-light leading-relaxed">
             Handpicked hotels, villas, and resorts with verified reviews and flexible booking.
           </p>
         </div>
 
-        {/* Floating Search Bar Card (Streamlined design matching screenshot) */}
+        {/* กล่องค้นหาแบบลอย (ดีไซน์ตามภาพตัวอย่าง) */}
         <form
           onSubmit={handleSubmit}
           className="bg-white rounded-2xl shadow-xl p-2 sm:p-2.5 border border-slate-200/90 flex flex-col md:flex-row items-center gap-2 md:gap-3 text-slate-800"
         >
-          {/* Section 1: Where to? */}
+          {/* ส่วนที่ 1: จะไปที่ไหน? */}
           <div className="w-full md:flex-1 bg-[#f1f5f9]/70 hover:bg-[#f1f5f9] transition-colors rounded-xl px-3.5 py-2.5 flex items-center gap-3">
             <svg
               className="w-5 h-5 text-slate-600 shrink-0"
@@ -152,10 +134,10 @@ export default function AccommodationHero({
             )}
           </div>
 
-          {/* Divider */}
+          {/* เส้นคั่น */}
           <div className="hidden md:block w-px h-7 bg-slate-200" />
 
-          {/* Section 2: Dates (Fri, Sep 18 - Sat, Sep 19 + 1 night pill) */}
+          {/* ส่วนที่ 2: วันที่ (เช่น Fri, Sep 18 - Sat, Sep 19 + ป้ายจำนวนคืน) */}
           <div className="relative w-full md:w-auto shrink-0" ref={datePickerRef}>
             <button
               type="button"
@@ -206,13 +188,13 @@ export default function AccommodationHero({
                 </div>
               </div>
 
-              {/* Night pill badge */}
+              {/* ป้ายจำนวนคืน */}
               <span className="bg-slate-100 text-slate-600 text-xs font-medium px-2.5 py-0.5 rounded-full whitespace-nowrap ml-1">
                 {nights} {nights === 1 ? 'night' : 'nights'}
               </span>
             </button>
 
-            {/* Date Picker Popover */}
+            {/* Popover เลือกวันที่ */}
             {datePickerOpen && (
               <div className="absolute top-full left-0 mt-2 bg-white rounded-2xl shadow-xl border border-slate-200 p-4 z-50 min-w-[280px]">
                 <div className="space-y-3">
@@ -260,10 +242,10 @@ export default function AccommodationHero({
             )}
           </div>
 
-          {/* Divider */}
+          {/* เส้นคั่น */}
           <div className="hidden md:block w-px h-7 bg-slate-200" />
 
-          {/* Section 3: Rooms & Guests (1 room, 2 adults, 0 children) */}
+          {/* ส่วนที่ 3: ห้องพัก & ผู้เข้าพัก (1 ห้อง, 2 ผู้ใหญ่, 0 เด็ก) */}
           <div className="relative w-full md:w-auto shrink-0" ref={guestPickerRef}>
             <button
               type="button"
@@ -292,11 +274,11 @@ export default function AccommodationHero({
               </span>
             </button>
 
-            {/* Guests Popover */}
+            {/* Popover ผู้เข้าพัก */}
             {guestPickerOpen && (
               <div className="absolute top-full left-0 md:right-0 md:left-auto mt-2 bg-white rounded-2xl shadow-xl border border-slate-200 p-4 z-50 min-w-[270px]">
                 <div className="space-y-3.5">
-                  {/* Rooms */}
+                  {/* ห้องพัก */}
                   <div className="flex items-center justify-between">
                     <div>
                       <div className="text-sm font-bold text-slate-900">Rooms</div>
@@ -324,7 +306,7 @@ export default function AccommodationHero({
                     </div>
                   </div>
 
-                  {/* Adults */}
+                  {/* ผู้ใหญ่ */}
                   <div className="flex items-center justify-between">
                     <div>
                       <div className="text-sm font-bold text-slate-900">Adults</div>
@@ -352,7 +334,7 @@ export default function AccommodationHero({
                     </div>
                   </div>
 
-                  {/* Children */}
+                  {/* เด็ก */}
                   <div className="flex items-center justify-between">
                     <div>
                       <div className="text-sm font-bold text-slate-900">Children</div>
@@ -394,7 +376,7 @@ export default function AccommodationHero({
             )}
           </div>
 
-          {/* Section 4: Search Button (Using original deep navy #0a192f and amber accent) */}
+          {/* ส่วนที่ 4: ปุ่มค้นหา (โทนสีกรมท่าเข้ม #0a192f และสีทองเดิม) */}
           <div className="w-full md:w-auto shrink-0 md:ml-auto">
             <button
               type="submit"

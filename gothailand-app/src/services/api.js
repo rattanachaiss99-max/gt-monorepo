@@ -10,9 +10,11 @@
  */
 import axios from "axios";
 
-// กำหนดจาก .env
+// Dev: ใช้ relative path "/api" ผ่าน Vite proxy (bypass CORS)
+// Production: ใช้ VITE_API_URL หรือ absolute URL
 const BASE_URL =
-  import.meta.env.VITE_API_URL || "https://gothailand-api.onrender.com/api";
+  import.meta.env.VITE_API_URL ||
+  (import.meta.env.DEV ? "/api" : "https://gothailand-api.onrender.com/api");
 
 const api = axios.create({
   baseURL: BASE_URL,

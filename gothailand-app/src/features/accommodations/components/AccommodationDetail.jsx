@@ -1,64 +1,11 @@
 import { useState } from 'react';
-
-// Dynamically load all accommodation images from the assets folder using Vite
-const accommodationImages = import.meta.glob(
-  '../../../assets/accommodations/*.{jpg,jpeg,png,webp}',
-  { eager: true, import: 'default' }
-);
-
-const ASSET_KEYS = [
-  'siam-heritage-sanctuary',
-  'skyline-executive-suites',
-  'ayutthaya-heritage-riverside',
-  'river-kwai-jungle-raft',
-  'hua-hin-royal-beachfront',
-  'four-seasons-samui-cove',
-  'railay-cliff-beach-villas',
-  'amanpuri-retreat-villas',
-  'lanna-riverside-boutique',
-  'emerald-jungle-retreat',
-  'doi-mist-mountain-lodge',
-  'khaoyai-vineyard-villas',
-  'mekong-riverside-retreat',
-  'isan-ricefield-homestay',
-];
-
-const CATEGORY_FALLBACK = {
-  'Luxury Resort': 'lanna-riverside-boutique',
-  'Private Villa': 'amanpuri-retreat-villas',
-  'Luxury Hotel': 'skyline-executive-suites',
-  'Bed & Breakfast': 'doi-mist-mountain-lodge',
-  'Guest House': 'isan-ricefield-homestay',
-  'Budget Hotel': 'ayutthaya-heritage-riverside',
-};
-
-function getAssetUrl(name) {
-  if (!name) return null;
-  return (
-    accommodationImages[`../../../assets/accommodations/${name}.jpg`] ||
-    accommodationImages[`../../../assets/accommodations/${name}.png`] ||
-    accommodationImages[`../../../assets/accommodations/${name}.webp`] ||
-    null
-  );
-}
-
-function getImageForAccommodation(accommodation) {
-  if (!accommodation) return null;
-  const id = accommodation.id || '';
-  
-  const directMatch = getAssetUrl(id);
-  if (directMatch) return directMatch;
-
-  const matchedKey = ASSET_KEYS.find((k) => id.includes(k) || (accommodation.name && accommodation.name.toLowerCase().includes(k.replace(/-/g, ' '))));
-  if (matchedKey) return getAssetUrl(matchedKey);
-
-  const catKey = CATEGORY_FALLBACK[accommodation.category];
-  if (catKey && getAssetUrl(catKey)) return getAssetUrl(catKey);
-
-  const numericId = typeof accommodation._id === 'number' ? accommodation._id : (id.length || 0);
-  const fallbackKey = ASSET_KEYS[Math.abs(numericId) % ASSET_KEYS.length];
-  return getAssetUrl(fallbackKey);
-}
+import { getDefaultDateRange, calculateDateSpan } from '../../../utils/date';
+import Button from './Button';
+import {
+  getAssetUrl,
+  getImageForAccommodation,
+  ACCOMMODATION_ASSET_KEYS,
+} from '../utils/accommodationImages';
 
 function getGalleryForAccommodation(accommodation, mainImage) {
   const pictures = [];
@@ -66,9 +13,9 @@ function getGalleryForAccommodation(accommodation, mainImage) {
 
   // เสริมรูปในเครือและหมวดเดียวกันเพื่อจำลองแกลเลอรีคุณภาพสูง
   const numericId = typeof accommodation._id === 'number' ? accommodation._id : 1;
-  const secondaryKey1 = ASSET_KEYS[(numericId + 1) % ASSET_KEYS.length];
-  const secondaryKey2 = ASSET_KEYS[(numericId + 2) % ASSET_KEYS.length];
-  const secondaryKey3 = ASSET_KEYS[(numericId + 3) % ASSET_KEYS.length];
+  const secondaryKey1 = ACCOMMODATION_ASSET_KEYS[(numericId + 1) % ACCOMMODATION_ASSET_KEYS.length];
+  const secondaryKey2 = ACCOMMODATION_ASSET_KEYS[(numericId + 2) % ACCOMMODATION_ASSET_KEYS.length];
+  const secondaryKey3 = ACCOMMODATION_ASSET_KEYS[(numericId + 3) % ACCOMMODATION_ASSET_KEYS.length];
 
   const img1 = getAssetUrl(secondaryKey1);
   const img2 = getAssetUrl(secondaryKey2);
@@ -96,8 +43,9 @@ export default function AccommodationDetail({ accommodation = {}, onBookNow }) {
   const gallery = getGalleryForAccommodation(accommodation, mainImageAsset);
 
   const [activeImage, setActiveImage] = useState(mainImageAsset || gallery[0]);
-  const [checkInDate, setCheckInDate] = useState('2026-10-15');
-  const [checkOutDate, setCheckOutDate] = useState('2026-10-18');
+  const defaultStayDates = getDefaultDateRange(1, 4);
+  const [checkInDate, setCheckInDate] = useState(defaultStayDates.start);
+  const [checkOutDate, setCheckOutDate] = useState(defaultStayDates.end);
   const [guestsCount, setGuestsCount] = useState(2);
   const [selectedRoomId, setSelectedRoomId] = useState(
     accommodation.rooms?.[0]?.room_type_id || 'default'
@@ -106,7 +54,7 @@ export default function AccommodationDetail({ accommodation = {}, onBookNow }) {
   const basePrice = Number(accommodation.base_price_per_night || 0);
   const selectedRoom = accommodation.rooms?.find((r) => r.room_type_id === selectedRoomId);
   const currentPricePerNight = selectedRoom?.price_per_night || basePrice;
-  const nights = 3; // คำนวณจากช่วงวันที่ 15 - 18 ต.ค.
+  const nights = calculateDateSpan(checkInDate, checkOutDate);
   const totalPrice = currentPricePerNight * nights;
 
   const location = accommodation.location || {};
@@ -117,13 +65,7 @@ export default function AccommodationDetail({ accommodation = {}, onBookNow }) {
   const rating = accommodation.rating_avg ?? 5.0;
   const reviews = accommodation.total_reviews ?? 0;
 
-  const facilities = accommodation.facilities || [
-    'Free Wi-Fi',
-    'Swimming Pool',
-    'Room Service',
-    'Spa',
-    'Air Conditioning',
-  ];
+  const facilities = accommodation.facilities || [];
 
   const handleBookClick = () => {
     if (onBookNow) {
@@ -229,17 +171,21 @@ export default function AccommodationDetail({ accommodation = {}, onBookNow }) {
             <h3 className="font-serif text-base font-bold text-slate-900 mb-3">
               Popular Amenities & Facilities
             </h3>
-            <div className="flex flex-wrap gap-2">
-              {facilities.map((fac, idx) => (
-                <span
-                  key={idx}
-                  className="inline-flex items-center gap-1.5 bg-slate-50 text-slate-700 text-xs px-3 py-1.5 rounded-lg border border-slate-100 font-medium"
-                >
-                  <span className="text-amber-500">✓</span>
-                  {fac}
-                </span>
-              ))}
-            </div>
+            {facilities.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {facilities.map((fac, idx) => (
+                  <span
+                    key={idx}
+                    className="inline-flex items-center gap-1.5 bg-slate-50 text-slate-700 text-xs px-3 py-1.5 rounded-lg border border-slate-100 font-medium"
+                  >
+                    <span className="text-amber-500">✓</span>
+                    {fac}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-slate-400">No amenities listed for this property yet.</p>
+            )}
           </div>
         </div>
 
@@ -291,26 +237,26 @@ export default function AccommodationDetail({ accommodation = {}, onBookNow }) {
 
         {/* สถานที่สำคัญใกล้เคียงและนโยบาย (Nearby Landmarks & Policies) */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {/* Nearby Landmarks */}
+          {/* สถานที่สำคัญใกล้เคียง */}
           <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-2xs space-y-3">
             <h4 className="font-serif font-bold text-slate-900 text-sm">
               📍 Nearby Landmarks
             </h4>
-            <ul className="space-y-2 text-xs text-slate-600">
-              {(location.nearby_landmarks || [
-                { name: 'City Center / Night Market', distance: '1.2 km' },
-                { name: 'Main Airport / Train Station', distance: '12 km' },
-                { name: 'Scenic Viewpoint', distance: '2.5 km' },
-              ]).map((lm, idx) => (
-                <li key={idx} className="flex justify-between items-center border-b border-slate-50 pb-1.5">
-                  <span className="font-medium text-slate-700">{lm.name}</span>
-                  <span className="text-slate-400 font-mono text-[11px]">{lm.distance}</span>
-                </li>
-              ))}
-            </ul>
+            {(location.nearby_landmarks || []).length > 0 ? (
+              <ul className="space-y-2 text-xs text-slate-600">
+                {location.nearby_landmarks.map((lm, idx) => (
+                  <li key={idx} className="flex justify-between items-center border-b border-slate-50 pb-1.5">
+                    <span className="font-medium text-slate-700">{lm.name}</span>
+                    <span className="text-slate-400 font-mono text-[11px]">{lm.distance}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-xs text-slate-400">No nearby landmarks listed for this property yet.</p>
+            )}
           </div>
 
-          {/* Policies */}
+          {/* นโยบาย */}
           <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-2xs space-y-3">
             <h4 className="font-serif font-bold text-slate-900 text-sm">
               ℹ️ Hotel Policies
@@ -398,14 +344,16 @@ export default function AccommodationDetail({ accommodation = {}, onBookNow }) {
             </select>
           </div>
 
-          <button
+          <Button
             type="button"
             onClick={handleBookClick}
-            className="w-full bg-[#0a192f] hover:bg-amber-400 hover:text-slate-900 text-white py-3.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all duration-200 shadow-md hover:shadow-lg cursor-pointer flex items-center justify-center gap-2"
+            variant="navy"
+            size="none"
+            className="w-full py-3.5 font-bold text-xs uppercase tracking-wider transition-all duration-200 shadow-md hover:shadow-lg gap-2"
           >
             <span>Reserve Now</span>
             <span aria-hidden="true">→</span>
-          </button>
+          </Button>
 
           <div className="text-[11px] text-center text-slate-400 leading-relaxed space-y-1">
             <p>✓ Instant confirmation without booking fees</p>
