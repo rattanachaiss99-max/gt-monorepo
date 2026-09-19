@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom';
+import Button from './Button';
 
 /**
  * CarCard Component (Guitar x Yok Design System)
@@ -92,14 +93,16 @@ export default function CarCard({ car, onViewDetail }) {
           </div>
         </div>
 
-        <button 
+        <Button
           type="button"
           onClick={handleDetailClick}
-          className="w-full bg-[#0a192f] hover:bg-amber-400 hover:text-slate-900 text-white font-semibold py-2.5 rounded-xl text-xs uppercase tracking-wider transition-all duration-200 shadow-2xs cursor-pointer flex items-center justify-center gap-1.5"
+          variant="navy"
+          size="none"
+          className="w-full font-semibold py-2.5 text-xs uppercase tracking-wider transition-all duration-200 shadow-2xs gap-1.5"
         >
           <span>View Detail</span>
           <span aria-hidden="true">→</span>
-        </button>
+        </Button>
       </div>
     </div>
   );

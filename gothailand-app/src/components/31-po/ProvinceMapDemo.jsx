@@ -7,6 +7,16 @@ import Footer from "./Footer";
 import { fetchYokServices } from "../../services/yokService";
 import { getProvinceApiUrl } from "../../services/api";
 
+// API ส่ง SVG path มาซ้อนอยู่ใน province.vectorData.d ไม่ใช่ province.d ตรงๆ
+// ทั้ง ProvinceSvgViewer และ ProvinceTable คาดหวัง field แบบ flat จึงต้องแปลงตรงนี้ที่เดียว
+function normalizeProvinces(rawProvinces) {
+  return rawProvinces.map((p) => ({
+    ...p,
+    d: p.vectorData?.d || p.d,
+    viewBox: p.vectorData?.viewBox || p.viewBox,
+  }));
+}
+
 export default function ProvinceMapDemo() {
   const [count, setCount] = useState(0);
   const [provinces, setProvinces] = useState([]);
@@ -31,15 +41,19 @@ export default function ProvinceMapDemo() {
     setError(null);
     try {
       const [provRes, yokRes] = await Promise.allSettled([
-        fetch(`${API_URL}/api/provinces`).then(async (res) => {
+        fetch(`${API_URL}/provinces`).then(async (res) => {
           if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
           return res.json();
         }),
         fetchYokServices(),
       ]);
 
-      if (provRes.status === "fulfilled" && provRes.value?.success && provRes.value?.provinces) {
-        setProvinces(provRes.value.provinces);
+      if (
+        provRes.status === "fulfilled" &&
+        provRes.value?.success &&
+        provRes.value?.provinces
+      ) {
+        setProvinces(normalizeProvinces(provRes.value.provinces));
       } else if (provRes.status === "rejected") {
         setError(provRes.reason?.message || "ไม่สามารถเชื่อมต่อ Backend ได้");
       }
@@ -61,8 +75,9 @@ export default function ProvinceMapDemo() {
     const loadInitialData = async () => {
       try {
         const [provRes, yokRes] = await Promise.allSettled([
-          fetch(`${API_URL}/api/provinces`).then(async (res) => {
-            if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+          fetch(`${API_URL}/provinces`).then(async (res) => {
+            if (!res.ok)
+              throw new Error(`HTTP ${res.status}: ${res.statusText}`);
             return res.json();
           }),
           fetchYokServices(),
@@ -70,11 +85,15 @@ export default function ProvinceMapDemo() {
 
         if (ignore) return;
 
-        if (provRes.status === "fulfilled" && provRes.value?.success && provRes.value?.provinces) {
-          setProvinces(provRes.value.provinces);
+        if (
+          provRes.status === "fulfilled" &&
+          provRes.value?.success &&
+          provRes.value?.provinces
+        ) {
+          const normalized = normalizeProvinces(provRes.value.provinces);
+          setProvinces(normalized);
           const defaultItem =
-            provRes.value.provinces.find((p) => p.slug === "chiang-mai") ||
-            provRes.value.provinces[0];
+            normalized.find((p) => p.slug === "chiang-mai") || normalized[0];
           if (defaultItem) setSelectedSlug(defaultItem.slug);
           setError(null);
         } else if (provRes.status === "rejected") {
@@ -105,7 +124,7 @@ export default function ProvinceMapDemo() {
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800 p-6 md:p-10 font-sans">
       <div className="max-w-5xl mx-auto space-y-8">
-        {/* 1. Header (Vite logo + Counter button + Refresh button) */}
+        {/* 1. Header (โลโก้ Vite + ปุ่มตัวนับ + ปุ่มรีเฟรช) */}
         <Header
           count={count}
           onIncrement={() => setCount((c) => c + 1)}
@@ -131,7 +150,9 @@ export default function ProvinceMapDemo() {
             </span>
             <div className="text-2xl font-black text-emerald-600 mt-1">
               {provinces.filter((p) => p.d || p.vectorData?.d).length}
-              <span className="text-xs font-normal text-slate-400 ml-1">จังหวัด</span>
+              <span className="text-xs font-normal text-slate-400 ml-1">
+                จังหวัด
+              </span>
             </div>
           </div>
 
@@ -141,7 +162,9 @@ export default function ProvinceMapDemo() {
             </span>
             <div className="text-2xl font-black text-blue-600 mt-1">
               {provinces.filter((p) => p.slogan || p.summary).length}
-              <span className="text-xs font-normal text-slate-400 ml-1">จังหวัด</span>
+              <span className="text-xs font-normal text-slate-400 ml-1">
+                จังหวัด
+              </span>
             </div>
           </div>
 
@@ -192,7 +215,7 @@ export default function ProvinceMapDemo() {
           guides={yokData.guides}
         />
 
-        {/* 5. Footer */}
+        {/* 5. ส่วนท้าย */}
         <Footer />
       </div>
     </div>

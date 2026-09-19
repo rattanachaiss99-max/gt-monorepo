@@ -5,6 +5,7 @@
  * เชื่อมต่อกับ Central API Client (`api.js`) สอดคล้องตามมาตรฐานของ Monorepo
  */
 import api from "../../../services/api";
+import { findByIdOrSlug } from "../../../utils/findByIdOrSlug";
 
 // Fallback ข้อมูลรถเช่าจากระบบฐานข้อมูล กรณีที่เครือข่ายออฟไลน์หรือ Render Server หลับ
 // ดึงรูปสำรองจาก public/images/cars ภายใน repo นี้
@@ -254,10 +255,6 @@ const FALLBACK_CARS = [
   }
 ];
 
-/**
- * ฟังก์ชัน normalizeCar (รักษา interface เดิมไว้ ไม่ดัดแปลง URL รูปภาพจาก API)
- */
-export const normalizeCar = (car) => car;
 
 /**
  * ดึงรายการรถเช่าทั้งหมดจาก API
@@ -265,7 +262,9 @@ export const normalizeCar = (car) => car;
 export const getCars = async () => {
   try {
     const response = await api.get("/cars", { timeout: 10000 });
-    if (Array.isArray(response.data) && response.data.length > 0) {
+    // เฉพาะกรณี response ไม่ใช่ array (backend ตอบผิดรูปแบบ) เท่านั้นที่ใช้ fallback
+    // ส่วน array ว่างจริง (0 ผลลัพธ์ตาม filter) ต้องคืนค่าว่างจริง ไม่ใช่ข้อมูลจำลอง
+    if (Array.isArray(response.data)) {
       return response.data;
     }
     return FALLBACK_CARS;
@@ -277,21 +276,26 @@ export const getCars = async () => {
 
 /**
  * ดึงข้อมูลรถเช่ารายคันตาม ID หรือ Slug
+ * รองรับทั้งการดึงตรงจาก Endpoint /cars/:id (หาก backend มี)
+ * และการค้นหาจากรายการรถที่โหลดจริง (ไม่ใช่แค่ fallback) ด้วย slug, id, หรือ _id
  */
 export const getCarById = async (id) => {
+  let directError = null;
   try {
     const response = await api.get(`/cars/${id}`, { timeout: 8000 });
-    return response.data;
+    if (response.data) return response.data;
   } catch (error) {
-    console.warn(`⚠️ [CarService] ไม่พบรถ id/slug "${id}" จาก API ค้นหาใน Fallback:`, error.message);
-    const found = FALLBACK_CARS.find(c => c._id === id || c.slug === id || c.id === id);
-    if (found) return found;
-    throw error;
+    directError = error;
+    console.warn(`⚠️ [CarService] ไม่พบรถ id/slug "${id}" จาก API โดยตรง ค้นหาใน list แทน:`, error.message);
   }
+
+  const all = await getCars();
+  const found = findByIdOrSlug(all, id);
+  if (found) return found;
+  throw directError || new Error(`ไม่พบข้อมูลรถยนต์รหัส "${id}"`);
 };
 
 export default {
   getCars,
   getCarById,
-  normalizeCar
 };

@@ -7,11 +7,11 @@ import {
   BrowseByProperty,
   GetInspired,
 } from '../components';
-
-const API_ENDPOINT = 'https://gothailand-api.onrender.com/api/accommodations';
+import { getAccommodations } from '../services/accommodationService';
+import { getDefaultDateRange } from '../../../utils/date';
 
 const SEARCH_ALIASES = {
-  // Thai provinces & popular locations
+  // ชื่อจังหวัดไทยและสถานที่ยอดนิยม
   'เชียงใหม่': 'chiang mai',
   'เชียงราย': 'chiang rai',
   'กรุงเทพ': 'bangkok',
@@ -48,7 +48,7 @@ const SEARCH_ALIASES = {
   'ภาคใต้': 'south',
   'ภาคตะวันออก': 'east',
   'ภาคตะวันตก': 'west',
-  // Common English nicknames
+  // ชื่อเรียกภาษาอังกฤษที่ใช้กันทั่วไป
   'bkk': 'bangkok',
   'pattaya': 'chonburi',
   'samui': 'surat thani',
@@ -70,7 +70,7 @@ function matchesSearch(item, rawQuery) {
   const q = rawQuery.toLowerCase().trim();
   const qNorm = normalizeText(q);
 
-  // Targets to match
+  // คำที่จะใช้จับคู่
   const searchTargets = [q, qNorm];
   for (const [alias, mapped] of Object.entries(SEARCH_ALIASES)) {
     if (q.includes(alias) || alias.includes(q)) {
@@ -79,7 +79,7 @@ function matchesSearch(item, rawQuery) {
     }
   }
 
-  // Multi-word token support
+  // รองรับการค้นหาแบบหลายคำ
   const tokens = q.split(/\s+/).filter(Boolean);
 
   const fields = [
@@ -99,7 +99,7 @@ function matchesSearch(item, rawQuery) {
   const fieldTexts = fields.map((f) => f.toString().toLowerCase());
   const fieldNorms = fields.map((f) => normalizeText(f));
 
-  // Match if any search target matches any field (supports "chiangmai" matching "Chiang Mai")
+  // จับคู่ได้ถ้ามีคำค้นหาใดตรงกับฟิลด์ใดฟิลด์หนึ่ง (รองรับ "chiangmai" จับคู่กับ "Chiang Mai")
   const anyTargetMatched = searchTargets.some((target) =>
     fieldTexts.some((f) => f.includes(target)) ||
     fieldNorms.some((fn) => fn.includes(target))
@@ -107,7 +107,7 @@ function matchesSearch(item, rawQuery) {
 
   if (anyTargetMatched) return true;
 
-  // If multi-word, verify each token matches something
+  // ถ้าเป็นหลายคำ ตรวจว่าทุกคำต้องจับคู่ได้อย่างน้อยหนึ่งฟิลด์
   if (tokens.length > 1) {
     const allTokensMatch = tokens.every((token) => {
       const tokenNorm = normalizeText(token);
@@ -138,7 +138,7 @@ export default function AccommodationPage() {
   const [error, setError] = useState(null);
   const [reloadKey, setReloadKey] = useState(0);
 
-  // View Mode: 'landing' (Page 1) or 'results' (Page 2)
+  // โหมดการแสดงผล: 'landing' (หน้า 1) หรือ 'results' (หน้า 2)
   const [viewMode, setViewMode] = useState('landing');
 
   const handleViewAccommodation = (item) => {
@@ -146,13 +146,16 @@ export default function AccommodationPage() {
     navigate(`/accommodations/${slugId}`, { state: { accommodation: item } });
   };
 
-  // Search & Filter States
+  // สถานะการค้นหา & ตัวกรอง
   const [selectedRegion, setSelectedRegion] = useState('central'); // default ภาคกลาง
-  const [selectedProvince, setSelectedProvince] = useState(''); // filter by province
-  const [pageSize, setPageSize] = useState(10); // default 10 / page
+  const [selectedProvince, setSelectedProvince] = useState(''); // กรองตามจังหวัด
+  const [pageSize, setPageSize] = useState(10); // default 10 รายการ/หน้า
+  // Default dates: วันนี้ + 1 และ วันนี้ + 2
+  const defaultStayDates = getDefaultDateRange(1, 2);
+
   const [searchTerm, setSearchTerm] = useState('');
-  const [checkIn, setCheckIn] = useState('2026-09-18');
-  const [checkOut, setCheckOut] = useState('2026-09-19');
+  const [checkIn, setCheckIn] = useState(defaultStayDates.start);
+  const [checkOut, setCheckOut] = useState(defaultStayDates.end);
   const [guestCount, setGuestCount] = useState(2);
   const [maxPrice, setMaxPrice] = useState(20000);
   const [selectedSpecialOptions, setSelectedSpecialOptions] = useState([]);
@@ -160,45 +163,33 @@ export default function AccommodationPage() {
   const [selectedFacilities, setSelectedFacilities] = useState([]);
   const [sortBy, setSortBy] = useState('recommended');
 
-  // Fetch real accommodation data from API
+  // ดึงข้อมูลจาก API ผ่าน accommodationService
   useEffect(() => {
     window.scrollTo(0, 0);
     let ignore = false;
-    const controller = new AbortController();
 
     async function fetchData() {
       try {
         setLoading(true);
         setError(null);
-        const res = await fetch(API_ENDPOINT, { signal: controller.signal });
-        if (!res.ok) {
-          throw new Error(`HTTP ${res.status}: ${res.statusText}`);
-        }
-        const data = await res.json();
+        const data = await getAccommodations();
         if (!ignore) {
           setAccommodations(Array.isArray(data) ? data : []);
-          setError(null);
         }
       } catch (err) {
-        if (!ignore && err.name !== 'AbortError') {
+        if (!ignore) {
           setError(err.message || 'Failed to fetch accommodations');
         }
       } finally {
-        if (!ignore) {
-          setLoading(false);
-        }
+        if (!ignore) setLoading(false);
       }
     }
 
     fetchData();
-
-    return () => {
-      ignore = true;
-      controller.abort();
-    };
+    return () => { ignore = true; };
   }, [reloadKey]);
 
-  // Compute facet counts dynamically from accommodations list
+  // คำนวณจำนวนของแต่ละตัวเลือกแบบไดนามิกจาก list ที่พัก
   const {
     optionCounts,
     categoryCounts,
@@ -215,7 +206,7 @@ export default function AccommodationPage() {
     const destCounts = {};
 
     accommodations.forEach((item) => {
-      // Count regions & provinces
+      // นับจำนวนภาค & จังหวัด
       const reg = item.region;
       const city = item.location?.city;
 
@@ -228,14 +219,14 @@ export default function AccommodationPage() {
         }
       }
 
-      // Count special options
+      // นับจำนวนตัวเลือกพิเศษ
       if (Array.isArray(item.special_options)) {
         item.special_options.forEach((opt) => {
           optCounts[opt] = (optCounts[opt] || 0) + 1;
         });
       }
 
-      // Count categories
+      // นับจำนวนหมวดหมู่
       if (item.category) {
         catCounts[item.category] = (catCounts[item.category] || 0) + 1;
       }
@@ -247,7 +238,7 @@ export default function AccommodationPage() {
         });
       }
 
-      // Count facilities
+      // นับจำนวนสิ่งอำนวยความสะดวก
       if (Array.isArray(item.facilities)) {
         item.facilities.forEach((fac) => {
           facCounts[fac] = (facCounts[fac] || 0) + 1;
@@ -255,7 +246,7 @@ export default function AccommodationPage() {
       }
     });
 
-    // Format sorted provinces per region (higher count first)
+    // จัดเรียงจังหวัดในแต่ละภาค (จำนวนมากไปน้อย)
     const sortedRegionProvinces = {};
     Object.entries(regProvsMap).forEach(([reg, citiesObj]) => {
       sortedRegionProvinces[reg] = Object.entries(citiesObj)
@@ -273,7 +264,7 @@ export default function AccommodationPage() {
     };
   }, [accommodations]);
 
-  // Toggles for checkboxes
+  // ฟังก์ชัน toggle สำหรับ checkbox
   const handleToggleSpecialOption = (option) => {
     setSelectedSpecialOptions((prev) =>
       prev.includes(option) ? prev.filter((o) => o !== option) : [...prev, option]
@@ -292,14 +283,14 @@ export default function AccommodationPage() {
     );
   };
 
-  // Reset all filters to default
   const handleResetFilters = () => {
     setSelectedRegion('central');
     setSelectedProvince('');
     setPageSize(10);
     setSearchTerm('');
-    setCheckIn('2026-09-18');
-    setCheckOut('2026-09-19');
+    const resetDates = getDefaultDateRange(1, 2);
+    setCheckIn(resetDates.start);
+    setCheckOut(resetDates.end);
     setGuestCount(2);
     setMaxPrice(20000);
     setSelectedSpecialOptions([]);
@@ -308,9 +299,9 @@ export default function AccommodationPage() {
     setSortBy('recommended');
   };
 
-  // User Actions: Transitions from Page 1 (Landing) to Page 2 (Results)
+  // การกระทำของผู้ใช้: เปลี่ยนจากหน้า 1 (Landing) ไปหน้า 2 (Results)
   const handleSearchSubmit = () => {
-    // When submitting search from hero, if a destination keyword is typed, search across all regions
+    // เมื่อค้นหาจาก hero ถ้าพิมพ์ชื่อสถานที่มา ให้ค้นหาข้ามทุกภาค
     if (searchTerm.trim()) {
       setSelectedRegion('all');
       setSelectedProvince('');
@@ -335,19 +326,19 @@ export default function AccommodationPage() {
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
   };
 
-  // Filter and Sort accommodations
+  // กรองและเรียงลำดับที่พัก
   const { filteredAccommodations, activeRegionDisplay, activeProvinceDisplay } = useMemo(() => {
     let list = [...accommodations];
 
-    // 1. Search term filter (with smart normalization e.g. "chiangmai" matching "Chiang Mai", Thai aliases, etc.)
+    // 1. กรองด้วยคำค้นหา (มีการ normalize อัจฉริยะ เช่น "chiangmai" จับคู่กับ "Chiang Mai", ชื่อเรียกภาษาไทย ฯลฯ)
     const hasSearchTerm = Boolean(searchTerm && searchTerm.trim());
     if (hasSearchTerm) {
       list = list.filter((item) => matchesSearch(item, searchTerm));
     }
 
-    // 2. Region filter
-    // If a search keyword produces results, but the currently selected region would filter ALL of them out,
-    // gracefully relax region to 'all' so user search results are not hidden
+    // 2. กรองตามภาค
+    // ถ้าคำค้นหาให้ผลลัพธ์ แต่ภาคที่เลือกอยู่จะกรองผลลัพธ์ทั้งหมดออกไป
+    // ให้ผ่อนปรนกลับเป็น 'all' เพื่อไม่ให้ผลการค้นหาของผู้ใช้หายไป
     let effectiveRegion = selectedRegion;
     if (hasSearchTerm && effectiveRegion && effectiveRegion !== 'all') {
       const inCurrentRegion = list.filter((item) => item.region === effectiveRegion);
@@ -360,7 +351,7 @@ export default function AccommodationPage() {
       list = list.filter((item) => item.region === effectiveRegion);
     }
 
-    // 3. Province filter
+    // 3. กรองตามจังหวัด
     let effectiveProvince = selectedProvince;
     if (hasSearchTerm && effectiveProvince) {
       const inCurrentProvince = list.filter(
@@ -375,14 +366,14 @@ export default function AccommodationPage() {
       list = list.filter((item) => item.location?.city === effectiveProvince);
     }
 
-    // 4. Price filter
+    // 4. กรองตามราคา
     if (maxPrice < 20000) {
       list = list.filter(
         (item) => Number(item.base_price_per_night || 0) <= maxPrice
       );
     }
 
-    // 5. Guest count filter (strictly based on rooms[].max_guests.adults)
+    // 5. กรองตามจำนวนผู้เข้าพัก (อ้างอิงจาก rooms[].max_guests.adults เท่านั้น)
     if (guestCount) {
       const minGuests = Number(guestCount);
       list = list.filter((item) => {
@@ -393,7 +384,7 @@ export default function AccommodationPage() {
       });
     }
 
-    // 6. Special Options filter (e.g. Breakfast Included, Private Pool)
+    // 6. กรองตามตัวเลือกพิเศษ (เช่น Breakfast Included, Private Pool)
     if (selectedSpecialOptions.length > 0) {
       list = list.filter((item) => {
         const itemOptions = Array.isArray(item.special_options)
@@ -403,7 +394,7 @@ export default function AccommodationPage() {
       });
     }
 
-    // 7. Category filter
+    // 7. กรองตามหมวดหมู่
     if (selectedCategories.length > 0) {
       list = list.filter((item) => {
         const cats = [item.category, ...(item.categories || [])].filter(Boolean);
@@ -411,7 +402,7 @@ export default function AccommodationPage() {
       });
     }
 
-    // 8. Facilities filter
+    // 8. กรองตามสิ่งอำนวยความสะดวก
     if (selectedFacilities.length > 0) {
       list = list.filter((item) => {
         const itemFacs = Array.isArray(item.facilities) ? item.facilities : [];
@@ -419,7 +410,7 @@ export default function AccommodationPage() {
       });
     }
 
-    // 9. Sort
+    // 9. เรียงลำดับ
     if (sortBy === 'price_asc') {
       list.sort(
         (a, b) =>
@@ -454,7 +445,7 @@ export default function AccommodationPage() {
 
   return (
     <div className="pb-16 font-sans">
-      {/* 1. Full-Width Hero Section with Floating Search Bar */}
+      {/* 1. ส่วน Hero เต็มความกว้างพร้อมกล่องค้นหาแบบลอย */}
       <AccommodationHero
         searchTerm={searchTerm}
         onSearchTermChange={setSearchTerm}
@@ -467,16 +458,16 @@ export default function AccommodationPage() {
         onSearchSubmit={handleSearchSubmit}
       />
 
-      {/* PAGE 1: Landing Page (Browse by property type + Get inspired) */}
+      {/* หน้า 1: Landing Page (เลือกตามประเภทที่พัก + แรงบันดาลใจการเดินทาง) */}
       {viewMode === 'landing' && (
         <div>
-          {/* Section: Browse by property type */}
+          {/* ส่วน: เลือกตามประเภทที่พัก */}
           <BrowseByProperty
             categoryCounts={categoryCounts}
             onSelectCategory={handleSelectPropertyType}
           />
 
-          {/* Section: Get inspired for your next trip */}
+          {/* ส่วน: แรงบันดาลใจสำหรับทริปหน้า */}
           <GetInspired
             destinationCounts={destinationCounts}
             onSelectDestination={handleSelectDestination}
@@ -484,10 +475,10 @@ export default function AccommodationPage() {
         </div>
       )}
 
-      {/* PAGE 2: Search Results & Filters Listing View */}
+      {/* หน้า 2: ผลการค้นหา & มุมมองรายการพร้อมตัวกรอง */}
       {viewMode === 'results' && (
         <div>
-          {/* Back Navigation to Landing Page */}
+          {/* ปุ่มย้อนกลับไปหน้า Landing */}
           <div className="mb-6 flex items-center justify-between">
             <button
               type="button"
@@ -506,7 +497,7 @@ export default function AccommodationPage() {
             </span>
           </div>
 
-          {/* 2-Column Grid: Filter Sidebar (Left) + Accommodation List (Right) */}
+          {/* กริด 2 คอลัมน์: แถบตัวกรอง (ซ้าย) + รายการที่พัก (ขวา) */}
           <div className="flex flex-col lg:flex-row gap-8 items-start">
             <FilterSidebar
               selectedRegion={selectedRegion}

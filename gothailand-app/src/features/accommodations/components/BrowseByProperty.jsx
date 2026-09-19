@@ -1,17 +1,4 @@
-// Import local high-resolution assets
-const accommodationImages = import.meta.glob(
-  '../../../assets/accommodations/*.{jpg,jpeg,png,webp}',
-  { eager: true, import: 'default' }
-);
-
-function getAsset(name) {
-  return (
-    accommodationImages[`../../../assets/accommodations/${name}.jpg`] ||
-    accommodationImages[`../../../assets/accommodations/${name}.png`] ||
-    accommodationImages[`../../../assets/accommodations/${name}.webp`] ||
-    ''
-  );
-}
+import { getAssetUrl as getAsset } from '../utils/accommodationImages';
 
 /**
  * BrowseByProperty Component
@@ -76,7 +63,7 @@ export default function BrowseByProperty({
         </div>
       </div>
 
-      {/* Grid of Property Type Cards */}
+      {/* กริดการ์ดประเภทที่พัก */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
         {propertyTypes.map((item) => {
           const count = categoryCounts[item.id] || 0;
@@ -87,7 +74,7 @@ export default function BrowseByProperty({
               onClick={() => onSelectCategory?.(item.id)}
               className="group cursor-pointer space-y-2.5"
             >
-              {/* Card Image */}
+              {/* รูปการ์ด */}
               <div className="relative aspect-4/3 rounded-2xl overflow-hidden bg-slate-100 border border-slate-200/80 shadow-2xs group-hover:shadow-lg transition-all duration-300">
                 {item.image ? (
                   <img
@@ -99,11 +86,11 @@ export default function BrowseByProperty({
                 ) : (
                   <div className="w-full h-full bg-slate-200" />
                 )}
-                {/* Subtle dark gradient overlay on hover */}
+                {/* เงา gradient จางๆ ตอน hover */}
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/15 transition-colors duration-300" />
               </div>
 
-              {/* Title & Count */}
+              {/* ชื่อ & จำนวน */}
               <div>
                 <h3 className="text-sm font-bold text-slate-900 group-hover:text-amber-600 transition-colors leading-tight">
                   {item.name}

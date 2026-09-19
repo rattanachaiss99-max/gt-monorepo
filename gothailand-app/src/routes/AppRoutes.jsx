@@ -17,6 +17,8 @@ import AccommodationPage from "../features/accommodations/pages/AccommodationPag
 import AccommodationDetailPage from "../features/accommodations/pages/AccommodationDetailPage";
 import CarPage from "../features/cars/pages/CarPage";
 import CarDetailPage from "../features/cars/pages/CarDetailPage";
+import GuidePage from "../features/guides/pages/GuidePage";
+import GuideDetailPage from "../features/guides/pages/GuideDetailPage";
 
 export default function AppRoutes() {
   return (
@@ -31,6 +33,8 @@ export default function AppRoutes() {
           <Route path="/accommodations/:id" element={<AccommodationDetailPage />} />
           <Route path="/cars" element={<CarPage />} />
           <Route path="/cars/:id" element={<CarDetailPage />} />
+          <Route path="/guides" element={<GuidePage />} />
+          <Route path="/guides/:id" element={<GuideDetailPage />} />
         </Route>
       </Routes>
     </BrowserRouter>

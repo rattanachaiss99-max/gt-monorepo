@@ -7,6 +7,7 @@ import {
   Button,
 } from '../components';
 import { getCars } from '../services/carService';
+import { getDefaultDateRange, calculateDateSpan } from '../../../utils/date';
 
 /**
  * CarPage (Car Rentals Feature Page)
@@ -28,8 +29,9 @@ export default function CarPage() {
 
   // ตัวกรองจาก Hero Search Bar
   const [searchLocation, setSearchLocation] = useState('');
-  const [pickupDate, setPickupDate] = useState('2026-10-15');
-  const [returnDate, setReturnDate] = useState('2026-10-18');
+  const defaultRentalDates = getDefaultDateRange(1, 4);
+  const [pickupDate, setPickupDate] = useState(defaultRentalDates.start);
+  const [returnDate, setReturnDate] = useState(defaultRentalDates.end);
   const [heroCategory, setHeroCategory] = useState('all');
 
   // ตัวกรองจาก Sidebar
@@ -88,7 +90,7 @@ export default function CarPage() {
     setSelectedCategories((prev) => {
       const exists = prev.includes(category);
       const next = exists ? prev.filter((c) => c !== category) : [...prev, category];
-      // Sync back to hero if single or none
+      // ซิงก์กลับไปที่ hero ถ้าเลือกแค่หนึ่งหรือไม่เลือกเลย
       if (next.length === 1) {
         setHeroCategory(next[0]);
       } else {
@@ -134,20 +136,7 @@ export default function CarPage() {
   };
 
   // คำนวณจำนวนวันเช่า
-  const calculateDays = () => {
-    if (!pickupDate || !returnDate) return 3;
-    try {
-      const d1 = new Date(pickupDate);
-      const d2 = new Date(returnDate);
-      const diffTime = d2.getTime() - d1.getTime();
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      return diffDays > 0 ? diffDays : 1;
-    } catch {
-      return 3;
-    }
-  };
-
-  const rentalDays = calculateDays();
+  const rentalDays = calculateDateSpan(pickupDate, returnDate);
 
   // รวบรวมรายชื่อจุดรับรถทั้งหมด (Unique Locations)
   const allLocations = useMemo(() => {
@@ -330,7 +319,7 @@ export default function CarPage() {
               </div>
 
               <div className="flex items-center gap-3">
-                {/* Sort dropdown */}
+                {/* ตัวเลือกการเรียงลำดับ */}
                 <div className="flex items-center gap-1.5 text-xs text-slate-600">
                   <span className="text-slate-400">Sort by:</span>
                   <select
@@ -345,7 +334,7 @@ export default function CarPage() {
                   </select>
                 </div>
 
-                {/* Page Size selector */}
+                {/* ตัวเลือกขนาดหน้า */}
                 <div className="hidden sm:flex items-center gap-1 text-xs text-slate-500 border-l border-slate-200 pl-3">
                   <span className="text-slate-400">Show:</span>
                   {[6, 9, 999].map((size) => (
@@ -366,7 +355,7 @@ export default function CarPage() {
               </div>
             </div>
 
-            {/* Loading State */}
+            {/* สถานะกำลังโหลด */}
             {loading && (
               <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
                 {[1, 2, 3, 4, 5, 6].map((i) => (
@@ -386,7 +375,7 @@ export default function CarPage() {
               </div>
             )}
 
-            {/* Error State */}
+            {/* สถานะข้อผิดพลาด */}
             {!loading && error && (
               <div className="bg-red-50 border border-red-200 rounded-2xl p-6 text-center text-red-800">
                 <p className="font-semibold text-sm mb-2">{error}</p>
@@ -396,7 +385,7 @@ export default function CarPage() {
               </div>
             )}
 
-            {/* Empty State */}
+            {/* สถานะไม่มีข้อมูล */}
             {!loading && !error && filteredCars.length === 0 && (
               <div className="bg-white rounded-3xl border border-slate-200/80 p-12 text-center shadow-xs">
                 <div className="w-16 h-16 rounded-2xl bg-amber-100 text-amber-800 text-3xl flex items-center justify-center mx-auto mb-4">
@@ -414,7 +403,7 @@ export default function CarPage() {
               </div>
             )}
 
-            {/* Cars Grid */}
+            {/* กริดรายการรถ */}
             {!loading && !error && filteredCars.length > 0 && (
               <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
                 {paginatedCars.map((car) => (
@@ -427,13 +416,13 @@ export default function CarPage() {
               </div>
             )}
 
-            {/* Pagination Controls */}
+            {/* ตัวควบคุม Pagination */}
             {!loading && totalPages > 1 && (
               <div className="pt-6 flex items-center justify-center gap-2">
                 <button
                   type="button"
-                  onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
-                  disabled={currentPage === 1}
+                  onClick={() => handlePageChange(Math.max(1, activePage - 1))}
+                  disabled={activePage === 1}
                   className="px-3.5 py-2 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shadow-2xs cursor-pointer"
                 >
                   ← Previous
@@ -446,7 +435,7 @@ export default function CarPage() {
                       type="button"
                       onClick={() => handlePageChange(page)}
                       className={`w-8 h-8 rounded-xl text-xs font-bold transition-colors cursor-pointer flex items-center justify-center ${
-                        currentPage === page
+                        activePage === page
                           ? 'bg-[#0a192f] text-amber-400 shadow-2xs'
                           : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'
                       }`}
@@ -458,8 +447,8 @@ export default function CarPage() {
 
                 <button
                   type="button"
-                  onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
-                  disabled={currentPage === totalPages}
+                  onClick={() => handlePageChange(Math.min(totalPages, activePage + 1))}
+                  disabled={activePage === totalPages}
                   className="px-3.5 py-2 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shadow-2xs cursor-pointer"
                 >
                   Next →

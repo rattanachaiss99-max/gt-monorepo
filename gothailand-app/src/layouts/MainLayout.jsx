@@ -13,7 +13,7 @@ export default function MainLayout() {
       {/* Top Navigation Bar ส่วนกลาง */}
       <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-slate-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          {/* Logo & Project Title */}
+          {/* โลโก้ & ชื่อโปรเจกต์ */}
           <NavLink to="/" className="flex items-center gap-3 group">
             <span className="text-2xl filter drop-shadow-sm group-hover:scale-110 transition-transform">
               🇹🇭
@@ -28,7 +28,7 @@ export default function MainLayout() {
             </div>
           </NavLink>
 
-          {/* Navigation Menu */}
+          {/* เมนูนำทาง */}
           <nav className="flex items-center gap-1 sm:gap-2">
             <NavLink to="/" className={navLinkClass} end>
               🏠 หน้าแรก
@@ -41,6 +41,9 @@ export default function MainLayout() {
             </NavLink>
             <NavLink to="/cars" className={navLinkClass}>
               🚗 รถเช่าท่องเที่ยว
+            </NavLink>
+            <NavLink to="/guides" className={navLinkClass}>
+              🧭 ไกด์นำเที่ยว
             </NavLink>
           </nav>
         </div>

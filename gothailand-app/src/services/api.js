@@ -6,7 +6,7 @@
  * สถาปัตยกรรมแบ่งแยก Backend 2 ระบบอย่างชัดเจน:
  * 1. Yok Core API (yokApi / default export `api`):
  *    - ให้บริการโมดูลหลัก: /cars (รถเช่า), /accommodations (ที่พัก), /guides (ไกด์), /bookings (การจอง), /users (ผู้ใช้)
- *    - Development: ถ้ามี VITE_YOK_API_URL ใน .env (เช่น http://localhost:5001) ให้ใช้ค่านั้น 
+ *    - Development: ถ้ามี VITE_YOK_API_URL ใน .env (เช่น http://localhost:5001) ให้ใช้ค่านั้น
  *      หากไม่มีจะเชื่อมตรงเข้า Render Cloud (https://gothailand-api.onrender.com/api) อัตโนมัติ
  *    - Production (Vercel): ใช้ Rewrite Proxy "/api/yok" เพื่อเลี่ยง CORS และลด Latency
  *
@@ -26,7 +26,10 @@ export const getYokApiUrl = () => {
     return raw.endsWith("/api") ? raw : `${raw}/api`;
   }
   // บน Vercel Production ให้วิ่งผ่าน Proxy /api/yok ตามที่กำหนดใน vercel.json
-  if (typeof window !== "undefined" && !window.location.hostname.includes("localhost")) {
+  if (
+    typeof window !== "undefined" &&
+    !window.location.hostname.includes("localhost")
+  ) {
     return "/api/yok";
   }
   return "https://gothailand-api.onrender.com/api";
@@ -36,7 +39,8 @@ export const getProvinceApiUrl = () => {
   const raw =
     import.meta.env.VITE_PROVINCE_API_URL ||
     import.meta.env.VITE_API_URL ||
-    (typeof window !== "undefined" && !window.location.hostname.includes("localhost")
+    (typeof window !== "undefined" &&
+    !window.location.hostname.includes("localhost")
       ? "https://gothailand-31-po.onrender.com/api"
       : "http://localhost:5000/api");
   const clean = raw.replace(/\/+$/, "");
@@ -65,7 +69,11 @@ const attachInterceptors = (instance, serviceName = "API") => {
   instance.interceptors.response.use(
     (response) => response,
     (error) => {
-      console.error(`❌ [${serviceName}] Error:`, error.response?.status, error.message);
+      console.error(
+        `❌ [${serviceName}] Error:`,
+        error.response?.status,
+        error.message,
+      );
       return Promise.reject(error);
     },
   );
@@ -86,7 +94,7 @@ export const yokApi = attachInterceptors(
       "Content-Type": "application/json",
     },
   }),
-  "YokCoreAPI"
+  "YokCoreAPI",
 );
 
 // Province & Map Services (Po Backend): 77 จังหวัด, SVG Map
@@ -98,9 +106,8 @@ export const provinceApi = attachInterceptors(
       "Content-Type": "application/json",
     },
   }),
-  "ProvinceAPI"
+  "ProvinceAPI",
 );
 
 // Default export: ใช้ yokApi เพื่อให้ service ส่วนใหญ่ (cars, accommodations) เรียกใช้งานได้ทันที
 export default yokApi;
-

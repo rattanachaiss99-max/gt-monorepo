@@ -32,7 +32,7 @@ export default function ProvinceSvgViewer({
 
   return (
     <section className="bg-white border border-slate-200 rounded-xl p-6 shadow-xs space-y-6">
-      {/* Header & Dropdown */}
+      {/* หัวข้อ & Dropdown */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
         <div>
           <h3 className="text-xl font-bold text-slate-900 flex items-center gap-2">
@@ -48,7 +48,7 @@ export default function ProvinceSvgViewer({
           </p>
         </div>
 
-        {/* Dropdown Selector */}
+        {/* ตัวเลือกแบบ Dropdown */}
         <div className="flex items-center gap-2">
           <label
             htmlFor="province-select"
@@ -71,9 +71,9 @@ export default function ProvinceSvgViewer({
         </div>
       </div>
 
-      {/* SVG Canvas & Info Sheet */}
+      {/* พื้นที่วาด SVG & แผงข้อมูล */}
       <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
-        {/* Native SVG Renderer */}
+        {/* ตัวแสดงผล SVG โดยตรง */}
         <div className="md:col-span-4 flex flex-col items-center justify-center p-6 bg-slate-50 border border-slate-200 rounded-xl">
           {svgPath ? (
             <svg
@@ -98,7 +98,7 @@ export default function ProvinceSvgViewer({
           </span>
         </div>
 
-        {/* Fields extracted from MongoDB & Yok API */}
+        {/* ฟิลด์ข้อมูลที่ดึงมาจาก MongoDB & Yok API */}
         <div className="md:col-span-8 space-y-3 text-xs">
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
             <div className="p-2.5 bg-slate-50 rounded-lg border border-slate-100">
@@ -125,7 +125,7 @@ export default function ProvinceSvgViewer({
             </div>
           </div>
 
-          {/* Slogan */}
+          {/* คำขวัญประจำจังหวัด */}
           {province.slogan && (
             <div className="p-3 bg-blue-50/60 border border-blue-100 rounded-lg text-slate-700">
               <span className="font-bold text-blue-900 block mb-0.5">
@@ -237,7 +237,7 @@ export default function ProvinceSvgViewer({
             </div>
           </div>
 
-          {/* Raw SVG Path Snippet */}
+          {/* ตัวอย่าง SVG Path ดิบ */}
           <div>
             <span className="text-slate-400 block mb-1">
               ตัวอย่าง SVG Path Snippet (จาก MongoDB):
