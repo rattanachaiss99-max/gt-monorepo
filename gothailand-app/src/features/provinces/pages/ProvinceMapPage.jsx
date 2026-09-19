@@ -1,20 +1,18 @@
+/**
+ * ProvinceMapPage.jsx
+ * -------------------------------------------------------------
+ * หน้าจัดการข้อมูลจังหวัด (Route: /provinces)
+ * ทำหน้าที่เป็น "Page Component" ที่ดึงฟีเจอร์จัดการข้อมูลจังหวัดมาแสดงผล
+ * เพื่อให้โค้ดเป็นระเบียบและอธิบายการทำงานแบบแยกส่วนได้ง่าย
+ */
 import ProvinceMapDemo from "../../../components/31-po/ProvinceMapDemo";
 
 export default function ProvinceMapPage() {
   return (
     <section>
-      {/* ส่วนหัวของหน้า */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-slate-800">
-          🗺️ ข้อมูลและแผนที่ 77 จังหวัด
-        </h1>
-        <p className="text-sm text-slate-500 mt-1">
-          ระบบแสดงผลแผนที่เชิงโต้ตอบและข้อมูลจังหวัดจากฐานข้อมูล
-        </p>
-      </div>
-
-      {/* เรนเดอร์ฟีเจอร์แผนที่ */}
+      {/* เรนเดอร์ฟีเจอร์จัดการข้อมูลจังหวัด */}
       <ProvinceMapDemo />
     </section>
   );
 }
+

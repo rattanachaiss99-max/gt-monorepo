@@ -1,18 +1,8 @@
 // Service สำหรับดึงข้อมูลจาก API ของคุณ Yok (gothailand-api.onrender.com)
+import { getYokApiUrl } from "./api";
 
-const getBaseUrl = () => {
-  if (import.meta.env.VITE_YOK_API_URL) {
-    const raw = import.meta.env.VITE_YOK_API_URL.replace(/\/+$/, "");
-    return raw.endsWith("/api") ? raw : `${raw}/api`;
-  }
-  // ถ้าเป็น Vercel Production ใช้ Rewrite Proxy /api/yok
-  if (typeof window !== "undefined" && !window.location.hostname.includes("localhost")) {
-    return "/api/yok";
-  }
-  return "https://gothailand-api.onrender.com/api";
-};
+const YOK_API_ROOT = getYokApiUrl();
 
-const YOK_API_ROOT = getBaseUrl();
 
 /**
  * ดึงข้อมูลบริการทั้งหมด (ที่พัก, ไกด์, รถเช่า, ผู้ใช้) จาก Yok API พร้อมกัน
@@ -68,9 +58,26 @@ export async function fetchYokServices() {
   }
 }
 
+// แผนที่จับคู่ชื่อเมืองท่องเที่ยวพิเศษให้ตรงกับชื่อจังหวัดมาตรฐาน
+const PROVINCE_ALIASES = {
+  pattaya: ["chon-buri", "ชลบุรี", "chonburi"],
+  huahin: ["prachuap-khiri-khan", "ประจวบคีรีขันธ์", "prachuapkhirikhan"],
+  "hua hin": ["prachuap-khiri-khan", "ประจวบคีรีขันธ์", "prachuapkhirikhan"],
+  samui: ["surat-thani", "สุราษฎร์ธานี", "suratthani"],
+  "koh samui": ["surat-thani", "สุราษฎร์ธานี", "suratthani"],
+  khaoyai: ["nakhon-ratchasima", "นครราชสีมา", "nakhonratchasima"],
+  "khao yai": ["nakhon-ratchasima", "นครราชสีมา", "nakhonratchasima"],
+  kohchang: ["trat", "ตราด"],
+  "koh chang": ["trat", "ตราด"],
+  ayutthaya: ["phra-nakhon-si-ayutthaya", "พระนครศรีอยุธยา", "phranakhonsiayutthaya"],
+  betong: ["yala", "ยะลา"],
+  hatyai: ["songkhla", "สงขลา"],
+  "hat yai": ["songkhla", "สงขลา"],
+};
+
 /**
  * ฟังก์ชันตรวจสอบว่าชื่อ location/province ของ Yok ตรงกับจังหวัดที่เลือกหรือไม่
- * เช่น "Chiang Mai", "chiangmai", "เชียงใหม่"
+ * เช่น "Chiang Mai", "chiangmai", "เชียงใหม่", "Pattaya" -> "Chon Buri"
  */
 export function matchProvince(locationStr, province) {
   if (!locationStr || !province) return false;
@@ -85,11 +92,12 @@ export function matchProvince(locationStr, province) {
   };
 
   const cleanLoc = normalize(locationStr);
-  const cleanNameEn = normalize(province.nameEn);
-  const cleanNameTh = normalize(province.nameTh);
+  const cleanNameEn = normalize(province.nameEn || province.name_en);
+  const cleanNameTh = normalize(province.nameTh || province.name_th);
   const cleanSlug = normalize(province.slug);
 
-  return (
+  // ตรวจสอบชื่อตรงกันหรือมีส่วนประกอบของชื่อ
+  if (
     cleanLoc === cleanNameEn ||
     cleanLoc === cleanNameTh ||
     cleanLoc === cleanSlug ||
@@ -97,5 +105,41 @@ export function matchProvince(locationStr, province) {
     (cleanLoc && cleanNameEn && cleanNameEn.includes(cleanLoc)) ||
     (cleanLoc && cleanNameTh && cleanLoc.includes(cleanNameTh)) ||
     (cleanLoc && cleanNameTh && cleanNameTh.includes(cleanLoc))
-  );
+  ) {
+    return true;
+  }
+
+  // ตรวจสอบกับชื่อเมืองท่องเที่ยวพิเศษ (Aliases)
+  for (const [alias, provKeys] of Object.entries(PROVINCE_ALIASES)) {
+    const cleanAlias = normalize(alias);
+    if (cleanLoc.includes(cleanAlias)) {
+      if (
+        provKeys.some(
+          (k) =>
+            normalize(k) === cleanNameEn ||
+            normalize(k) === cleanNameTh ||
+            normalize(k) === cleanSlug
+        )
+      ) {
+        return true;
+      }
+    }
+  }
+
+  return false;
 }
+
+/**
+ * ฟังก์ชันตรวจสอบว่ารถเช่า (Car) ของ Yok ให้บริการในจังหวัดที่เลือกหรือไม่
+ * รองรับทั้ง car.availableLocations, car.province, car.location
+ */
+export function matchCarProvince(car, province) {
+  if (!car || !province) return false;
+  if (car.province && matchProvince(car.province, province)) return true;
+  if (car.location && matchProvince(car.location, province)) return true;
+  if (Array.isArray(car.availableLocations)) {
+    return car.availableLocations.some((loc) => matchProvince(loc, province));
+  }
+  return false;
+}
+

@@ -5,6 +5,7 @@ import ProvinceSvgViewer from "./ProvinceSvgViewer";
 import ProvinceTable from "./ProvinceTable";
 import Footer from "./Footer";
 import { fetchYokServices } from "../../services/yokService";
+import { getProvinceApiUrl } from "../../services/api";
 
 // API ส่ง SVG path มาซ้อนอยู่ใน province.vectorData.d ไม่ใช่ province.d ตรงๆ
 // ทั้ง ProvinceSvgViewer และ ProvinceTable คาดหวัง field แบบ flat จึงต้องแปลงตรงนี้ที่เดียว
@@ -32,8 +33,7 @@ export default function ProvinceMapDemo() {
     isOnline: false,
   });
 
-  // VITE_API_URL (ตั้งไว้ใน .env) มี "/api" ต่อท้ายอยู่แล้ว เหมือนกับที่ api.js ใช้
-  const API_URL = import.meta.env.VITE_API_URL || "https://gothailand-api.onrender.com/api";
+  const API_URL = getProvinceApiUrl().replace(/\/api$/, "");
 
   // ฟังก์ชันรีเฟรชข้อมูลทั้งสองฝั่งพร้อมกัน
   const handleRefreshAll = async () => {
@@ -48,7 +48,11 @@ export default function ProvinceMapDemo() {
         fetchYokServices(),
       ]);
 
-      if (provRes.status === "fulfilled" && provRes.value?.success && provRes.value?.provinces) {
+      if (
+        provRes.status === "fulfilled" &&
+        provRes.value?.success &&
+        provRes.value?.provinces
+      ) {
         setProvinces(normalizeProvinces(provRes.value.provinces));
       } else if (provRes.status === "rejected") {
         setError(provRes.reason?.message || "ไม่สามารถเชื่อมต่อ Backend ได้");
@@ -72,7 +76,8 @@ export default function ProvinceMapDemo() {
       try {
         const [provRes, yokRes] = await Promise.allSettled([
           fetch(`${API_URL}/provinces`).then(async (res) => {
-            if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+            if (!res.ok)
+              throw new Error(`HTTP ${res.status}: ${res.statusText}`);
             return res.json();
           }),
           fetchYokServices(),
@@ -80,7 +85,11 @@ export default function ProvinceMapDemo() {
 
         if (ignore) return;
 
-        if (provRes.status === "fulfilled" && provRes.value?.success && provRes.value?.provinces) {
+        if (
+          provRes.status === "fulfilled" &&
+          provRes.value?.success &&
+          provRes.value?.provinces
+        ) {
           const normalized = normalizeProvinces(provRes.value.provinces);
           setProvinces(normalized);
           const defaultItem =
@@ -123,6 +132,53 @@ export default function ProvinceMapDemo() {
           loading={loading}
         />
 
+        {/* สรุปสถานะภาพรวม 4 การ์ด (Status Overview Cards) */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <div className="p-4 bg-white border border-slate-200 rounded-2xl shadow-2xs">
+            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block">
+              จังหวัดในระบบ
+            </span>
+            <div className="text-2xl font-black text-slate-800 mt-1">
+              {provinces.length}{" "}
+              <span className="text-xs font-normal text-slate-400">/ 77</span>
+            </div>
+          </div>
+
+          <div className="p-4 bg-white border border-slate-200 rounded-2xl shadow-2xs">
+            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block">
+              ความพร้อม SVG
+            </span>
+            <div className="text-2xl font-black text-emerald-600 mt-1">
+              {provinces.filter((p) => p.d || p.vectorData?.d).length}
+              <span className="text-xs font-normal text-slate-400 ml-1">
+                จังหวัด
+              </span>
+            </div>
+          </div>
+
+          <div className="p-4 bg-white border border-slate-200 rounded-2xl shadow-2xs">
+            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block">
+              มีคำขวัญ / ข้อมูลท่องเที่ยว
+            </span>
+            <div className="text-2xl font-black text-blue-600 mt-1">
+              {provinces.filter((p) => p.slogan || p.summary).length}
+              <span className="text-xs font-normal text-slate-400 ml-1">
+                จังหวัด
+              </span>
+            </div>
+          </div>
+
+          <div className="p-4 bg-white border border-slate-200 rounded-2xl shadow-2xs">
+            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block">
+              สถานะ BACKEND
+            </span>
+            <div className="inline-flex items-center gap-1.5 text-sm font-bold text-emerald-600 mt-2">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              {error ? "ขัดข้อง" : "Online พร้อมใช้งาน"}
+            </div>
+          </div>
+        </div>
+
         {/* 2. สถานะการเชื่อมต่อ Database (MongoDB Atlas + Yok API) */}
         <DatabaseStatus
           provincesCount={provinces.length}
@@ -144,6 +200,7 @@ export default function ProvinceMapDemo() {
             selectedSlug={selectedSlug}
             onSelectProvince={setSelectedSlug}
             accommodations={yokData.accommodations}
+            cars={yokData.cars}
             guides={yokData.guides}
           />
         )}
@@ -154,6 +211,7 @@ export default function ProvinceMapDemo() {
           selectedSlug={selectedSlug}
           onSelectProvince={setSelectedSlug}
           accommodations={yokData.accommodations}
+          cars={yokData.cars}
           guides={yokData.guides}
         />
 

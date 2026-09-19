@@ -2,8 +2,9 @@ import { Link } from 'react-router-dom';
 import Button from './Button';
 
 /**
- * Shared loading/error/breadcrumb shell for *DetailPage components
- * (accommodations, cars, guides). Renders `children` once `entity` resolves.
+ * โครงหน้ากลาง (shell) ที่ใช้ร่วมกันสำหรับหน้ารายละเอียดต่างๆ (*DetailPage)
+ * เช่น หน้าที่พัก, รถเช่า, ไกด์ — จัดการสถานะโหลดข้อมูล/error/breadcrumb ให้อัตโนมัติ
+ * จะแสดง `children` (เนื้อหาจริงของหน้า) ก็ต่อเมื่อโหลดข้อมูล `entity` สำเร็จแล้วเท่านั้น
  */
 export default function DetailPageShell({
   loading,

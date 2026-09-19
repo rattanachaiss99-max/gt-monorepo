@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { matchProvince } from "../../services/yokService";
+import { matchProvince, matchCarProvince } from "../../services/yokService";
 
 export default function ProvinceTable({
   provinces = [],
@@ -7,17 +7,29 @@ export default function ProvinceTable({
   onSelectProvince,
   accommodations = [],
   guides = [],
+  cars = [],
 }) {
   const [search, setSearch] = useState("");
   const [selectedRegion, setSelectedRegion] = useState("all");
 
   const filteredProvinces = provinces.filter((p) => {
+    const q = search.trim().toLowerCase();
+    const nameTh = p.nameTh || p.name_th || p.name || "";
+    const nameEn = p.nameEn || p.name_en || p.slug || "";
+    const pId = p.provinceId || (p.code ? `TH-${p.code}` : (p.id ? `TH-${p.id}` : ""));
+
     const matchSearch =
-      !search ||
-      p.nameTh?.includes(search) ||
-      p.nameEn?.toLowerCase().includes(search.toLowerCase()) ||
-      p.provinceId?.toLowerCase().includes(search.toLowerCase());
-    const matchRegion = selectedRegion === "all" || p.region === selectedRegion;
+      !q ||
+      nameTh.includes(q) ||
+      nameEn.toLowerCase().includes(q) ||
+      pId.toLowerCase().includes(q) ||
+      p.slug?.toLowerCase().includes(q);
+
+    const matchRegion =
+      selectedRegion === "all" ||
+      p.region === selectedRegion ||
+      p.region_th === selectedRegion;
+
     return matchSearch && matchRegion;
   });
 
@@ -76,6 +88,7 @@ export default function ProvinceTable({
             {filteredProvinces.map((prov) => {
               const isSelected = prov.slug === selectedSlug;
               const hasAcc = accommodations.some((a) => matchProvince(a.location, prov));
+              const hasCar = cars.some((c) => matchCarProvince(c, prov));
               const hasGuide = guides.some((g) => matchProvince(g.province, prov));
 
               return (
@@ -88,32 +101,48 @@ export default function ProvinceTable({
                       : "hover:bg-slate-50"
                   }`}
                 >
-                  <td className="py-2 px-3 font-mono">{prov.provinceId}</td>
-                  <td className="py-2 px-3">{prov.nameTh}</td>
-                  <td className="py-2 px-3 font-mono text-slate-500">
-                    {prov.nameEn} ({prov.slug})
+                  <td className="py-2 px-3 font-mono">
+                    {prov.provinceId || (prov.code ? `TH-${prov.code}` : (prov.id ? `TH-${prov.id}` : "-"))}
                   </td>
-                  <td className="py-2 px-3 capitalize">{prov.region}</td>
+                  <td className="py-2 px-3">{prov.nameTh || prov.name_th}</td>
+                  <td className="py-2 px-3 font-mono text-slate-500">
+                    {prov.nameEn || prov.name_en} ({prov.slug})
+                  </td>
+                  <td className="py-2 px-3 capitalize">{prov.region_th || prov.region}</td>
                   <td className="py-2 px-3">
-                    {prov.d ? (
+                    {prov.d || prov.vectorData?.d ? (
                       <span className="inline-flex items-center gap-1 text-emerald-600 font-medium">
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                        มี SVG ({prov.d.length} ch)
+                        มี SVG ({(prov.d || prov.vectorData?.d).length.toLocaleString()} ch)
                       </span>
                     ) : (
                       <span className="text-slate-400">ไม่มีข้อมูล</span>
                     )}
                   </td>
                   <td className="py-2 px-3">
-                    {hasAcc || hasGuide ? (
-                      <div className="flex items-center gap-1.5">
+                    {hasAcc || hasCar || hasGuide ? (
+                      <div className="flex items-center gap-1.5 flex-wrap">
                         {hasAcc && (
-                          <span className="bg-blue-50 text-blue-700 border border-blue-200 px-1.5 py-0.5 rounded text-[10px] font-medium">
+                          <span
+                            className="bg-blue-50 text-blue-700 border border-blue-200 px-1.5 py-0.5 rounded text-[10px] font-medium"
+                            title="มีที่พักในระบบ Yok API"
+                          >
                             🏨 ที่พัก
                           </span>
                         )}
+                        {hasCar && (
+                          <span
+                            className="bg-amber-50 text-amber-800 border border-amber-200 px-1.5 py-0.5 rounded text-[10px] font-medium"
+                            title="มีรถเช่าในระบบ Yok API"
+                          >
+                            🚗 รถเช่า
+                          </span>
+                        )}
                         {hasGuide && (
-                          <span className="bg-emerald-50 text-emerald-700 border border-emerald-200 px-1.5 py-0.5 rounded text-[10px] font-medium">
+                          <span
+                            className="bg-emerald-50 text-emerald-700 border border-emerald-200 px-1.5 py-0.5 rounded text-[10px] font-medium"
+                            title="มีไกด์นำเที่ยวในระบบ Yok API"
+                          >
                             🧭 ไกด์
                           </span>
                         )}

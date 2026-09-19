@@ -1,8 +1,9 @@
-import { useNavigate } from 'react-router-dom';
-import Button from './Button';
+import { useNavigate } from "react-router-dom";
+import Button from "./Button";
 
 // รูปโปรไฟล์สำรอง กรณีรูปจริงโหลดไม่ได้หรือไม่มีข้อมูล
-const DEFAULT_AVATAR = "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=800&q=80";
+const DEFAULT_AVATAR =
+  "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=800&q=80";
 
 /**
  * GuideCard Component
@@ -27,8 +28,8 @@ export default function GuideCard({ guide, onViewDetail }) {
   const languages = Array.isArray(guide.language)
     ? guide.language
     : Array.isArray(guide.languages)
-    ? guide.languages
-    : ["Thai", "English"];
+      ? guide.languages
+      : ["Thai", "English"];
 
   const handleCardClick = () => {
     if (onViewDetail) {
@@ -58,7 +59,7 @@ export default function GuideCard({ guide, onViewDetail }) {
         />
 
         {/* Gradient Overlay ด้านล่างรูปเพื่อให้อ่านชื่อชัดเจน */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent pointer-events-none" />
+        <div className="absolute inset-0 bg-linear-to-t from-black/70 via-black/20 to-transparent pointer-events-none" />
 
         {/* ป้ายด้านบน */}
         <div className="absolute top-3 left-3 right-3 flex items-center justify-between gap-2 z-10">
@@ -121,7 +122,8 @@ export default function GuideCard({ guide, onViewDetail }) {
 
           {/* คำแนะนำตัวสั้นๆ */}
           <p className="text-xs text-slate-600 line-clamp-2 mt-2.5 font-light leading-relaxed">
-            {guide.description || "มัคคุเทศก์มืออาชีพพร้อมพาคุณสัมผัสประสบการณ์ท่องเที่ยวไทยแบบเจาะลึก"}
+            {guide.description ||
+              "มัคคุเทศก์มืออาชีพพร้อมพาคุณสัมผัสประสบการณ์ท่องเที่ยวไทยแบบเจาะลึก"}
           </p>
 
           {/* ภาษาที่สื่อสารได้ */}
@@ -152,7 +154,9 @@ export default function GuideCard({ guide, onViewDetail }) {
               <span className="font-serif text-lg sm:text-xl font-bold text-slate-900">
                 ฿{Number(fee).toLocaleString()}
               </span>
-              <span className="text-[11px] text-slate-400 font-normal">/ day</span>
+              <span className="text-[11px] text-slate-400 font-normal">
+                / day
+              </span>
             </div>
           </div>
 

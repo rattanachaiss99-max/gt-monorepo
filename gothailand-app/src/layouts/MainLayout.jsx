@@ -34,7 +34,7 @@ export default function MainLayout() {
               🏠 หน้าแรก
             </NavLink>
             <NavLink to="/provinces" className={navLinkClass}>
-              🗺️ แผนที่จังหวัด
+              🗺️ จัดการข้อมูลจังหวัด
             </NavLink>
             <NavLink to="/accommodations" className={navLinkClass}>
               🏨 ที่พักท่องเที่ยว
