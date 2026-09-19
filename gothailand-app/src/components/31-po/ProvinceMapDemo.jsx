@@ -33,7 +33,7 @@ export default function ProvinceMapDemo() {
     isOnline: false,
   });
 
-  const API_URL = getProvinceApiUrl().replace(/\/api$/, "");
+  const API_URL = getProvinceApiUrl();
 
   // ฟังก์ชันรีเฟรชข้อมูลทั้งสองฝั่งพร้อมกัน
   const handleRefreshAll = async () => {
