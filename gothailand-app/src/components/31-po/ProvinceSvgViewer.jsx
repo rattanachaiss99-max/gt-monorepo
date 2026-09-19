@@ -1,4 +1,4 @@
-import { matchProvince } from "../../services/yokService";
+import { matchProvince, matchCarProvince } from "../../services/yokService";
 
 export default function ProvinceSvgViewer({
   province,
@@ -7,12 +7,16 @@ export default function ProvinceSvgViewer({
   onSelectProvince,
   accommodations = [],
   guides = [],
+  cars = [],
 }) {
   if (!province) return null;
 
-  // กรองที่พักและไกด์ของคุณ Yok ที่ตรงกับจังหวัดที่เลือก
+  // กรองที่พัก รถเช่า และไกด์ของคุณ Yok ที่ตรงกับจังหวัดที่เลือก
   const localAccommodations = accommodations.filter((a) =>
     matchProvince(a.location, province)
+  );
+  const localCars = cars.filter((c) =>
+    matchCarProvince(c, province)
   );
   const localGuides = guides.filter((g) =>
     matchProvince(g.province, province)
@@ -132,67 +136,104 @@ export default function ProvinceSvgViewer({
           )}
 
           {/* Yok Services in this Province */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
-            {/* Accommodations */}
-            <div className="p-2.5 bg-slate-50 rounded-lg border border-slate-100">
-              <div className="flex items-center justify-between mb-1.5">
-                <span className="font-bold text-slate-700 flex items-center gap-1">
-                  🏨 ที่พักในพื้นที่ (Yok API)
-                </span>
-                <span className="font-semibold text-blue-600 font-mono">
-                  {localAccommodations.length} แห่ง
-                </span>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1">
+            {/* 1. Accommodations */}
+            <div className="p-2.5 bg-slate-50 rounded-lg border border-slate-100 flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="font-bold text-slate-700 flex items-center gap-1">
+                    🏨 ที่พักในพื้นที่ (Yok API)
+                  </span>
+                  <span className="font-semibold text-blue-600 font-mono">
+                    {localAccommodations.length} แห่ง
+                  </span>
+                </div>
+                {localAccommodations.length > 0 ? (
+                  <ul className="space-y-1 max-h-32 overflow-y-auto pr-0.5">
+                    {localAccommodations.map((acc) => (
+                      <li
+                        key={acc._id}
+                        className="flex items-center justify-between text-[11px] text-slate-600 bg-white px-2 py-1 rounded border border-slate-100"
+                      >
+                        <span className="truncate" title={acc.name}>{acc.name}</span>
+                        <span className="font-medium text-emerald-600 ml-1.5 whitespace-nowrap">
+                          ฿{(acc.price ?? acc.base_price_per_night ?? acc.basePrice)?.toLocaleString()}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-[11px] text-slate-400 italic">
+                    ยังไม่มีที่พักในระบบของจังหวัดนี้
+                  </p>
+                )}
               </div>
-              {localAccommodations.length > 0 ? (
-                <ul className="space-y-1">
-                  {localAccommodations.map((acc) => (
-                    <li
-                      key={acc._id}
-                      className="flex items-center justify-between text-[11px] text-slate-600 bg-white px-2 py-1 rounded border border-slate-100"
-                    >
-                      <span className="truncate">{acc.name}</span>
-                      <span className="font-medium text-emerald-600 ml-2 whitespace-nowrap">
-                        ฿{(acc.price ?? acc.base_price_per_night ?? acc.basePrice)?.toLocaleString()}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="text-[11px] text-slate-400 italic">
-                  ยังไม่มีที่พักในระบบของจังหวัดนี้
-                </p>
-              )}
             </div>
 
-            {/* Guides */}
-            <div className="p-2.5 bg-slate-50 rounded-lg border border-slate-100">
-              <div className="flex items-center justify-between mb-1.5">
-                <span className="font-bold text-slate-700 flex items-center gap-1">
-                  🧭 ไกด์นำเที่ยว (Yok API)
-                </span>
-                <span className="font-semibold text-blue-600 font-mono">
-                  {localGuides.length} คน
-                </span>
+            {/* 2. Cars */}
+            <div className="p-2.5 bg-slate-50 rounded-lg border border-slate-100 flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="font-bold text-slate-700 flex items-center gap-1">
+                    🚗 รถเช่าในพื้นที่ (Yok API)
+                  </span>
+                  <span className="font-semibold text-blue-600 font-mono">
+                    {localCars.length} คัน
+                  </span>
+                </div>
+                {localCars.length > 0 ? (
+                  <ul className="space-y-1 max-h-32 overflow-y-auto pr-0.5">
+                    {localCars.map((car) => (
+                      <li
+                        key={car._id || car.slug}
+                        className="flex items-center justify-between text-[11px] text-slate-600 bg-white px-2 py-1 rounded border border-slate-100"
+                      >
+                        <span className="truncate" title={car.name}>{car.name}</span>
+                        <span className="font-medium text-emerald-600 ml-1.5 whitespace-nowrap">
+                          ฿{(car.pricePerDay ?? car.price)?.toLocaleString()}/วัน
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-[11px] text-slate-400 italic">
+                    ยังไม่มีรถเช่าในระบบของจังหวัดนี้
+                  </p>
+                )}
               </div>
-              {localGuides.length > 0 ? (
-                <ul className="space-y-1">
-                  {localGuides.map((g) => (
-                    <li
-                      key={g._id}
-                      className="flex items-center justify-between text-[11px] text-slate-600 bg-white px-2 py-1 rounded border border-slate-100"
-                    >
-                      <span className="truncate">{g.name}</span>
-                      <span className="font-medium text-emerald-600 ml-2 whitespace-nowrap">
-                        ฿{g.price?.toLocaleString()}/วัน
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="text-[11px] text-slate-400 italic">
-                  ยังไม่มีไกด์ในระบบของจังหวัดนี้
-                </p>
-              )}
+            </div>
+
+            {/* 3. Guides */}
+            <div className="p-2.5 bg-slate-50 rounded-lg border border-slate-100 flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="font-bold text-slate-700 flex items-center gap-1">
+                    🧭 ไกด์นำเที่ยว (Yok API)
+                  </span>
+                  <span className="font-semibold text-blue-600 font-mono">
+                    {localGuides.length} คน
+                  </span>
+                </div>
+                {localGuides.length > 0 ? (
+                  <ul className="space-y-1 max-h-32 overflow-y-auto pr-0.5">
+                    {localGuides.map((g) => (
+                      <li
+                        key={g._id}
+                        className="flex items-center justify-between text-[11px] text-slate-600 bg-white px-2 py-1 rounded border border-slate-100"
+                      >
+                        <span className="truncate" title={g.name}>{g.name}</span>
+                        <span className="font-medium text-emerald-600 ml-1.5 whitespace-nowrap">
+                          ฿{g.price?.toLocaleString()}/วัน
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-[11px] text-slate-400 italic">
+                    ยังไม่มีไกด์ในระบบของจังหวัดนี้
+                  </p>
+                )}
+              </div>
             </div>
           </div>
 

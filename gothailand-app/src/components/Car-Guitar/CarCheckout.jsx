@@ -5,6 +5,7 @@ import BookingSummary from "./BookingSummary";
 import CheckoutSection from "./CheckoutSection";
 import FormField, { inputClassName } from "./FormField";
 import PaymentPanel from "./PaymentPanel";
+import api from "../../services/api";
 
 export default function CarCheckout() {
   const location = useLocation();
@@ -103,26 +104,16 @@ export default function CarCheckout() {
         termsAccepted: form.terms,
       };
 
-      const rawApiUrl = import.meta.env.VITE_API_URL || "http://localhost:5001";
-      const API_BASE = rawApiUrl.endsWith("/api") ? rawApiUrl : `${rawApiUrl}/api`;
-      
-      const res = await fetch(`${API_BASE}/bookings`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      if (!res.ok) {
-        // Fallback รองรับถ้า backend ยังไม่มี /bookings แต่ให้ demo ผ่านพร้อม feedback
-        const data = await res.json().catch(() => ({}));
-        console.warn("Booking API response status:", res.status, data);
-        // หากต่อไม่ได้ ให้ยืนยันผลการจองพร้อม log
+      try {
+        await api.post("/bookings", payload);
+      } catch (postErr) {
+        console.warn("Booking API post note:", postErr.response?.status, postErr.message);
+        // ในกรณีที่เครือข่ายขัดข้อง ยังคงยืนยันผลการจองระดับ client demo
       }
 
       setIsConfirmed(true);
     } catch (err) {
-      console.warn("Error posting booking to API:", err.message);
-      // ในกรณี network error ยืนยันการจองในระดับ client จำลอง
+      console.warn("Error processing booking:", err.message);
       setIsConfirmed(true);
     } finally {
       setLoading(false);

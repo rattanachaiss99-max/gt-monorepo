@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { matchProvince } from "../../services/yokService";
+import { matchProvince, matchCarProvince } from "../../services/yokService";
 
 export default function ProvinceTable({
   provinces = [],
@@ -7,6 +7,7 @@ export default function ProvinceTable({
   onSelectProvince,
   accommodations = [],
   guides = [],
+  cars = [],
 }) {
   const [search, setSearch] = useState("");
   const [selectedRegion, setSelectedRegion] = useState("all");
@@ -87,6 +88,7 @@ export default function ProvinceTable({
             {filteredProvinces.map((prov) => {
               const isSelected = prov.slug === selectedSlug;
               const hasAcc = accommodations.some((a) => matchProvince(a.location, prov));
+              const hasCar = cars.some((c) => matchCarProvince(c, prov));
               const hasGuide = guides.some((g) => matchProvince(g.province, prov));
 
               return (
@@ -118,15 +120,29 @@ export default function ProvinceTable({
                     )}
                   </td>
                   <td className="py-2 px-3">
-                    {hasAcc || hasGuide ? (
-                      <div className="flex items-center gap-1.5">
+                    {hasAcc || hasCar || hasGuide ? (
+                      <div className="flex items-center gap-1.5 flex-wrap">
                         {hasAcc && (
-                          <span className="bg-blue-50 text-blue-700 border border-blue-200 px-1.5 py-0.5 rounded text-[10px] font-medium">
+                          <span
+                            className="bg-blue-50 text-blue-700 border border-blue-200 px-1.5 py-0.5 rounded text-[10px] font-medium"
+                            title="มีที่พักในระบบ Yok API"
+                          >
                             🏨 ที่พัก
                           </span>
                         )}
+                        {hasCar && (
+                          <span
+                            className="bg-amber-50 text-amber-800 border border-amber-200 px-1.5 py-0.5 rounded text-[10px] font-medium"
+                            title="มีรถเช่าในระบบ Yok API"
+                          >
+                            🚗 รถเช่า
+                          </span>
+                        )}
                         {hasGuide && (
-                          <span className="bg-emerald-50 text-emerald-700 border border-emerald-200 px-1.5 py-0.5 rounded text-[10px] font-medium">
+                          <span
+                            className="bg-emerald-50 text-emerald-700 border border-emerald-200 px-1.5 py-0.5 rounded text-[10px] font-medium"
+                            title="มีไกด์นำเที่ยวในระบบ Yok API"
+                          >
                             🧭 ไกด์
                           </span>
                         )}

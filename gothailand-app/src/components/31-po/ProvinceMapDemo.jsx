@@ -5,6 +5,7 @@ import ProvinceSvgViewer from "./ProvinceSvgViewer";
 import ProvinceTable from "./ProvinceTable";
 import Footer from "./Footer";
 import { fetchYokServices } from "../../services/yokService";
+import { getProvinceApiUrl } from "../../services/api";
 
 export default function ProvinceMapDemo() {
   const [count, setCount] = useState(0);
@@ -22,7 +23,7 @@ export default function ProvinceMapDemo() {
     isOnline: false,
   });
 
-  const API_URL = import.meta.env.VITE_API_URL || "https://gothailand-api.onrender.com";
+  const API_URL = getProvinceApiUrl().replace(/\/api$/, "");
 
   // ฟังก์ชันรีเฟรชข้อมูลทั้งสองฝั่งพร้อมกัน
   const handleRefreshAll = async () => {
@@ -176,6 +177,7 @@ export default function ProvinceMapDemo() {
             selectedSlug={selectedSlug}
             onSelectProvince={setSelectedSlug}
             accommodations={yokData.accommodations}
+            cars={yokData.cars}
             guides={yokData.guides}
           />
         )}
@@ -186,6 +188,7 @@ export default function ProvinceMapDemo() {
           selectedSlug={selectedSlug}
           onSelectProvince={setSelectedSlug}
           accommodations={yokData.accommodations}
+          cars={yokData.cars}
           guides={yokData.guides}
         />
 

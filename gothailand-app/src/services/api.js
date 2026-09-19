@@ -1,52 +1,106 @@
 /**
  * api.js
  * -------------------------------------------------------------
- * Centralized API Client (Axios Instance ส่วนกลาง)
+ * Centralized API Client (Axios Instances ส่วนกลาง)
  *
- * หลักการสำคัญตาม Architecture (หัวข้อที่ 7):
- * 1. รวมการตั้งค่า Base URL, Timeout และ Header ไว้ที่เดียว
- * 2. ป้องกันไม่ให้ Component หรือ Page ยิง URL แบบ Hardcode กระจัดกระจาย
- * 3. รองรับการใส่ Interceptors เพื่อจัดการ Token และ Error ส่วนกลางในอนาคต
+ * สถาปัตยกรรมแบ่งแยก Backend 2 ระบบอย่างชัดเจน:
+ * 1. Yok Core API (yokApi / default export `api`):
+ *    - ให้บริการโมดูลหลัก: /cars (รถเช่า), /accommodations (ที่พัก), /guides (ไกด์), /bookings (การจอง), /users (ผู้ใช้)
+ *    - Development: ถ้ามี VITE_YOK_API_URL ใน .env (เช่น http://localhost:5001) ให้ใช้ค่านั้น 
+ *      หากไม่มีจะเชื่อมตรงเข้า Render Cloud (https://gothailand-api.onrender.com/api) อัตโนมัติ
+ *    - Production (Vercel): ใช้ Rewrite Proxy "/api/yok" เพื่อเลี่ยง CORS และลด Latency
+ *
+ * 2. Po Province API (provinceApi):
+ *    - ให้บริการโมดูล: /provinces (จัดการข้อมูล 77 จังหวัด, Interactive SVG Map)
+ *    - Development: VITE_PROVINCE_API_URL หรือ VITE_API_URL (เช่น http://localhost:5000/api)
+ *    - Production: https://gothailand-31-po.onrender.com/api
  */
 import axios from "axios";
 
-// กำหนด Base URL (ตัด trailing slash และเติม /api ให้อัตโนมัติหากยังไม่มี)
-const rawUrl =
-  import.meta.env.VITE_API_URL || "https://gothailand-api.onrender.com/api";
-const cleanUrl = rawUrl.replace(/\/+$/, "");
-const BASE_URL = cleanUrl.endsWith("/api") ? cleanUrl : `${cleanUrl}/api`;
+// -------------------------------------------------------------
+// 1. Helper คำนวณ Base URL ของแต่ละ Backend Service
+// -------------------------------------------------------------
+export const getYokApiUrl = () => {
+  if (import.meta.env.VITE_YOK_API_URL) {
+    const raw = import.meta.env.VITE_YOK_API_URL.replace(/\/+$/, "");
+    return raw.endsWith("/api") ? raw : `${raw}/api`;
+  }
+  // บน Vercel Production ให้วิ่งผ่าน Proxy /api/yok ตามที่กำหนดใน vercel.json
+  if (typeof window !== "undefined" && !window.location.hostname.includes("localhost")) {
+    return "/api/yok";
+  }
+  return "https://gothailand-api.onrender.com/api";
+};
 
-const api = axios.create({
-  baseURL: BASE_URL,
-  timeout: 10000,
-  headers: {
-    "Content-Type": "application/json",
-  },
-});
+export const getProvinceApiUrl = () => {
+  const raw =
+    import.meta.env.VITE_PROVINCE_API_URL ||
+    import.meta.env.VITE_API_URL ||
+    (typeof window !== "undefined" && !window.location.hostname.includes("localhost")
+      ? "https://gothailand-31-po.onrender.com/api"
+      : "http://localhost:5000/api");
+  const clean = raw.replace(/\/+$/, "");
+  return clean.endsWith("/api") ? clean : `${clean}/api`;
+};
 
-// Interceptor ขาเข้า (Request): ตรวจสอบและแนบ Token จากระบบสมาชิก (S2/S3) อัตโนมัติ
-api.interceptors.request.use(
-  (config) => {
-    const token =
-      localStorage.getItem("gt_token") ||
-      localStorage.getItem("token") ||
-      localStorage.getItem("auth_token");
+// -------------------------------------------------------------
+// 2. ฟังก์ชันแนบ Interceptors (Auth Token & Error Logging)
+// -------------------------------------------------------------
+const attachInterceptors = (instance, serviceName = "API") => {
+  instance.interceptors.request.use(
+    (config) => {
+      const token =
+        localStorage.getItem("gt_token") ||
+        localStorage.getItem("token") ||
+        localStorage.getItem("auth_token");
 
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => Promise.reject(error),
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+      return config;
+    },
+    (error) => Promise.reject(error),
+  );
+
+  instance.interceptors.response.use(
+    (response) => response,
+    (error) => {
+      console.error(`❌ [${serviceName}] Error:`, error.response?.status, error.message);
+      return Promise.reject(error);
+    },
+  );
+
+  return instance;
+};
+
+// -------------------------------------------------------------
+// 3. สร้าง Axios Instances แยก Backend
+// -------------------------------------------------------------
+
+// Core Travel Services (Yok Backend): รถเช่า, ที่พัก, ไกด์, บุ๊กกิ้ง, ผู้ใช้
+export const yokApi = attachInterceptors(
+  axios.create({
+    baseURL: getYokApiUrl(),
+    timeout: 12000,
+    headers: {
+      "Content-Type": "application/json",
+    },
+  }),
+  "YokCoreAPI"
 );
 
-//จัดการ Error ภาพรวม (เช่น 401 Unauthorized, Server Down)
-api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    console.error("❌ API Error:", error.response?.status, error.message);
-    return Promise.reject(error);
-  },
+// Province & Map Services (Po Backend): 77 จังหวัด, SVG Map
+export const provinceApi = attachInterceptors(
+  axios.create({
+    baseURL: getProvinceApiUrl(),
+    timeout: 10000,
+    headers: {
+      "Content-Type": "application/json",
+    },
+  }),
+  "ProvinceAPI"
 );
 
-export default api;
+// Default export: ใช้ yokApi เพื่อให้ service ส่วนใหญ่ (cars, accommodations) เรียกใช้งานได้ทันที
+export default yokApi;
+
