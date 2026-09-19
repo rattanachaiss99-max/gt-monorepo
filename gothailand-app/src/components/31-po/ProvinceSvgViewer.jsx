@@ -18,6 +18,14 @@ export default function ProvinceSvgViewer({
     matchProvince(g.province, province)
   );
 
+  // Fallbacks รองรับโครงสร้างข้อมูลทั้งจาก Po API และ Yok Backend
+  const svgPath = province.d || province.vectorData?.d || "";
+  const svgViewBox = province.viewBox || province.vectorData?.viewBox || "0 0 800 600";
+  const pId = province.provinceId || (province.code ? `TH-${province.code}` : (province.id ? `TH-${province.id}` : "-"));
+  const displayNameTh = province.nameTh || province.name_th || province.name || "";
+  const displayNameEn = province.nameEn || province.name_en || province.slug || "";
+  const pathLength = svgPath ? svgPath.length : 0;
+
   return (
     <section className="bg-white border border-slate-200 rounded-xl p-6 shadow-xs space-y-6">
       {/* Header & Dropdown */}
@@ -25,9 +33,9 @@ export default function ProvinceSvgViewer({
         <div>
           <h3 className="text-xl font-bold text-slate-900 flex items-center gap-2">
             🗺️ ผลลัพธ์การวาดแผนที่จาก MongoDB:
-            <span className="text-blue-600">{province.nameTh}</span>
+            <span className="text-blue-600">{displayNameTh}</span>
             <span className="text-sm font-normal text-slate-400">
-              ({province.nameEn})
+              ({displayNameEn})
             </span>
           </h3>
           <p className="text-xs text-slate-500 mt-0.5">
@@ -63,13 +71,13 @@ export default function ProvinceSvgViewer({
       <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
         {/* Native SVG Renderer */}
         <div className="md:col-span-4 flex flex-col items-center justify-center p-6 bg-slate-50 border border-slate-200 rounded-xl">
-          {province.d ? (
+          {svgPath ? (
             <svg
-              viewBox={province.viewBox || "0 0 200 200"}
+              viewBox={svgViewBox}
               className="w-48 h-48 filter drop-shadow-md hover:scale-105 transition-transform"
             >
               <path
-                d={province.d}
+                d={svgPath}
                 fill="#0284c7"
                 stroke="#0369a1"
                 strokeWidth="1.5"
@@ -82,7 +90,7 @@ export default function ProvinceSvgViewer({
             </div>
           )}
           <span className="mt-3 text-[11px] font-mono text-slate-400 bg-white px-2 py-0.5 rounded border border-slate-200">
-            viewBox: {province.viewBox}
+            viewBox: {svgViewBox}
           </span>
         </div>
 
@@ -94,13 +102,13 @@ export default function ProvinceSvgViewer({
                 รหัสจังหวัด (provinceId)
               </span>
               <span className="font-bold text-slate-800 font-mono text-sm">
-                {province.provinceId}
+                {pId}
               </span>
             </div>
             <div className="p-2.5 bg-slate-50 rounded-lg border border-slate-100">
               <span className="text-slate-400 block">ภูมิภาค (region)</span>
               <span className="font-bold text-blue-700 capitalize">
-                {province.region}
+                {province.region_th || province.region}
               </span>
             </div>
             <div className="p-2.5 bg-slate-50 rounded-lg border border-slate-100">
@@ -108,7 +116,7 @@ export default function ProvinceSvgViewer({
                 ขนาด Path (ตัวอักษร d)
               </span>
               <span className="font-bold text-emerald-600 font-mono">
-                {province.d?.length.toLocaleString() || 0} ตัว
+                {pathLength.toLocaleString()} ตัว
               </span>
             </div>
           </div>
@@ -194,7 +202,7 @@ export default function ProvinceSvgViewer({
               ตัวอย่าง SVG Path Snippet (จาก MongoDB):
             </span>
             <pre className="p-2.5 bg-slate-900 text-emerald-400 rounded-lg font-mono text-[11px] overflow-x-auto whitespace-pre-wrap line-clamp-2">
-              {province.d?.slice(0, 120)}...
+              {svgPath?.slice(0, 120)}...
             </pre>
           </div>
         </div>

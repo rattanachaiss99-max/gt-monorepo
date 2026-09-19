@@ -12,12 +12,23 @@ export default function ProvinceTable({
   const [selectedRegion, setSelectedRegion] = useState("all");
 
   const filteredProvinces = provinces.filter((p) => {
+    const q = search.trim().toLowerCase();
+    const nameTh = p.nameTh || p.name_th || p.name || "";
+    const nameEn = p.nameEn || p.name_en || p.slug || "";
+    const pId = p.provinceId || (p.code ? `TH-${p.code}` : (p.id ? `TH-${p.id}` : ""));
+
     const matchSearch =
-      !search ||
-      p.nameTh?.includes(search) ||
-      p.nameEn?.toLowerCase().includes(search.toLowerCase()) ||
-      p.provinceId?.toLowerCase().includes(search.toLowerCase());
-    const matchRegion = selectedRegion === "all" || p.region === selectedRegion;
+      !q ||
+      nameTh.includes(q) ||
+      nameEn.toLowerCase().includes(q) ||
+      pId.toLowerCase().includes(q) ||
+      p.slug?.toLowerCase().includes(q);
+
+    const matchRegion =
+      selectedRegion === "all" ||
+      p.region === selectedRegion ||
+      p.region_th === selectedRegion;
+
     return matchSearch && matchRegion;
   });
 
@@ -88,17 +99,19 @@ export default function ProvinceTable({
                       : "hover:bg-slate-50"
                   }`}
                 >
-                  <td className="py-2 px-3 font-mono">{prov.provinceId}</td>
-                  <td className="py-2 px-3">{prov.nameTh}</td>
-                  <td className="py-2 px-3 font-mono text-slate-500">
-                    {prov.nameEn} ({prov.slug})
+                  <td className="py-2 px-3 font-mono">
+                    {prov.provinceId || (prov.code ? `TH-${prov.code}` : (prov.id ? `TH-${prov.id}` : "-"))}
                   </td>
-                  <td className="py-2 px-3 capitalize">{prov.region}</td>
+                  <td className="py-2 px-3">{prov.nameTh || prov.name_th}</td>
+                  <td className="py-2 px-3 font-mono text-slate-500">
+                    {prov.nameEn || prov.name_en} ({prov.slug})
+                  </td>
+                  <td className="py-2 px-3 capitalize">{prov.region_th || prov.region}</td>
                   <td className="py-2 px-3">
-                    {prov.d ? (
+                    {prov.d || prov.vectorData?.d ? (
                       <span className="inline-flex items-center gap-1 text-emerald-600 font-medium">
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                        มี SVG ({prov.d.length} ch)
+                        มี SVG ({(prov.d || prov.vectorData?.d).length.toLocaleString()} ch)
                       </span>
                     ) : (
                       <span className="text-slate-400">ไม่มีข้อมูล</span>

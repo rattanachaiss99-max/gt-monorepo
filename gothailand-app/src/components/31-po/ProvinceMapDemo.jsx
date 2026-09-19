@@ -112,6 +112,49 @@ export default function ProvinceMapDemo() {
           loading={loading}
         />
 
+        {/* สรุปสถานะภาพรวม 4 การ์ด (Status Overview Cards) */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <div className="p-4 bg-white border border-slate-200 rounded-2xl shadow-2xs">
+            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block">
+              จังหวัดในระบบ
+            </span>
+            <div className="text-2xl font-black text-slate-800 mt-1">
+              {provinces.length}{" "}
+              <span className="text-xs font-normal text-slate-400">/ 77</span>
+            </div>
+          </div>
+
+          <div className="p-4 bg-white border border-slate-200 rounded-2xl shadow-2xs">
+            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block">
+              ความพร้อม SVG
+            </span>
+            <div className="text-2xl font-black text-emerald-600 mt-1">
+              {provinces.filter((p) => p.d || p.vectorData?.d).length}
+              <span className="text-xs font-normal text-slate-400 ml-1">จังหวัด</span>
+            </div>
+          </div>
+
+          <div className="p-4 bg-white border border-slate-200 rounded-2xl shadow-2xs">
+            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block">
+              มีคำขวัญ / ข้อมูลท่องเที่ยว
+            </span>
+            <div className="text-2xl font-black text-blue-600 mt-1">
+              {provinces.filter((p) => p.slogan || p.summary).length}
+              <span className="text-xs font-normal text-slate-400 ml-1">จังหวัด</span>
+            </div>
+          </div>
+
+          <div className="p-4 bg-white border border-slate-200 rounded-2xl shadow-2xs">
+            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block">
+              สถานะ BACKEND
+            </span>
+            <div className="inline-flex items-center gap-1.5 text-sm font-bold text-emerald-600 mt-2">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              {error ? "ขัดข้อง" : "Online พร้อมใช้งาน"}
+            </div>
+          </div>
+        </div>
+
         {/* 2. สถานะการเชื่อมต่อ Database (MongoDB Atlas + Yok API) */}
         <DatabaseStatus
           provincesCount={provinces.length}

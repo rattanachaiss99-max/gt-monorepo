@@ -10,9 +10,11 @@
  */
 import axios from "axios";
 
-// กำหนดจาก .env
-const BASE_URL =
+// กำหนด Base URL (ตัด trailing slash และเติม /api ให้อัตโนมัติหากยังไม่มี)
+const rawUrl =
   import.meta.env.VITE_API_URL || "https://gothailand-api.onrender.com/api";
+const cleanUrl = rawUrl.replace(/\/+$/, "");
+const BASE_URL = cleanUrl.endsWith("/api") ? cleanUrl : `${cleanUrl}/api`;
 
 const api = axios.create({
   baseURL: BASE_URL,
@@ -22,17 +24,23 @@ const api = axios.create({
   },
 });
 
-// Interceptor ขาเข้า (Request): สำหรับแนบ Auth Token ในอนาคต
+// Interceptor ขาเข้า (Request): ตรวจสอบและแนบ Token จากระบบสมาชิก (S2/S3) อัตโนมัติ
 api.interceptors.request.use(
   (config) => {
-    // เช่น const token = localStorage.getItem("token");
-    // if (token) config.headers.Authorization = `Bearer ${token}`;
+    const token =
+      localStorage.getItem("gt_token") ||
+      localStorage.getItem("token") ||
+      localStorage.getItem("auth_token");
+
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
     return config;
   },
   (error) => Promise.reject(error),
 );
 
-// Interceptor ขาออก (Response): จัดการ Error ภาพรวม (เช่น 401 Unauthorized, Server Down)
+//จัดการ Error ภาพรวม (เช่น 401 Unauthorized, Server Down)
 api.interceptors.response.use(
   (response) => response,
   (error) => {
