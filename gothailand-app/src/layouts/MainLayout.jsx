@@ -39,6 +39,9 @@ export default function MainLayout() {
             <NavLink to="/accommodations" className={navLinkClass}>
               🏨 ที่พักท่องเที่ยว
             </NavLink>
+            <NavLink to="/cars" className={navLinkClass}>
+              🚗 รถเช่าท่องเที่ยว
+            </NavLink>
           </nav>
         </div>
       </header>
