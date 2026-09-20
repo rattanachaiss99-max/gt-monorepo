@@ -1,9 +1,9 @@
 import { Outlet, NavLink } from "react-router-dom";
-import { CartNavbarButton, CartDrawer } from "../components/common";
+import { CartNavbarButton, CartDrawer, UserNavbarWidget } from "../components/common";
 
 export default function MainLayout() {
   const navLinkClass = ({ isActive }) =>
-    `px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200 ${
+    `px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 ${
       isActive
         ? "bg-amber-400 text-slate-900 shadow-sm"
         : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
@@ -29,15 +29,13 @@ export default function MainLayout() {
             </div>
           </NavLink>
 
-          {/* เมนูนำทาง & ตะกร้าสินค้า */}
+          {/* เมนูนำทาง & ตะกร้าสินค้า & ผู้ใช้งาน */}
           <div className="flex items-center gap-2 sm:gap-3">
             <nav className="flex items-center gap-1 sm:gap-2">
               <NavLink to="/" className={navLinkClass} end>
                 🏠 หน้าแรก
               </NavLink>
-              <NavLink to="/provinces" className={navLinkClass}>
-                🗺️ จัดการข้อมูลจังหวัด
-              </NavLink>
+
               <NavLink to="/accommodations" className={navLinkClass}>
                 🏨 ที่พักท่องเที่ยว
               </NavLink>
@@ -53,6 +51,9 @@ export default function MainLayout() {
 
             {/* ปุ่มเปิดตะกร้าส่วนกลาง */}
             <CartNavbarButton />
+
+            {/* วิดเจ็ตข้อมูลผู้ใช้ / เข้าสู่ระบบ */}
+            <UserNavbarWidget />
           </div>
         </div>
       </header>

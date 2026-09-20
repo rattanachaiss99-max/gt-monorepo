@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import { useCart } from '../../context/CartContext';
+import { useAuth } from '../../context/AuthContext';
 import Button from './Button';
 
 /**
@@ -25,6 +26,9 @@ export default function CartDrawer() {
     toastMessage,
     dismissToast,
   } = useCart();
+
+  const { isAuthenticated, user } = useAuth();
+  const navigate = useNavigate();
 
   const drawerRef = useRef(null);
 
@@ -83,12 +87,35 @@ export default function CartDrawer() {
   };
 
   const handleCheckout = () => {
+    if (!isAuthenticated) {
+      const confirmLogin = window.confirm(
+        '💡 คุณยังไม่ได้เข้าสู่ระบบ\n\n' +
+        'กรุณาเข้าสู่ระบบก่อนดำเนินการยืนยันการจองทริป เพื่อบันทึกประวัติการจองและรับเอกสารยืนยัน\n' +
+        '(รายการสินค้าในตะกร้าของคุณจะยังคงอยู่ ไม่สูญหาย)\n\n' +
+        'กด "ตกลง" เพื่อไปยังหน้าเข้าสู่ระบบทันที'
+      );
+      if (confirmLogin) {
+        closeDrawer();
+        navigate('/login?redirect=cart');
+      }
+      return;
+    }
+
+    const customerName = user.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : (user.name || user.email);
+    const roleBadge = user.role === 'admin' ? '👑 ผู้ดูแลระบบ (Admin)' : '👤 สมาชิก (Customer)';
+
     alert(
-      `🎉 ขอบคุณที่ร่วมเดินทางกับ Go Thailand!\n\n` +
-      `คุณมีรายการจองทั้งหมด ${totalItemsCount} รายการ\n` +
-      `ยอดรวมทั้งสิ้น: ฿${grandTotal.toLocaleString()}\n\n` +
-      `(ระบบการชำระเงินและ Checkout กำลังเชื่อมต่อใน Sprint ถัดไป)`
+      `🎉 ขอบคุณ คุณ ${customerName} ที่ร่วมเดินทางกับ Go Thailand!\n\n` +
+      `📋 สรุปรายการจองทริป:\n` +
+      `• ผู้จอง: ${customerName} (${user.email})\n` +
+      `• สถานะบัญชี: ${roleBadge}\n` +
+      `• รายการบริการ: ${totalItemsCount} รายการ\n` +
+      `• ยอดชำระรวม: ฿${grandTotal.toLocaleString()}\n\n` +
+      `✅ บันทึกการจองสำเร็จ! เจ้าหน้าที่จะส่งรายละเอียดและ Voucher ไปยัง ${user.email} เรียบร้อยแล้ว`
     );
+
+    clearCart();
+    closeDrawer();
   };
 
   return (
@@ -344,6 +371,48 @@ export default function CartDrawer() {
                   </span>
                 </div>
               </div>
+
+              {/* สถานะการเข้าสู่ระบบสำหรับการ Checkout */}
+              {isAuthenticated ? (
+                <div className="p-2.5 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-between">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <div className="w-7 h-7 rounded-full bg-[#0a192f] text-amber-400 flex items-center justify-center font-bold text-xs shrink-0">
+                      {user?.firstName ? user.firstName.charAt(0).toUpperCase() : '👤'}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-xs font-bold text-slate-800 truncate">
+                        จองในนาม: {user?.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : user?.email}
+                      </p>
+                      <p className="text-[10px] text-slate-500 truncate">
+                        {user?.email} • {user?.role === 'admin' ? '👑 Admin' : '👤 Customer'}
+                      </p>
+                    </div>
+                  </div>
+                  <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full shrink-0 border border-emerald-200">
+                    พร้อมจอง
+                  </span>
+                </div>
+              ) : (
+                <div className="p-2.5 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="text-base">💡</span>
+                    <div className="min-w-0">
+                      <p className="text-xs font-bold text-amber-900">ยังไม่ได้เข้าสู่ระบบ</p>
+                      <p className="text-[10px] text-amber-700">เข้าสู่ระบบเพื่อบันทึกประวัติการจอง</p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      closeDrawer();
+                      navigate('/login?redirect=cart');
+                    }}
+                    className="px-2.5 py-1 rounded-lg bg-amber-500 hover:bg-amber-600 text-[#0a192f] text-xs font-bold transition-colors cursor-pointer shrink-0 shadow-xs"
+                  >
+                    เข้าสู่ระบบ
+                  </button>
+                </div>
+              )}
 
               {/* ปุ่มดำเนินการหลัก */}
               <div className="pt-2 flex flex-col gap-2">
