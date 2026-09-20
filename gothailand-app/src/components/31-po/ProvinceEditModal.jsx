@@ -13,21 +13,21 @@ export default function ProvinceEditModal({
   onClose,
   onSuccess,
 }) {
-  if (!isOpen || !province) return null;
-
   const [method, setMethod] = useState("PATCH"); // 'PATCH' หรือ 'PUT'
-  const [slogan, setSlogan] = useState(province.slogan || "");
-  const [summary, setSummary] = useState(province.summary || "");
-  const [travelTips, setTravelTips] = useState(province.travelTips || "");
+  const [slogan, setSlogan] = useState(province?.slogan || "");
+  const [summary, setSummary] = useState(province?.summary || "");
+  const [travelTips, setTravelTips] = useState(province?.travelTips || "");
   const [highlights, setHighlights] = useState(
-    Array.isArray(province.highlights) ? province.highlights.join(", ") : ""
+    Array.isArray(province?.highlights) ? province.highlights.join(", ") : ""
   );
   const [signatureFood, setSignatureFood] = useState(
-    Array.isArray(province.signatureFood) ? province.signatureFood.join(", ") : ""
+    Array.isArray(province?.signatureFood) ? province.signatureFood.join(", ") : ""
   );
 
   const [loading, setLoading] = useState(false);
   const [feedback, setFeedback] = useState(null);
+
+  if (!isOpen || !province) return null;
 
   const handleSubmit = async (e) => {
     e.preventDefault();

@@ -3,7 +3,9 @@ import Header from "./Header";
 import DatabaseStatus from "./DatabaseStatus";
 import ProvinceSvgViewer from "./ProvinceSvgViewer";
 import ProvinceTable from "./ProvinceTable";
+import TravelSearchResultsTable from "./TravelSearchResultsTable";
 import Footer from "./Footer";
+import { TravelSearchBox } from "../common";
 import { fetchYokServices } from "../../services/yokService";
 import { getProvinceApiUrl } from "../../services/api";
 
@@ -23,6 +25,7 @@ export default function ProvinceMapDemo() {
   const [selectedSlug, setSelectedSlug] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [searchQuery, setSearchQuery] = useState(null);
 
   // ข้อมูลบริการจาก Yok API (Render)
   const [yokData, setYokData] = useState({
@@ -121,7 +124,9 @@ export default function ProvinceMapDemo() {
   const handleProvinceUpdated = (updatedDoc) => {
     if (!updatedDoc) return;
     setProvinces((prev) =>
-      prev.map((p) => (p.slug === updatedDoc.slug ? { ...p, ...updatedDoc } : p))
+      prev.map((p) =>
+        p.slug === updatedDoc.slug ? { ...p, ...updatedDoc } : p,
+      ),
     );
   };
 
@@ -200,7 +205,36 @@ export default function ProvinceMapDemo() {
           }}
         />
 
-        {/* 3. กล่องวาดแผนที่ SVG สดจากฟิลด์ vectorData.d ของ MongoDB พร้อมข้อมูลเสริมของ Yok */}
+        {/* 3. กล่องค้นหาบริการท่องเที่ยวส่วนกลาง (Universal Travel Search Box) */}
+        <TravelSearchBox
+          selectedProvince={selectedSlug}
+          onProvinceChange={(slug) => {
+            setSelectedSlug(slug);
+            setSearchQuery((prev) =>
+              prev ? { ...prev, provinceSlug: slug } : { provinceSlug: slug },
+            );
+          }}
+          provinces={provinces}
+          onSearchSubmit={(payload) => {
+            setSearchQuery(payload);
+            if (payload.provinceSlug) {
+              setSelectedSlug(payload.provinceSlug);
+            }
+          }}
+        />
+
+        {/* 5. ตารางผลลัพธ์การค้นหาบริการท่องเที่ยว (Travel Search Results Table สไตล์ ProvinceTable) */}
+        <TravelSearchResultsTable
+          searchQuery={searchQuery}
+          provinces={provinces}
+          accommodations={yokData.accommodations}
+          cars={yokData.cars}
+          guides={yokData.guides}
+          selectedSlug={selectedSlug}
+          onSelectProvince={setSelectedSlug}
+        />
+
+        {/* 4. กล่องวาดแผนที่ SVG สดจากฟิลด์ vectorData.d ของ MongoDB พร้อมข้อมูลเสริมของ Yok */}
         {currentProvince && (
           <ProvinceSvgViewer
             province={currentProvince}
@@ -214,7 +248,7 @@ export default function ProvinceMapDemo() {
           />
         )}
 
-        {/* 4. ตารางแสดงรายการ 77 จังหวัด พร้อมค้นหาและกรองภาค */}
+        {/* 6. ตารางแสดงรายการ 77 จังหวัด พร้อมค้นหาและกรองภาค */}
         <ProvinceTable
           provinces={provinces}
           selectedSlug={selectedSlug}

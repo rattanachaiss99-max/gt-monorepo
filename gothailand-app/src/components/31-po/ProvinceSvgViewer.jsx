@@ -13,11 +13,11 @@ export default function ProvinceSvgViewer({
   guides = [],
   cars = [],
 }) {
-  if (!province) return null;
-
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteResult, setDeleteResult] = useState(null);
+
+  if (!province) return null;
 
   // กรองที่พัก รถเช่า และไกด์ของคุณ Yok ที่ตรงกับจังหวัดที่เลือก
   const localAccommodations = accommodations.filter((a) =>

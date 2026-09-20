@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   CarHero,
   CarFilterSidebar,
@@ -21,6 +21,11 @@ import { getDefaultDateRange, calculateDateSpan } from '../../../utils/date';
  */
 export default function CarPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const paramLocation = searchParams.get('location') || '';
+  const paramPickup = searchParams.get('pickupDate');
+  const paramReturn = searchParams.get('returnDate');
+  const paramCategory = searchParams.get('category') || 'all';
 
   // ข้อมูลรถจาก API
   const [cars, setCars] = useState([]);
@@ -28,11 +33,11 @@ export default function CarPage() {
   const [error, setError] = useState(null);
 
   // ตัวกรองจาก Hero Search Bar
-  const [searchLocation, setSearchLocation] = useState('');
   const defaultRentalDates = getDefaultDateRange(1, 4);
-  const [pickupDate, setPickupDate] = useState(defaultRentalDates.start);
-  const [returnDate, setReturnDate] = useState(defaultRentalDates.end);
-  const [heroCategory, setHeroCategory] = useState('all');
+  const [searchLocation, setSearchLocation] = useState(paramLocation);
+  const [pickupDate, setPickupDate] = useState(paramPickup || defaultRentalDates.start);
+  const [returnDate, setReturnDate] = useState(paramReturn || defaultRentalDates.end);
+  const [heroCategory, setHeroCategory] = useState(paramCategory);
 
   // ตัวกรองจาก Sidebar
   const [selectedCategories, setSelectedCategories] = useState([]);
@@ -277,6 +282,7 @@ export default function CarPage() {
         onReturnDateChange={setReturnDate}
         selectedCategory={heroCategory}
         onSelectedCategoryChange={handleHeroCategoryChange}
+        availableLocations={allLocations.length > 0 ? allLocations : undefined}
         onSearchSubmit={handleSearchSubmit}
       />
 

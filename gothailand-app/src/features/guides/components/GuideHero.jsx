@@ -1,11 +1,4 @@
-/**
- * GuideHero Component
- * -------------------------------------------------------------
- * Hero Section + Floating Search Bar สำหรับระบบไกด์นำเที่ยว
- * สไตล์เดียวกับ CarHero: ภาพพื้นหลัง + gradient overlay
- * Floating Search Bar: Province / Destination, Language Spoken, Tour Date
- * Province และ Language options ดึงจาก API data จริง (ไม่ hardcode)
- */
+import { TravelSearchBox } from '../../../components/common';
 
 const POPULAR_PROVINCE_IDS = [
   { id: 'Chiang Mai', label: 'Chiang Mai', icon: '⛰️' },
@@ -16,22 +9,27 @@ const POPULAR_PROVINCE_IDS = [
   { id: 'Surat Thani', label: 'Surat Thani', icon: '🌴' },
 ];
 
+/**
+ * GuideHero Component
+ * -------------------------------------------------------------
+ * Hero Section + Floating Search Bar สำหรับระบบไกด์นำเที่ยว
+ * ขับเคลื่อนด้วย TravelSearchBox (Shared Component)
+ * สไตล์เดียวกับ CarHero: ภาพพื้นหลัง + gradient overlay
+ * Floating Search Bar: Province / Destination, Language Spoken, Tour Date
+ * Province และ Language options ดึงจาก API data จริง
+ * -------------------------------------------------------------
+ */
 export default function GuideHero({
-  selectedProvince,
+  selectedProvince = '',
   onSelectedProvinceChange,
-  tourDate,
+  tourDate = '',
   onTourDateChange,
-  selectedLanguage,
+  selectedLanguage = 'all',
   onSelectedLanguageChange,
   availableProvinces = [],
   availableLanguages = [],
   onSearchSubmit,
 }) {
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (onSearchSubmit) onSearchSubmit();
-  };
-
   const popularPills = POPULAR_PROVINCE_IDS.filter(
     (p) => availableProvinces.length === 0 || availableProvinces.includes(p.id)
   );
@@ -60,84 +58,25 @@ export default function GuideHero({
           </p>
         </div>
 
-        {/* Floating Search Bar — 3 fields */}
-        <form
-          onSubmit={handleSubmit}
-          className="bg-white rounded-2xl shadow-xl p-2 sm:p-2.5 border border-slate-200/90 flex flex-col md:flex-row items-center gap-2 md:gap-0 text-slate-800 max-w-4xl mx-auto"
-        >
-          {/* ช่อง 1: Province */}
-          <div className="w-full md:flex-1 bg-[#f1f5f9]/70 hover:bg-[#f1f5f9] transition-colors rounded-xl px-3.5 py-2.5 flex items-center gap-3">
-            <span className="text-slate-500 text-base shrink-0">📍</span>
-            <div className="flex-1">
-              <span className="block text-[10px] uppercase font-bold text-slate-400 tracking-wider">
-                Province / Destination
-              </span>
-              <select
-                value={selectedProvince}
-                onChange={(e) => onSelectedProvinceChange(e.target.value)}
-                className="w-full text-sm font-semibold text-slate-800 bg-transparent border-none outline-none cursor-pointer"
-              >
-                <option value="">All Provinces (ทั่วประเทศ)</option>
-                {availableProvinces.map((prov) => (
-                  <option key={prov} value={prov}>{prov}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          <div className="hidden md:block w-px h-8 bg-slate-200 mx-1" />
-
-          {/* ช่อง 2: Language */}
-          <div className="w-full md:flex-1 hover:bg-slate-50 transition-colors rounded-xl px-3.5 py-2.5 flex items-center gap-3">
-            <span className="text-slate-500 text-base shrink-0">🗣️</span>
-            <div className="flex-1">
-              <span className="block text-[10px] uppercase font-bold text-slate-400 tracking-wider">
-                Language Spoken
-              </span>
-              <select
-                value={selectedLanguage}
-                onChange={(e) => onSelectedLanguageChange(e.target.value)}
-                className="w-full text-sm font-semibold text-slate-800 bg-transparent border-none outline-none cursor-pointer"
-              >
-                <option value="all">Any Language (ทุกภาษา)</option>
-                {availableLanguages.map((lang) => (
-                  <option key={lang} value={lang}>{lang}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          <div className="hidden md:block w-px h-8 bg-slate-200 mx-1" />
-
-          {/* ช่อง 3: Tour Date */}
-          <div className="w-full md:flex-1 hover:bg-slate-50 transition-colors rounded-xl px-3.5 py-2.5 flex items-center gap-3">
-            <span className="text-slate-500 text-base shrink-0">📅</span>
-            <div className="flex-1">
-              <span className="block text-[10px] uppercase font-bold text-slate-400 tracking-wider">
-                Tour Date
-              </span>
-              <input
-                type="date"
-                value={tourDate}
-                onChange={(e) => onTourDateChange(e.target.value)}
-                className="w-full text-sm font-semibold text-slate-800 bg-transparent border-none outline-none cursor-pointer"
-              />
-            </div>
-          </div>
-
-          {/* ปุ่ม Search */}
-          <div className="w-full md:w-auto shrink-0 md:ml-2">
-            <button
-              type="submit"
-              className="w-full md:w-auto bg-[#0a192f] hover:bg-[#112240] active:bg-[#071324] text-white font-semibold px-6 py-2.5 rounded-xl transition-all duration-200 flex items-center justify-center gap-2 shadow-sm cursor-pointer"
-            >
-              <svg className="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-              <span>Search Guides</span>
-            </button>
-          </div>
-        </form>
+        {/* Floating Search Bar — ใช้ Shared TravelSearchBox Component */}
+        <div className="max-w-4xl mx-auto">
+          <TravelSearchBox
+            defaultService="guides"
+            hideTabs={true}
+            showBookingLinks={false}
+            searchButtonText="Search Guides"
+            selectedProvince={selectedProvince}
+            onSelectedProvinceChange={onSelectedProvinceChange}
+            tourDate={tourDate}
+            onTourDateChange={onTourDateChange}
+            selectedLanguage={selectedLanguage}
+            onSelectedLanguageChange={onSelectedLanguageChange}
+            availableProvinces={availableProvinces}
+            availableLanguages={availableLanguages}
+            onSearchSubmit={onSearchSubmit}
+            className="shadow-2xl border-slate-200/90"
+          />
+        </div>
 
         {/* Quick Province Pills */}
         {popularPills.length > 0 && (
@@ -145,7 +84,7 @@ export default function GuideHero({
             <span className="text-xs text-slate-400 font-medium mr-1 hidden sm:inline">Popular:</span>
             <button
               type="button"
-              onClick={() => onSelectedProvinceChange('')}
+              onClick={() => onSelectedProvinceChange?.('')}
               className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-200 cursor-pointer ${
                 !selectedProvince
                   ? 'bg-amber-400 text-slate-900 shadow-md scale-105'
@@ -159,7 +98,7 @@ export default function GuideHero({
               <button
                 key={prov.id}
                 type="button"
-                onClick={() => onSelectedProvinceChange(prov.id)}
+                onClick={() => onSelectedProvinceChange?.(prov.id)}
                 className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-200 cursor-pointer ${
                   selectedProvince === prov.id
                     ? 'bg-amber-400 text-slate-900 shadow-md scale-105'

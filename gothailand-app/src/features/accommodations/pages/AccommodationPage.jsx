@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   AccommodationHero,
   FilterSidebar,
@@ -97,7 +97,7 @@ function matchesSearch(item, rawQuery) {
   ].filter(Boolean);
 
   const fieldTexts = fields.map((f) => f.toString().toLowerCase());
-  const fieldNorms = fields.map((f) => normalizeText(f));
+  const fieldNorms = fields.map((fn) => normalizeText(fn));
 
   // จับคู่ได้ถ้ามีคำค้นหาใดตรงกับฟิลด์ใดฟิลด์หนึ่ง (รองรับ "chiangmai" จับคู่กับ "Chiang Mai")
   const anyTargetMatched = searchTargets.some((target) =>
@@ -133,13 +133,19 @@ function matchesSearch(item, rawQuery) {
  */
 export default function AccommodationPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const paramDestination = searchParams.get('destination') || searchParams.get('location') || '';
+  const paramCheckIn = searchParams.get('checkIn');
+  const paramCheckOut = searchParams.get('checkOut');
+  const paramGuests = parseInt(searchParams.get('guests'), 10);
+
   const [accommodations, setAccommodations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [reloadKey, setReloadKey] = useState(0);
 
-  // โหมดการแสดงผล: 'landing' (หน้า 1) หรือ 'results' (หน้า 2)
-  const [viewMode, setViewMode] = useState('landing');
+  // โหมดการแสดงผล: ถ้าส่งค่าค้นหามาให้เปิดหน้า results ทันที
+  const [viewMode, setViewMode] = useState(paramDestination ? 'results' : 'landing');
 
   const handleViewAccommodation = (item) => {
     const slugId = item.slug || item.id || item._id;
@@ -153,10 +159,10 @@ export default function AccommodationPage() {
   // Default dates: วันนี้ + 1 และ วันนี้ + 2
   const defaultStayDates = getDefaultDateRange(1, 2);
 
-  const [searchTerm, setSearchTerm] = useState('');
-  const [checkIn, setCheckIn] = useState(defaultStayDates.start);
-  const [checkOut, setCheckOut] = useState(defaultStayDates.end);
-  const [guestCount, setGuestCount] = useState(2);
+  const [searchTerm, setSearchTerm] = useState(paramDestination);
+  const [checkIn, setCheckIn] = useState(paramCheckIn || defaultStayDates.start);
+  const [checkOut, setCheckOut] = useState(paramCheckOut || defaultStayDates.end);
+  const [guestCount, setGuestCount] = useState(paramGuests || 2);
   const [maxPrice, setMaxPrice] = useState(20000);
   const [selectedSpecialOptions, setSelectedSpecialOptions] = useState([]);
   const [selectedCategories, setSelectedCategories] = useState([]);

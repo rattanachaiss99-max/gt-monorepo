@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   GuideHero,
   GuideFilterSidebar,
@@ -20,6 +20,10 @@ import { getGuides } from '../services/guideService';
  */
 export default function GuidePage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const paramProvince = searchParams.get('province') || '';
+  const paramDate = searchParams.get('date') || '';
+  const paramLanguage = searchParams.get('language') || 'all';
 
   // ข้อมูลไกด์จาก API
   const [guides, setGuides] = useState([]);
@@ -27,9 +31,9 @@ export default function GuidePage() {
   const [error, setError] = useState(null);
 
   // ตัวกรองจาก Hero Search Bar
-  const [selectedProvince, setSelectedProvince] = useState('');
-  const [tourDate, setTourDate] = useState('');
-  const [selectedLanguage, setSelectedLanguage] = useState('all');
+  const [selectedProvince, setSelectedProvince] = useState(paramProvince);
+  const [tourDate, setTourDate] = useState(paramDate);
+  const [selectedLanguage, setSelectedLanguage] = useState(paramLanguage);
 
   // ตัวกรองจาก Sidebar
   const [maxDailyRate, setMaxDailyRate] = useState(5000);

@@ -113,7 +113,7 @@ export default function ProvinceTable({
                     {prov.d || prov.vectorData?.d ? (
                       <span className="inline-flex items-center gap-1 text-emerald-600 font-medium">
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                        มี SVG ({(prov.d || prov.vectorData?.d).length.toLocaleString()} ch)
+                        มี SVG ({((prov.d || prov.vectorData?.d) || "").length.toLocaleString()} ch)
                       </span>
                     ) : (
                       <span className="text-slate-400">ไม่มีข้อมูล</span>
