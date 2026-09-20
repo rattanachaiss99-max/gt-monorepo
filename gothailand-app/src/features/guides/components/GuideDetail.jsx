@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { getDefaultDateRange } from '../../../utils/date';
 import Button from './Button';
+import { useCart } from '../../../context/CartContext';
 
 const DEFAULT_AVATAR = "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=800&q=80";
 
@@ -48,23 +49,45 @@ export default function GuideDetail({ guide = {}, onBookGuide }) {
   const durationMultiplier = duration === 'half' ? 0.65 : 1;
   const calculatedFee = Math.round(dailyFee * durationMultiplier);
 
+  const { addToCart } = useCart();
+
   const handleBookClick = () => {
+    const guideId = guide._id || guide.id;
+    const durationLabel = duration === 'full' ? 'Full Day (8 Hours)' : 'Half Day (4 Hours)';
+
+    addToCart(
+      {
+        type: 'guide',
+        itemId: guideId,
+        title: guide.name || 'มัคคุเทศก์ท้องถิ่น',
+        subtitle: `${guide.province || 'Thailand'} • ${durationLabel}`,
+        image: photoUrl,
+        location: guide.province || 'Thailand',
+        unitPrice: calculatedFee,
+        priceUnitLabel: duration === 'full' ? '/ วัน' : '/ ครึ่งวัน',
+        quantity: 1,
+        dates: {
+          startDate: selectedDate,
+          durationDays: 1,
+        },
+        details: {
+          duration: durationLabel,
+          guestCount,
+          licenseNumber: guide.license_number,
+          languages,
+        },
+      },
+      { openDrawer: true }
+    );
+
     if (onBookGuide) {
       onBookGuide({
         guide,
         date: selectedDate,
         guestCount,
-        duration: duration === 'full' ? 'Full Day (8 Hours)' : 'Half Day (4 Hours)',
+        duration: durationLabel,
         totalPrice: calculatedFee,
       });
-    } else {
-      alert(
-        `ติดต่อจองมัคคุเทศก์: ${guide.name} (${guide.nickname || 'Guide'})\n` +
-        `วันที่: ${selectedDate}\n` +
-        `จำนวนลูกทัวร์: ${guestCount} ท่าน\n` +
-        `แพ็กเกจ: ${duration === 'full' ? 'เต็มวัน (8 ชั่วโมง)' : 'ครึ่งวัน (4 ชั่วโมง)'}\n` +
-        `ยอดรวม: ฿${calculatedFee.toLocaleString()}`
-      );
     }
   };
 

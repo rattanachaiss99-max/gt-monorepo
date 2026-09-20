@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import Button from './Button';
+import { useCart } from '../../../context/CartContext';
 
 /**
  * CarCard Component (Guitar x Yok Design System)
@@ -9,6 +10,7 @@ import Button from './Button';
  */
 export default function CarCard({ car, onViewDetail }) {
   const navigate = useNavigate();
+  const { addToCart } = useCart();
 
   if (!car) return null;
 
@@ -31,6 +33,35 @@ export default function CarCard({ car, onViewDetail }) {
     } else {
       navigate(`/cars/${carId}`);
     }
+  };
+
+  const handleQuickAdd = (e) => {
+    if (e?.stopPropagation) e.stopPropagation();
+    addToCart(
+      {
+        type: 'car',
+        itemId: carId,
+        title: name,
+        subtitle: `${category} • ${seats} ที่นั่ง • เกียร์ ${transmission}`,
+        image: mainImage,
+        location: car.availableLocations?.[0] || 'Bangkok Suvarnabhumi Airport',
+        unitPrice: price,
+        priceUnitLabel: '/ วัน',
+        quantity: 1,
+        dates: {
+          startDate: '2026-10-15',
+          endDate: '2026-10-18',
+          durationDays: 3,
+        },
+        details: {
+          pickupLocation: car.availableLocations?.[0] || 'Bangkok Suvarnabhumi Airport',
+          transmission,
+          seats,
+          fuel,
+        },
+      },
+      { openDrawer: true }
+    );
   };
 
   return (
@@ -93,16 +124,28 @@ export default function CarCard({ car, onViewDetail }) {
           </div>
         </div>
 
-        <Button
-          type="button"
-          onClick={handleDetailClick}
-          variant="navy"
-          size="none"
-          className="w-full font-semibold py-2.5 text-xs uppercase tracking-wider transition-all duration-200 shadow-2xs gap-1.5"
-        >
-          <span>View Detail</span>
-          <span aria-hidden="true">→</span>
-        </Button>
+        <div className="grid grid-cols-2 gap-2">
+          <Button
+            type="button"
+            onClick={handleDetailClick}
+            variant="outline"
+            size="none"
+            className="w-full font-semibold py-2.5 text-xs tracking-wider transition-all duration-200 shadow-2xs cursor-pointer"
+          >
+            <span>รายละเอียด</span>
+          </Button>
+
+          <Button
+            type="button"
+            onClick={handleQuickAdd}
+            variant="primary"
+            size="none"
+            className="w-full font-bold py-2.5 text-xs tracking-wider transition-all duration-200 shadow-2xs gap-1 cursor-pointer"
+          >
+            <span>🛒</span>
+            <span>ใส่ตะกร้า</span>
+          </Button>
+        </div>
       </div>
     </div>
   );

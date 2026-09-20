@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { getDefaultDateRange, calculateDateSpan } from '../../../utils/date';
 import Button from './Button';
+import { useCart } from '../../../context/CartContext';
 
 /**
  * CarDetail Component (Presentation Component)
@@ -13,7 +13,6 @@ import Button from './Button';
  * - ปุ่มจอง (Book Now)
  */
 export default function CarDetail({ car = {}, onBookNow }) {
-  const navigate = useNavigate();
 
   const localFallback = car.slug ? `/images/cars/${car.slug}.jpg` : "/images/cars/toyota-yaris.jpg";
   const mainImage = car.mainImage || (car.galleryImages && car.galleryImages[0]) || localFallback;
@@ -47,26 +46,49 @@ export default function CarDetail({ car = {}, onBookNow }) {
   const rentalDays = calculateDateSpan(pickupDate, returnDate);
   const totalPrice = dailyPrice * rentalDays;
 
+  const { addToCart } = useCart();
+
   const handleBookClick = () => {
+    const carId = car.slug || car._id || car.id;
+    const carName = car.name || `${car.brand || ''} ${car.model || ''}`.trim() || 'รถเช่า';
+    const loc = selectedLocation || locations[0];
+
+    addToCart(
+      {
+        type: 'car',
+        itemId: carId,
+        title: carName,
+        subtitle: `${car.category || 'Vehicle'} • ${car.seats || 5} ที่นั่ง • เกียร์ ${car.transmission || 'Auto'}`,
+        image: activeImage || mainImage,
+        location: loc,
+        unitPrice: dailyPrice,
+        priceUnitLabel: '/ วัน',
+        quantity: 1,
+        dates: {
+          startDate: pickupDate,
+          endDate: returnDate,
+          durationDays: rentalDays,
+        },
+        details: {
+          pickupLocation: loc,
+          pickupTime,
+          transmission: car.transmission,
+          seats: car.seats,
+          fuel: fuelType,
+        },
+      },
+      { openDrawer: true }
+    );
+
     if (onBookNow) {
       onBookNow({
         car,
-        pickupLocation: selectedLocation || locations[0],
+        pickupLocation: loc,
         pickupDate,
         returnDate,
         pickupTime,
         rentalDays,
-      });
-      const carId = car.slug || car._id || car.id;
-      navigate(`/cars/${carId}/booking`, {
-        state: {
-          car,
-          pickupLocation: selectedLocation || locations[0],
-          pickupDate,
-          returnDate,
-          pickupTime,
-          rentalDays,
-        }
+        totalPrice,
       });
     }
   };

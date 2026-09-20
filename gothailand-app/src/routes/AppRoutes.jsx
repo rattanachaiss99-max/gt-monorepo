@@ -11,6 +11,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import ScrollToTop from "../components/common/ScrollToTop";
 import MainLayout from "../layouts/MainLayout";
+import { CartProvider } from "../context/CartContext";
 import LandingPage from "../pages/LandingPage";
 import ProvinceMapPage from "../features/provinces/pages/ProvinceMapPage";
 import AccommodationPage from "../features/accommodations/pages/AccommodationPage";
@@ -24,19 +25,21 @@ export default function AppRoutes() {
   return (
     <BrowserRouter>
       <ScrollToTop />
-      <Routes>
-        {/* ครอบทุกหน้าด้วย MainLayout เพื่อให้มี Header/Footer ร่วมกัน */}
-        <Route element={<MainLayout />}>
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/provinces" element={<ProvinceMapPage />} />
-          <Route path="/accommodations" element={<AccommodationPage />} />
-          <Route path="/accommodations/:id" element={<AccommodationDetailPage />} />
-          <Route path="/cars" element={<CarPage />} />
-          <Route path="/cars/:id" element={<CarDetailPage />} />
-          <Route path="/guides" element={<GuidePage />} />
-          <Route path="/guides/:id" element={<GuideDetailPage />} />
-        </Route>
-      </Routes>
+      <CartProvider>
+        <Routes>
+          {/* ครอบทุกหน้าด้วย MainLayout เพื่อให้มี Header/Footer ร่วมกัน */}
+          <Route element={<MainLayout />}>
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/provinces" element={<ProvinceMapPage />} />
+            <Route path="/accommodations" element={<AccommodationPage />} />
+            <Route path="/accommodations/:id" element={<AccommodationDetailPage />} />
+            <Route path="/cars" element={<CarPage />} />
+            <Route path="/cars/:id" element={<CarDetailPage />} />
+            <Route path="/guides" element={<GuidePage />} />
+            <Route path="/guides/:id" element={<GuideDetailPage />} />
+          </Route>
+        </Routes>
+      </CartProvider>
     </BrowserRouter>
   );
 }

@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import Button from './Button';
 import { getImageForAccommodation } from '../utils/accommodationImages';
+import { useCart } from '../../../context/CartContext';
 
 /**
  * AccommodationCard Component
@@ -20,6 +21,7 @@ export default function AccommodationCard({
   onBookNow,
 }) {
   const navigate = useNavigate();
+  const { addToCart } = useCart();
 
   if (!accommodation) return null;
 
@@ -33,12 +35,33 @@ export default function AccommodationCard({
     }
   };
 
-  const handleBookClick = () => {
-    if (onBookNow) {
-      onBookNow(accommodation);
-    } else {
-      navigate(`/accommodations/${slugId}`, { state: { accommodation } });
-    }
+  const handleQuickAdd = (e) => {
+    if (e?.stopPropagation) e.stopPropagation();
+    addToCart(
+      {
+        type: 'accommodation',
+        itemId: slugId,
+        title: accommodation.name || 'โรงแรม/รีสอร์ท',
+        subtitle: `${accommodation.category || 'Luxury Resort'} • ${accommodation.rooms?.[0]?.room_type_name || 'Standard Room'}`,
+        image: resolvedImage,
+        location: accommodation.location?.city || accommodation.location?.address_label || 'Thailand',
+        unitPrice: accommodation.base_price_per_night || 0,
+        priceUnitLabel: '/ คืน',
+        quantity: 1,
+        dates: {
+          startDate: '2026-10-15',
+          endDate: '2026-10-18',
+          durationDays: 3,
+        },
+        details: {
+          roomName: accommodation.rooms?.[0]?.room_type_name || 'Standard Room',
+          adults: adultCount || 2,
+          children: childCount || 0,
+        },
+      },
+      { openDrawer: true }
+    );
+    onBookNow?.(accommodation);
   };
 
   const {
@@ -218,9 +241,10 @@ export default function AccommodationCard({
           </div>
 
           {/* ปุ่มดำเนินการ */}
-          <div className="flex items-center gap-2.5 sm:self-end">
+          <div className="flex flex-wrap items-center gap-2 sm:self-end">
             <Button
               variant="outline"
+              size="sm"
               onClick={handleDetailClick}
             >
               View Details
@@ -228,9 +252,12 @@ export default function AccommodationCard({
 
             <Button
               variant="primary"
-              onClick={handleBookClick}
+              size="sm"
+              onClick={handleQuickAdd}
+              className="gap-1.5 font-bold shadow-xs cursor-pointer"
             >
-              Book Now <span>→</span>
+              <span>🛒</span>
+              <span>เพิ่มลงตะกร้า</span>
             </Button>
           </div>
         </div>

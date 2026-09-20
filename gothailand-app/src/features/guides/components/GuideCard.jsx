@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import Button from "./Button";
+import { useCart } from "../../../context/CartContext";
 
 // รูปโปรไฟล์สำรอง กรณีรูปจริงโหลดไม่ได้หรือไม่มีข้อมูล
 const DEFAULT_AVATAR =
@@ -17,6 +18,7 @@ const DEFAULT_AVATAR =
  */
 export default function GuideCard({ guide, onViewDetail }) {
   const navigate = useNavigate();
+  const { addToCart } = useCart();
 
   if (!guide) return null;
 
@@ -37,6 +39,33 @@ export default function GuideCard({ guide, onViewDetail }) {
     } else {
       navigate(`/guides/${guideId}`, { state: { guide } });
     }
+  };
+
+  const handleQuickAdd = (e) => {
+    if (e?.stopPropagation) e.stopPropagation();
+    addToCart(
+      {
+        type: 'guide',
+        itemId: guideId,
+        title: guide.name || 'Certified Local Guide',
+        subtitle: `${guide.province || 'Thailand'} • ${languages.join(', ')}`,
+        image: photoUrl,
+        location: guide.province || 'Thailand',
+        unitPrice: fee,
+        priceUnitLabel: '/ วัน',
+        quantity: 1,
+        dates: {
+          startDate: '2026-10-15',
+          durationDays: 1,
+        },
+        details: {
+          duration: 'Full Day (8 Hours)',
+          languages,
+          licenseNumber: guide.license_number,
+        },
+      },
+      { openDrawer: true }
+    );
   };
 
   return (
@@ -160,19 +189,31 @@ export default function GuideCard({ guide, onViewDetail }) {
             </div>
           </div>
 
-          <Button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleCardClick();
-            }}
-            variant="navy"
-            size="none"
-            className="gap-1.5 px-3.5 py-2 text-xs font-bold transition-all duration-200 shadow-2xs group-hover:bg-amber-400 group-hover:text-slate-900"
-          >
-            <span>View Profile</span>
-            <span aria-hidden="true">→</span>
-          </Button>
+          <div className="flex items-center gap-1.5">
+            <Button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleCardClick();
+              }}
+              variant="outline"
+              size="none"
+              className="px-3 py-1.5 text-xs font-semibold cursor-pointer"
+            >
+              <span>โปรไฟล์</span>
+            </Button>
+
+            <Button
+              type="button"
+              onClick={handleQuickAdd}
+              variant="primary"
+              size="none"
+              className="gap-1 px-3 py-1.5 text-xs font-bold transition-all duration-200 shadow-2xs cursor-pointer"
+            >
+              <span>🛒</span>
+              <span>ใส่ตะกร้า</span>
+            </Button>
+          </div>
         </div>
       </div>
     </article>

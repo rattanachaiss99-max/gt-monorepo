@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { getDefaultDateRange, calculateDateSpan } from '../../../utils/date';
 import Button from './Button';
+import { useCart } from '../../../context/CartContext';
 import {
   getAssetUrl,
   getImageForAccommodation,
@@ -66,8 +67,34 @@ export default function AccommodationDetail({ accommodation = {}, onBookNow }) {
   const reviews = accommodation.total_reviews ?? 0;
 
   const facilities = accommodation.facilities || [];
+  const { addToCart } = useCart();
 
   const handleBookClick = () => {
+    addToCart(
+      {
+        type: 'accommodation',
+        itemId: accommodation.slug || accommodation.id || accommodation._id,
+        title: accommodation.name || 'โรงแรม/ที่พัก',
+        subtitle: `${accommodation.category || 'Luxury Resort'} • ${selectedRoom?.room_type_name || 'Standard Room'}`,
+        image: activeImage || mainImageAsset,
+        location: fullLocation,
+        unitPrice: currentPricePerNight,
+        priceUnitLabel: '/ คืน',
+        quantity: 1,
+        dates: {
+          startDate: checkInDate,
+          endDate: checkOutDate,
+          durationDays: nights,
+        },
+        details: {
+          roomName: selectedRoom?.room_type_name || 'Standard Room',
+          roomId: selectedRoomId,
+          adults: guestsCount,
+        },
+      },
+      { openDrawer: true }
+    );
+
     if (onBookNow) {
       onBookNow({
         accommodation,
@@ -77,8 +104,6 @@ export default function AccommodationDetail({ accommodation = {}, onBookNow }) {
         selectedRoom,
         totalPrice,
       });
-    } else {
-      alert(`กำลังดำเนินการจอง: ${accommodation.name}\nยอดรวม: ฿${totalPrice.toLocaleString()}`);
     }
   };
 

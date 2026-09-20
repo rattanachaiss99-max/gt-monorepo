@@ -1,4 +1,5 @@
 import { Outlet, NavLink } from "react-router-dom";
+import { CartNavbarButton, CartDrawer } from "../components/common";
 
 export default function MainLayout() {
   const navLinkClass = ({ isActive }) =>
@@ -28,24 +29,31 @@ export default function MainLayout() {
             </div>
           </NavLink>
 
-          {/* เมนูนำทาง */}
-          <nav className="flex items-center gap-1 sm:gap-2">
-            <NavLink to="/" className={navLinkClass} end>
-              🏠 หน้าแรก
-            </NavLink>
-            <NavLink to="/provinces" className={navLinkClass}>
-              🗺️ จัดการข้อมูลจังหวัด
-            </NavLink>
-            <NavLink to="/accommodations" className={navLinkClass}>
-              🏨 ที่พักท่องเที่ยว
-            </NavLink>
-            <NavLink to="/cars" className={navLinkClass}>
-              🚗 รถเช่าท่องเที่ยว
-            </NavLink>
-            <NavLink to="/guides" className={navLinkClass}>
-              🧭 ไกด์นำเที่ยว
-            </NavLink>
-          </nav>
+          {/* เมนูนำทาง & ตะกร้าสินค้า */}
+          <div className="flex items-center gap-2 sm:gap-3">
+            <nav className="flex items-center gap-1 sm:gap-2">
+              <NavLink to="/" className={navLinkClass} end>
+                🏠 หน้าแรก
+              </NavLink>
+              <NavLink to="/provinces" className={navLinkClass}>
+                🗺️ จัดการข้อมูลจังหวัด
+              </NavLink>
+              <NavLink to="/accommodations" className={navLinkClass}>
+                🏨 ที่พักท่องเที่ยว
+              </NavLink>
+              <NavLink to="/cars" className={navLinkClass}>
+                🚗 รถเช่าท่องเที่ยว
+              </NavLink>
+              <NavLink to="/guides" className={navLinkClass}>
+                🧭 ไกด์นำเที่ยว
+              </NavLink>
+            </nav>
+
+            <div className="h-6 w-px bg-slate-200 hidden sm:block" />
+
+            {/* ปุ่มเปิดตะกร้าส่วนกลาง */}
+            <CartNavbarButton />
+          </div>
         </div>
       </header>
 
@@ -54,6 +62,9 @@ export default function MainLayout() {
         <Outlet />
       </main>
 
+      {/* Slide-over Cart Drawer กลางของระบบ */}
+      <CartDrawer />
+
       {/* Footer ส่วนกลาง */}
       <footer className="bg-white border-t border-slate-200 py-6 text-center text-xs text-slate-500">
         <p>© 2026 Go Thailand — JSD13 Team 8. All rights reserved.</p>
@@ -61,3 +72,4 @@ export default function MainLayout() {
     </div>
   );
 }
+
