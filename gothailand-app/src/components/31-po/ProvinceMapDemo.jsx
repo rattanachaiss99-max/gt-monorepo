@@ -117,6 +117,14 @@ export default function ProvinceMapDemo() {
     };
   }, [API_URL]);
 
+  // Callback เมื่อมีการอัปเดตข้อมูลจังหวัดผ่าน HTTP PATCH หรือ PUT
+  const handleProvinceUpdated = (updatedDoc) => {
+    if (!updatedDoc) return;
+    setProvinces((prev) =>
+      prev.map((p) => (p.slug === updatedDoc.slug ? { ...p, ...updatedDoc } : p))
+    );
+  };
+
   // หาจังหวัดที่กำลังเลือกดูอยู่
   const currentProvince =
     provinces.find((p) => p.slug === selectedSlug) || provinces[0];
@@ -199,6 +207,7 @@ export default function ProvinceMapDemo() {
             provinces={provinces}
             selectedSlug={selectedSlug}
             onSelectProvince={setSelectedSlug}
+            onUpdateProvince={handleProvinceUpdated}
             accommodations={yokData.accommodations}
             cars={yokData.cars}
             guides={yokData.guides}
