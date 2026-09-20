@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GoThailand - SVG Logo Preview & Assets</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card: #1e293b;
+      --border: #334155;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --primary: #38bdf8;
+    }
+    body {
+      margin: 0;
+      padding: 40px 20px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    h1 {
+      margin-bottom: 8px;
+      font-size: 28px;
+      font-weight: 700;
+      color: #fff;
+    }
+    p.sub {
+      margin-top: 0;
+      color: var(--muted);
+      font-size: 15px;
+    }
+    .controls {
+      display: flex;
+      gap: 12px;
+      margin: 24px 0 32px;
+      flex-wrap: wrap;
+    }
+    .btn {
+      padding: 8px 18px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: #fff;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+    .btn:hover, .btn.active {
+      background: #2563eb;
+      border-color: #3b82f6;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 24px;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+    }
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 14px;
+    }
+    .card-title {
+      font-weight: 600;
+      font-size: 16px;
+    }
+    .card-tag {
+      font-size: 12px;
+      color: var(--muted);
+      background: rgba(255,255,255,0.06);
+      padding: 2px 8px;
+      border-radius: 6px;
+    }
+    .preview-box {
+      border-radius: 10px;
+      padding: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 280px;
+      transition: background 0.3s;
+    }
+    .preview-box.checker {
+      background-color: #f1f5f9;
+      background-image: 
+        linear-gradient(45deg, #cbd5e1 25%, transparent 25%), 
+        linear-gradient(-45deg, #cbd5e1 25%, transparent 25%), 
+        linear-gradient(45deg, transparent 75%, #cbd5e1 75%), 
+        linear-gradient(-45deg, transparent 75%, #cbd5e1 75%);
+      background-size: 16px 16px;
+      background-position: 0 0, 0 8px, 8px -8px, -8px 0px;
+    }
+    .preview-box.white {
+      background: #ffffff;
+    }
+    .preview-box.dark {
+      background: #0b1329;
+    }
+    .preview-box.cream {
+      background: #fbf8f0;
+    }
+    .preview-box img {
+      max-width: 100%;
+      max-height: 240px;
+      object-fit: contain;
+    }
+    .card-actions {
+      margin-top: 18px;
+      display: flex;
+      gap: 10px;
+    }
+    .card-actions a {
+      flex: 1;
+      text-align: center;
+      padding: 9px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 600;
+      background: #1e40af;
+      color: #fff;
+    }
+    .card-actions a.sec {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+    }
+    .card-actions a:hover {
+      opacity: 0.9;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>GoThailand Vector Assets (SVG)</h1>
+    <p class="sub">แปลงรูปภาพโลโก้ต้นฉบับเป็นไฟล์ SVG เวกเตอร์คมชัดระดับ Retina ตัดพื้นหลังโปร่งใสและจัดเรียง Typography เรียบร้อย</p>
+
+    <div class="controls">
+      <span style="align-self: center; font-size: 14px; color: var(--muted); margin-right: 4px;">เปลี่ยนพื้นหลัง Preview:</span>
+      <button class="btn active" onclick="setBg('checker')">ลายตาราง (Transparent)</button>
+      <button class="btn" onclick="setBg('white')">พื้นหลังขาว (White)</button>
+      <button class="btn" onclick="setBg('dark')">พื้นหลังมืด (Dark Mode)</button>
+      <button class="btn" onclick="setBg('cream')">สีครีมต้นฉบับ (Original Cream)</button>
+    </div>
+
+    <div class="grid">
+      <!-- Card 1 -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">1. gothailand-logo.svg</span>
+          <span class="card-tag">Production (Font-Free)</span>
+        </div>
+        <div class="preview-box checker" id="p1">
+          <img src="gothailand-logo.svg" alt="GoThailand Full Logo SVG" />
+        </div>
+        <div class="card-actions">
+          <a href="gothailand-logo.svg" download>ดาวน์โหลด SVG</a>
+          <a href="gothailand-logo.png" download class="sec">ดาวน์โหลด PNG HD</a>
+        </div>
+      </div>
+
+      <!-- Card 2 -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">2. gothailand-badge.svg</span>
+          <span class="card-tag">Favicon / App Icon</span>
+        </div>
+        <div class="preview-box checker" id="p2">
+          <img src="gothailand-badge.svg" alt="GoThailand Badge SVG" />
+        </div>
+        <div class="card-actions">
+          <a href="gothailand-badge.svg" download>ดาวน์โหลด SVG</a>
+          <a href="gothailand-badge.png" download class="sec">ดาวน์โหลด PNG HD</a>
+        </div>
+      </div>
+
+      <!-- Card 3: Navbar Live Preview -->
+      <div class="card" style="grid-column: 1 / -1;">
+        <div class="card-header">
+          <span class="card-title">✨ Navbar Live Preview (gothailand-badge.svg + gothailand-logo-text.png)</span>
+          <span class="card-tag">Navbar Combination</span>
+        </div>
+        <div style="background: rgba(255,255,255,0.95); border-radius: 10px; padding: 12px 24px; display: flex; align-items: center; justify-content: space-between; border: 1px solid #e2e8f0;">
+          <div style="display: flex; align-items: center; gap: 12px; cursor: pointer;">
+            <img src="gothailand-badge.svg" alt="GoThailand Badge" style="height: 44px; width: auto; object-fit: contain;" />
+            <img src="gothailand-logo-text.png" alt="Go Thailand" style="height: 28px; width: auto; object-fit: contain;" />
+          </div>
+          <div style="display: flex; align-items: center; gap: 16px; font-size: 14px; font-weight: 500; color: #475569;">
+            <span style="color: #d97706; font-weight: 700;">🏠 หน้าแรก</span>
+            <span>🏨 ที่พัก</span>
+            <span>🚗 รถเช่า</span>
+            <span>🧭 ไกด์</span>
+            <span style="background: #f1f5f9; padding: 6px 12px; border-radius: 8px;">🛒 ตะกร้า</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function setBg(mode) {
+      document.querySelectorAll('.btn').forEach(b => b.classList.remove('active'));
+      event.target.classList.add('active');
+      ['p1', 'p2', 'p3'].forEach(id => {
+        const el = document.getElementById(id);
+        el.className = 'preview-box ' + mode;
+      });
+    }
+  </script>
+</body>
+</html>

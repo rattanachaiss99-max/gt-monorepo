@@ -2,18 +2,18 @@
  * AppRoutes.jsx
  * -------------------------------------------------------------
  * จุดศูนย์กลางควบคุมระบบเส้นทาง (Routing) ทั้งหมดของโปรเจกต์
- * จัดการให้หน้าทั้งหมดแสดงผลภายใต้ MainLayout เดียวกัน
- * 
- * จุดเด่นสำหรับการอธิบายทีม:
- * 1. ควบคุม Navigation ทั้งหมดจากจุดเดียว (Single Source of Truth)
- * 2. แต่ละหน้าใช้ Layout ร่วมกันอัตโนมัติผ่าน <Outlet />
+ * แบ่งสถาปัตยกรรม Layout 3 กลุ่มตามบทบาทการทำงาน:
+ * 1. MainLayout: หน้าบริการท่องเที่ยวสาธารณะ พร้อม Responsive Header, Mobile Bottom Nav และ Rich Footer
+ * 2. AuthLayout: หน้าสำหรับเข้าสู่ระบบและสมัครสมาชิก แบบ Clean & Minimal Focus
+ * 3. AdminLayout: แผงควบคุมระบบหลังบ้านสำหรับผู้ดูแลระบบ (Admin Console) พร้อม Sidebar และ Route Guard
  */
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import ScrollToTop from "../components/common/ScrollToTop";
-import MainLayout from "../layouts/MainLayout";
+import { MainLayout, AuthLayout, AdminLayout } from "../layouts";
 import { AuthProvider } from "../context/AuthContext";
 import { CartProvider } from "../context/CartContext";
 import ProtectedRoute from "./ProtectedRoute";
+
 import LandingPage from "../pages/LandingPage";
 import LoginPage from "../pages/LoginPage";
 import RegisterPage from "../pages/RegisterPage";
@@ -32,25 +32,32 @@ export default function AppRoutes() {
       <AuthProvider>
         <CartProvider>
           <Routes>
-            {/* ครอบทุกหน้าด้วย MainLayout เพื่อให้มี Header/Footer ร่วมกัน */}
+            {/* 1. Public Portal Layout: หน้าสำหรับนักท่องเที่ยวและบริการทั่วไป */}
             <Route element={<MainLayout />}>
               <Route path="/" element={<LandingPage />} />
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/register" element={<RegisterPage />} />
-              <Route
-                path="/provinces"
-                element={
-                  <ProtectedRoute adminOnly={true}>
-                    <ProvinceMapPage />
-                  </ProtectedRoute>
-                }
-              />
               <Route path="/accommodations" element={<AccommodationPage />} />
               <Route path="/accommodations/:id" element={<AccommodationDetailPage />} />
               <Route path="/cars" element={<CarPage />} />
               <Route path="/cars/:id" element={<CarDetailPage />} />
               <Route path="/guides" element={<GuidePage />} />
               <Route path="/guides/:id" element={<GuideDetailPage />} />
+            </Route>
+
+            {/* 2. Authentication Layout: หน้าเข้าสู่ระบบและสมัครสมาชิก */}
+            <Route element={<AuthLayout />}>
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/register" element={<RegisterPage />} />
+            </Route>
+
+            {/* 3. Admin Backoffice Layout: ระบบจัดการหลังบ้าน (ป้องกันด้วย ProtectedRoute) */}
+            <Route
+              element={
+                <ProtectedRoute adminOnly={true}>
+                  <AdminLayout />
+                </ProtectedRoute>
+              }
+            >
+              <Route path="/provinces" element={<ProvinceMapPage />} />
             </Route>
           </Routes>
         </CartProvider>
