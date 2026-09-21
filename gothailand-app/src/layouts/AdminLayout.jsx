@@ -29,9 +29,9 @@ export default function AdminLayout() {
     }`;
 
   const sidebarContent = (
-    <div className="flex flex-col h-full text-slate-200">
+    <div className="flex flex-col h-full text-slate-200 overflow-y-auto">
       {/* ส่วนหัว Sidebar */}
-      <div className="p-5 border-b border-slate-800 flex items-center justify-between">
+      <div className="p-5 border-b border-slate-800 flex items-center justify-between shrink-0">
         <NavLink to="/" className="flex items-center gap-2.5">
           <span className="text-2xl filter drop-shadow-sm">🇹🇭</span>
           <div>
@@ -56,7 +56,7 @@ export default function AdminLayout() {
       </div>
 
       {/* เมนูนำทางของระบบจัดการ */}
-      <div className="flex-1 p-4 space-y-1.5 overflow-y-auto">
+      <div className="p-4 space-y-1.5 shrink-0">
         <div className="text-[10px] uppercase tracking-wider text-slate-500 font-bold px-3 mb-2">
           เมนูจัดการหลัก
         </div>
@@ -105,38 +105,49 @@ export default function AdminLayout() {
         </div>
       </div>
 
-      {/* ส่วนท้าย Sidebar: ข้อมูล Admin & ปุ่มกลับหน้าร้าน */}
-      <div className="p-4 border-t border-slate-800 bg-black/20 space-y-3">
-        {/* การ์ดผู้ดูแลระบบ */}
-        <div className="flex items-center gap-2.5 p-2 rounded-xl bg-white/5 border border-white/10">
-          <div className="w-8 h-8 rounded-full bg-amber-400 text-slate-950 font-bold text-xs flex items-center justify-center shrink-0">
-            {user?.firstName ? user.firstName.charAt(0).toUpperCase() : "A"}
+      {/* ส่วนท้าย Sidebar: ข้อมูล Admin & ปุ่มกลับหน้าร้าน (กางกล่องเต็มพื้นที่ชิดขอบล่างจอ) */}
+      <div className="flex-1 p-4 border-t border-slate-800 bg-black/25 flex flex-col justify-between">
+        <div className="space-y-3">
+          {/* การ์ดผู้ดูแลระบบ */}
+          <div className="flex items-center gap-2.5 p-2 rounded-xl bg-white/5 border border-white/10">
+            <div className="w-8 h-8 rounded-full bg-amber-400 text-slate-950 font-bold text-xs flex items-center justify-center shrink-0">
+              {user?.firstName ? user.firstName.charAt(0).toUpperCase() : "A"}
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-xs font-bold text-white truncate">
+                {user?.firstName || "ผู้ดูแลระบบ"} {user?.lastName || ""}
+              </p>
+              <p className="text-[10px] text-slate-400 truncate">{user?.email}</p>
+            </div>
           </div>
-          <div className="min-w-0 flex-1">
-            <p className="text-xs font-bold text-white truncate">
-              {user?.firstName || "ผู้ดูแลระบบ"} {user?.lastName || ""}
-            </p>
-            <p className="text-[10px] text-slate-400 truncate">{user?.email}</p>
+
+          <div className="space-y-1.5 pt-1">
+            <NavLink
+              to="/"
+              className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-xl bg-white/10 hover:bg-white/20 text-xs font-bold text-slate-200 transition-colors cursor-pointer"
+            >
+              <span>🏠</span>
+              <span>กลับสู่หน้าร้านค้า (Public)</span>
+            </NavLink>
+
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 text-xs font-bold transition-colors cursor-pointer border border-rose-500/30"
+            >
+              <span>🚪</span>
+              <span>ออกจากระบบ</span>
+            </button>
           </div>
         </div>
 
-        <div className="space-y-1.5 pt-1">
-          <NavLink
-            to="/"
-            className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-xl bg-white/10 hover:bg-white/20 text-xs font-bold text-slate-200 transition-colors cursor-pointer"
-          >
-            <span>🏠</span>
-            <span>กลับสู่หน้าร้านค้า (Public)</span>
-          </NavLink>
-
-          <button
-            type="button"
-            onClick={handleLogout}
-            className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 text-xs font-bold transition-colors cursor-pointer border border-rose-500/30"
-          >
-            <span>🚪</span>
-            <span>ออกจากระบบ</span>
-          </button>
+        {/* แถบแสดงสถานะระบบด้านล่างสุด ช่วยตรึงกล่องให้กางชิดขอบล่างจออย่างสมบูรณ์ */}
+        <div className="pt-4 border-t border-slate-800/60 text-[11px] text-slate-400 flex items-center justify-between">
+          <span className="text-slate-400">Go Thailand Admin</span>
+          <span className="flex items-center gap-1.5 text-emerald-400 text-[10px] font-medium">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            v1.0 Ready
+          </span>
         </div>
       </div>
     </div>

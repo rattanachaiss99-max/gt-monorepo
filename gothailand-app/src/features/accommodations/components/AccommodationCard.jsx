@@ -1,7 +1,8 @@
-import { useNavigate } from 'react-router-dom';
-import Button from './Button';
-import { getImageForAccommodation } from '../utils/accommodationImages';
-import { useCart } from '../../../context/CartContext';
+import { useNavigate } from "react-router-dom";
+import Button from "./Button";
+import { QuickAddToCartButton } from "../../../components/common";
+import { getImageForAccommodation } from "../utils/accommodationImages";
+import { useCart } from "../../../context/CartContext";
 
 /**
  * AccommodationCard Component
@@ -39,27 +40,30 @@ export default function AccommodationCard({
     if (e?.stopPropagation) e.stopPropagation();
     addToCart(
       {
-        type: 'accommodation',
+        type: "accommodation",
         itemId: slugId,
-        title: accommodation.name || 'โรงแรม/รีสอร์ท',
-        subtitle: `${accommodation.category || 'Luxury Resort'} • ${accommodation.rooms?.[0]?.room_type_name || 'Standard Room'}`,
+        title: accommodation.name || "โรงแรม/รีสอร์ท",
+        subtitle: `${accommodation.category || "Luxury Resort"} • ${accommodation.rooms?.[0]?.room_type_name || "Standard Room"}`,
         image: resolvedImage,
-        location: accommodation.location?.city || accommodation.location?.address_label || 'Thailand',
+        location:
+          accommodation.location?.city ||
+          accommodation.location?.address_label ||
+          "Thailand",
         unitPrice: accommodation.base_price_per_night || 0,
-        priceUnitLabel: '/ คืน',
+        priceUnitLabel: "/ คืน",
         quantity: 1,
         dates: {
-          startDate: '2026-10-15',
-          endDate: '2026-10-18',
+          startDate: "2026-10-15",
+          endDate: "2026-10-18",
           durationDays: 3,
         },
         details: {
-          roomName: accommodation.rooms?.[0]?.room_type_name || 'Standard Room',
+          roomName: accommodation.rooms?.[0]?.room_type_name || "Standard Room",
           adults: adultCount || 2,
           children: childCount || 0,
         },
       },
-      { openDrawer: true }
+      { openDrawer: true },
     );
     onBookNow?.(accommodation);
   };
@@ -77,9 +81,7 @@ export default function AccommodationCard({
 
   // หารูปจาก local assets, fallback ตามหมวดหมู่ หรือรูปที่ override มา
   const resolvedImage =
-    imageSrc ||
-    getImageForAccommodation(accommodation) ||
-    '';
+    imageSrc || getImageForAccommodation(accommodation) || "";
 
   // ดึงพิกัดแผนที่ถ้ามีข้อมูล
   const lat = location?.map_coordinates?.lat;
@@ -88,8 +90,8 @@ export default function AccommodationCard({
   const mapUrl = hasCoordinates
     ? `https://www.google.com/maps?q=${lat},${lng}`
     : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-      location?.address_label || name || 'Thailand'
-    )}`;
+        location?.address_label || name || "Thailand",
+      )}`;
 
   // ข้อมูลจำนวนผู้เข้าพักอ้างอิงจาก data schema เท่านั้น (rooms[0].max_guests)
   const firstRoomGuests = rooms?.[0]?.max_guests;
@@ -103,7 +105,7 @@ export default function AccommodationCard({
         {resolvedImage ? (
           <img
             src={resolvedImage}
-            alt={name || 'Accommodation'}
+            alt={name || "Accommodation"}
             loading="lazy"
             className="absolute inset-0 w-full h-full object-cover object-center transform transition-transform duration-700 ease-out group-hover:scale-105"
             onError={(e) => {
@@ -111,7 +113,7 @@ export default function AccommodationCard({
               if (fallback && e.currentTarget.src !== fallback) {
                 e.currentTarget.src = fallback;
               } else {
-                e.currentTarget.style.display = 'none';
+                e.currentTarget.style.display = "none";
               }
             }}
           />
@@ -167,7 +169,7 @@ export default function AccommodationCard({
               {name}
             </h3>
 
-            {typeof rating_avg === 'number' && (
+            {typeof rating_avg === "number" && (
               <div
                 className="bg-slate-900 text-white text-xs sm:text-sm font-bold px-2.5 py-1 rounded-lg flex items-center gap-1.5 shrink-0 shadow-2xs"
                 title={`Rating: ${rating_avg.toFixed(1)} / 5`}
@@ -182,10 +184,15 @@ export default function AccommodationCard({
           {location?.address_label && (
             <div className="flex items-center flex-wrap gap-1.5 text-slate-500 text-sm">
               {/* ไอคอนหมุดแผนที่ */}
-              <span className="text-red-500 shrink-0 text-base" aria-hidden="true">
+              <span
+                className="text-red-500 shrink-0 text-base"
+                aria-hidden="true"
+              >
                 📍
               </span>
-              <span className="truncate max-w-[280px]">{location.address_label}</span>
+              <span className="truncate max-w-[280px]">
+                {location.address_label}
+              </span>
               <a
                 href={mapUrl}
                 target="_blank"
@@ -227,8 +234,10 @@ export default function AccommodationCard({
             {/* แสดงจำนวนผู้ใหญ่เฉพาะเมื่อ schema มีข้อมูลจริง (ไม่ใช้ mock) */}
             {adultCount && (
               <p className="text-xs text-slate-500 font-medium mb-1">
-                {adultCount} adult{adultCount > 1 ? 's' : ''}
-                {childCount ? `, ${childCount} ${childCount > 1 ? 'children' : 'child'}` : ''}
+                {adultCount} adult{adultCount > 1 ? "s" : ""}
+                {childCount
+                  ? `, ${childCount} ${childCount > 1 ? "children" : "child"}`
+                  : ""}
               </p>
             )}
 
@@ -236,29 +245,22 @@ export default function AccommodationCard({
               <span className="text-2xl sm:text-3xl font-bold font-serif text-slate-900 tracking-tight">
                 ฿{Number(base_price_per_night || 0).toLocaleString()}
               </span>
-              <span className="text-slate-500 text-sm font-normal">/ night</span>
+              <span className="text-slate-500 text-sm font-normal">
+                / night
+              </span>
             </div>
           </div>
 
           {/* ปุ่มดำเนินการ */}
           <div className="flex flex-wrap items-center gap-2 sm:self-end">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleDetailClick}
-            >
+            <Button variant="outline" size="sm" onClick={handleDetailClick}>
               View Details
             </Button>
 
-            <Button
-              variant="primary"
-              size="sm"
+            <QuickAddToCartButton
               onClick={handleQuickAdd}
-              className="gap-1.5 font-bold shadow-xs cursor-pointer"
-            >
-              <span>🛒</span>
-              <span>เพิ่มลงตะกร้า</span>
-            </Button>
+              size="sm"
+            />
           </div>
         </div>
       </div>

@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import Button from "./Button";
+import { QuickAddToCartButton } from "../../../components/common";
 import { useCart } from "../../../context/CartContext";
 
 // รูปโปรไฟล์สำรอง กรณีรูปจริงโหลดไม่ได้หรือไม่มีข้อมูล
@@ -45,26 +46,26 @@ export default function GuideCard({ guide, onViewDetail }) {
     if (e?.stopPropagation) e.stopPropagation();
     addToCart(
       {
-        type: 'guide',
+        type: "guide",
         itemId: guideId,
-        title: guide.name || 'Certified Local Guide',
-        subtitle: `${guide.province || 'Thailand'} • ${languages.join(', ')}`,
+        title: guide.name || "Certified Local Guide",
+        subtitle: `${guide.province || "Thailand"} • ${languages.join(", ")}`,
         image: photoUrl,
-        location: guide.province || 'Thailand',
+        location: guide.province || "Thailand",
         unitPrice: fee,
-        priceUnitLabel: '/ วัน',
+        priceUnitLabel: "/ วัน",
         quantity: 1,
         dates: {
-          startDate: '2026-10-15',
+          startDate: "2026-10-15",
           durationDays: 1,
         },
         details: {
-          duration: 'Full Day (8 Hours)',
+          duration: "Full Day (8 Hours)",
           languages,
           licenseNumber: guide.license_number,
         },
       },
-      { openDrawer: true }
+      { openDrawer: true },
     );
   };
 
@@ -203,16 +204,10 @@ export default function GuideCard({ guide, onViewDetail }) {
               <span>โปรไฟล์</span>
             </Button>
 
-            <Button
-              type="button"
+            <QuickAddToCartButton
               onClick={handleQuickAdd}
-              variant="primary"
-              size="none"
-              className="gap-1 px-3 py-1.5 text-xs font-bold transition-all duration-200 shadow-2xs cursor-pointer"
-            >
-              <span>🛒</span>
-              <span>ใส่ตะกร้า</span>
-            </Button>
+              size="sm"
+            />
           </div>
         </div>
       </div>
