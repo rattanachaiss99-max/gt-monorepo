@@ -51,7 +51,9 @@ export default function LoginPage() {
     switchDemoRole(role);
     setSuccessMsg(`สลับเป็นบัญชี ${role === 'admin' ? 'Admin' : 'Customer'} สำเร็จ!`);
     setTimeout(() => {
-      if (role === 'admin') {
+      if (redirectTarget) {
+        navigate(redirectTarget);
+      } else if (role === 'admin') {
         navigate('/provinces');
       } else {
         navigate('/');

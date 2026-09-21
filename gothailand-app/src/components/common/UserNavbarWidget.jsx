@@ -145,6 +145,30 @@ export default function UserNavbarWidget() {
 
           {/* ลิงก์เมนูเพิ่มเติม */}
           <div className="pt-2 border-t border-slate-100 space-y-1.5 text-xs">
+            <NavLink
+              to="/customerinfo"
+              onClick={() => setMenuOpen(false)}
+              className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-slate-100 text-slate-700 font-semibold transition-colors"
+            >
+              <div className="flex items-center gap-2">
+                <span>👤</span>
+                <span>แก้ไขข้อมูลส่วนตัว (Profile & Users)</span>
+              </div>
+              <span className="text-[10px] text-slate-400">→</span>
+            </NavLink>
+
+            <NavLink
+              to="/my-bookings"
+              onClick={() => setMenuOpen(false)}
+              className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-slate-100 text-slate-700 font-semibold transition-colors"
+            >
+              <div className="flex items-center gap-2">
+                <span>📋</span>
+                <span>การจองของฉัน (My Bookings)</span>
+              </div>
+              <span className="text-[10px] text-slate-400">→</span>
+            </NavLink>
+
             {isAdmin && (
               <NavLink
                 to="/provinces"

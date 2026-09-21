@@ -31,9 +31,15 @@ export default function TravelSearchResultsTable({
   const [sortBy, setSortBy] = useState("recommended"); // 'recommended' | 'price-asc' | 'price-desc' | 'name'
 
   // จังหวัดที่อ้างอิงจากการค้นหา หรือจาก selectedSlug
-  const targetSlug = searchQuery?.provinceSlug !== undefined ? searchQuery.provinceSlug : selectedSlug;
+  const targetSlug =
+    searchQuery?.provinceSlug !== undefined
+      ? searchQuery.provinceSlug
+      : selectedSlug;
   const currentProvinceObj = provinces.find(
-    (p) => p.slug === targetSlug || p.nameTh === targetSlug || p.nameEn === targetSlug
+    (p) =>
+      p.slug === targetSlug ||
+      p.nameTh === targetSlug ||
+      p.nameEn === targetSlug,
   );
 
   // แปลงรายการทั้งหมดจาก Yok API ให้อยู่ในโครงสร้าง Unified Search Item
@@ -43,7 +49,12 @@ export default function TravelSearchResultsTable({
     // 1. ที่พัก (Accommodations)
     accommodations.forEach((acc) => {
       const matchedProv = provinces.find((p) => matchProvince(acc.location, p));
-      const provNameTh = matchedProv?.nameTh || (typeof acc.location === "object" ? acc.location?.city : acc.location) || "ไม่ระบุ";
+      const provNameTh =
+        matchedProv?.nameTh ||
+        (typeof acc.location === "object"
+          ? acc.location?.city
+          : acc.location) ||
+        "ไม่ระบุ";
       const provNameEn = matchedProv?.nameEn || "";
       const provSlug = matchedProv?.slug || "";
       const price = acc.price ?? acc.base_price_per_night ?? acc.basePrice ?? 0;
@@ -55,14 +66,18 @@ export default function TravelSearchResultsTable({
         serviceIcon: "🏨",
         serviceLabel: "ที่พัก",
         name: acc.name || "ที่พักไม่มีชื่อ",
-        subTitle: acc.category || (acc.rating ? `⭐ ${acc.rating}` : "ที่พักคัดสรร"),
+        subTitle:
+          acc.category || (acc.rating ? `⭐ ${acc.rating}` : "ที่พักคัดสรร"),
         provinceNameTh: provNameTh,
         provinceNameEn: provNameEn,
         provinceSlug: provSlug,
         matchedProv,
         price,
         priceUnit: "/คืน",
-        highlight: acc.facilities?.slice(0, 3).join(", ") || acc.special_options?.slice(0, 2).join(", ") || "สิ่งอำนวยความสะดวกครบครัน",
+        highlight:
+          acc.facilities?.slice(0, 3).join(", ") ||
+          acc.special_options?.slice(0, 2).join(", ") ||
+          "สิ่งอำนวยความสะดวกครบครัน",
         link: `/accommodations/${acc.slug || acc.id || acc._id}`,
       });
     });
@@ -70,11 +85,20 @@ export default function TravelSearchResultsTable({
     // 2. รถเช่า (Cars)
     cars.forEach((car) => {
       const matchedProv = provinces.find((p) => matchCarProvince(car, p));
-      const provNameTh = matchedProv?.nameTh || car.location || (Array.isArray(car.availableLocations) ? car.availableLocations[0] : "") || "ครอบคลุมหลายจังหวัด";
+      const provNameTh =
+        matchedProv?.nameTh ||
+        car.location ||
+        (Array.isArray(car.availableLocations)
+          ? car.availableLocations[0]
+          : "") ||
+        "ครอบคลุมหลายจังหวัด";
       const provNameEn = matchedProv?.nameEn || "";
       const provSlug = matchedProv?.slug || "";
       const price = car.pricePerDay ?? car.price ?? 0;
-      const carTitle = car.name || `${car.brand || ""} ${car.model || ""}`.trim() || "รถเช่าขับเอง";
+      const carTitle =
+        car.name ||
+        `${car.brand || ""} ${car.model || ""}`.trim() ||
+        "รถเช่าขับเอง";
 
       items.push({
         id: car._id || car.id || car.slug,
@@ -90,18 +114,23 @@ export default function TravelSearchResultsTable({
         matchedProv,
         price,
         priceUnit: "/วัน",
-        highlight: [
-          car.transmission ? `เกียร์ ${car.transmission}` : "",
-          car.seats ? `${car.seats} ที่นั่ง` : "",
-          car.fuelType ? `เชื้อเพลิง ${car.fuelType}` : "",
-        ].filter(Boolean).join(" • ") || "ประกันภัยชั้น 1",
+        highlight:
+          [
+            car.transmission ? `เกียร์ ${car.transmission}` : "",
+            car.seats ? `${car.seats} ที่นั่ง` : "",
+            car.fuelType ? `เชื้อเพลิง ${car.fuelType}` : "",
+          ]
+            .filter(Boolean)
+            .join(" • ") || "ประกันภัยชั้น 1",
         link: `/cars/${car.slug || car.id || car._id}`,
       });
     });
 
     // 3. ไกด์นำเที่ยว (Guides)
     guides.forEach((guide) => {
-      const matchedProv = provinces.find((p) => matchProvince(guide.province, p));
+      const matchedProv = provinces.find((p) =>
+        matchProvince(guide.province, p),
+      );
       const provNameTh = matchedProv?.nameTh || guide.province || "ทั่วประเทศ";
       const provNameEn = matchedProv?.nameEn || "";
       const provSlug = matchedProv?.slug || "";
@@ -118,7 +147,11 @@ export default function TravelSearchResultsTable({
         serviceIcon: "🧭",
         serviceLabel: "ไกด์",
         name: guide.name || "มัคคุเทศก์ท้องถิ่น",
-        subTitle: guide.licenseCategory ? `ใบอนุญาต: ${guide.licenseCategory}` : (guide.verified ? "✓ ยืนยันตัวตนแล้ว" : "มัคคุเทศก์มีใบอนุญาต"),
+        subTitle: guide.licenseCategory
+          ? `ใบอนุญาต: ${guide.licenseCategory}`
+          : guide.verified
+            ? "✓ ยืนยันตัวตนแล้ว"
+            : "มัคคุเทศก์มีใบอนุญาต",
         provinceNameTh: provNameTh,
         provinceNameEn: provNameEn,
         provinceSlug: provSlug,
@@ -143,7 +176,10 @@ export default function TravelSearchResultsTable({
         if (!item.matchedProv && !item.provinceSlug) return false;
         return (
           item.provinceSlug === searchQuery.provinceSlug ||
-          (item.matchedProv && matchProvince(item.raw.location || item.raw.province, { slug: searchQuery.provinceSlug }))
+          (item.matchedProv &&
+            matchProvince(item.raw.location || item.raw.province, {
+              slug: searchQuery.provinceSlug,
+            }))
         );
       });
     } else if (targetSlug) {
@@ -158,10 +194,14 @@ export default function TravelSearchResultsTable({
 
     // 2. กรองตาม Service Type จาก SearchQuery (เช่น กดค้นหาจากแท็บที่พัก/รถเช่า/ไกด์)
     if (searchQuery?.serviceType && searchQuery.serviceType !== "all") {
-      result = result.filter((item) => item.serviceType === searchQuery.serviceType);
+      result = result.filter(
+        (item) => item.serviceType === searchQuery.serviceType,
+      );
     } else if (searchQuery?.selectedServices) {
       // โหมด All-in-One: กรองตาม checkboxes ที่เลือก
-      result = result.filter((item) => searchQuery.selectedServices[item.serviceType]);
+      result = result.filter(
+        (item) => searchQuery.selectedServices[item.serviceType],
+      );
     }
 
     // 3. กรองตาม Car Category จาก SearchQuery
@@ -178,8 +218,11 @@ export default function TravelSearchResultsTable({
       result = result.filter((item) => {
         if (item.serviceType !== "guides") return true;
         const qLang = searchQuery.guideLanguage.toLowerCase();
-        const itemLangs = (Array.isArray(item.raw?.languages) ? item.raw.languages : [item.raw?.language || ""])
-          .map((l) => String(l).toLowerCase());
+        const itemLangs = (
+          Array.isArray(item.raw?.languages)
+            ? item.raw.languages
+            : [item.raw?.language || ""]
+        ).map((l) => String(l).toLowerCase());
         return itemLangs.some((l) => l.includes(qLang));
       });
     }
@@ -199,7 +242,7 @@ export default function TravelSearchResultsTable({
           item.provinceNameEn.toLowerCase().includes(q) ||
           item.serviceLabel.includes(q) ||
           item.highlight.toLowerCase().includes(q) ||
-          item.subTitle.toLowerCase().includes(q)
+          item.subTitle.toLowerCase().includes(q),
       );
     }
 
@@ -213,13 +256,22 @@ export default function TravelSearchResultsTable({
     }
 
     return result;
-  }, [allUnifiedItems, searchQuery, targetSlug, serviceFilter, tableSearch, sortBy]);
+  }, [
+    allUnifiedItems,
+    searchQuery,
+    targetSlug,
+    serviceFilter,
+    tableSearch,
+    sortBy,
+  ]);
 
   // สรุปจำนวนแยกตามประเภท
   const countStats = useMemo(() => {
     return {
       all: filteredItems.length,
-      accommodations: allUnifiedItems.filter((i) => i.serviceType === "accommodations").length,
+      accommodations: allUnifiedItems.filter(
+        (i) => i.serviceType === "accommodations",
+      ).length,
       cars: allUnifiedItems.filter((i) => i.serviceType === "cars").length,
       guides: allUnifiedItems.filter((i) => i.serviceType === "guides").length,
     };
@@ -258,7 +310,8 @@ export default function TravelSearchResultsTable({
             )}
           </div>
           <p className="text-xs text-slate-500 mt-1">
-            ผลการค้นหาจาก Yok API ที่เชื่อมโยงกับฐานข้อมูล 77 จังหวัด • คลิกที่แถวเพื่อสลับดูแผนที่ SVG ด้านบน
+            ผลการค้นหาจาก Yok API ที่เชื่อมโยงกับฐานข้อมูล 77 จังหวัด •
+            คลิกที่แถวเพื่อสลับดูแผนที่ SVG ด้านบน
           </p>
         </div>
 
@@ -353,16 +406,23 @@ export default function TravelSearchResultsTable({
             <tr>
               <th className="py-2.5 px-3 whitespace-nowrap">บริการ</th>
               <th className="py-2.5 px-3 min-w-[200px]">ชื่อบริการ / รายการ</th>
-              <th className="py-2.5 px-3 whitespace-nowrap">จังหวัด / พื้นที่</th>
+              <th className="py-2.5 px-3 whitespace-nowrap">
+                จังหวัด / พื้นที่
+              </th>
               <th className="py-2.5 px-3 min-w-[180px]">รายละเอียด & ไฮไลท์</th>
-              <th className="py-2.5 px-3 text-right whitespace-nowrap">ราคาเริ่มต้น</th>
-              <th className="py-2.5 px-3 text-center whitespace-nowrap">ดำเนินการ</th>
+              <th className="py-2.5 px-3 text-right whitespace-nowrap">
+                ราคาเริ่มต้น
+              </th>
+              <th className="py-2.5 px-3 text-center whitespace-nowrap">
+                ดำเนินการ
+              </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 text-slate-700">
             {filteredItems.length > 0 ? (
               filteredItems.map((item) => {
-                const isCurrentProvince = item.provinceSlug && item.provinceSlug === selectedSlug;
+                const isCurrentProvince =
+                  item.provinceSlug && item.provinceSlug === selectedSlug;
 
                 return (
                   <tr
@@ -381,8 +441,8 @@ export default function TravelSearchResultsTable({
                           item.serviceType === "accommodations"
                             ? "bg-blue-50 text-blue-700 border-blue-200"
                             : item.serviceType === "cars"
-                            ? "bg-amber-50 text-amber-800 border-amber-200"
-                            : "bg-emerald-50 text-emerald-800 border-emerald-200"
+                              ? "bg-amber-50 text-amber-800 border-amber-200"
+                              : "bg-emerald-50 text-emerald-800 border-emerald-200"
                         }`}
                       >
                         <span>{item.serviceIcon}</span>
@@ -392,7 +452,10 @@ export default function TravelSearchResultsTable({
 
                     {/* คอลัมน์ 2: ชื่อบริการ */}
                     <td className="py-2.5 px-3">
-                      <div className="font-bold text-slate-800 truncate max-w-xs" title={item.name}>
+                      <div
+                        className="font-bold text-slate-800 truncate max-w-xs"
+                        title={item.name}
+                      >
                         {item.name}
                       </div>
                       <div className="text-[11px] text-slate-400 font-normal truncate">
@@ -415,7 +478,10 @@ export default function TravelSearchResultsTable({
 
                     {/* คอลัมน์ 4: จุดเด่น */}
                     <td className="py-2.5 px-3">
-                      <div className="text-[11px] text-slate-600 line-clamp-2" title={item.highlight}>
+                      <div
+                        className="text-[11px] text-slate-600 line-clamp-2"
+                        title={item.highlight}
+                      >
                         {item.highlight}
                       </div>
                     </td>

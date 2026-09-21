@@ -24,6 +24,11 @@ import CarPage from "../features/cars/pages/CarPage";
 import CarDetailPage from "../features/cars/pages/CarDetailPage";
 import GuidePage from "../features/guides/pages/GuidePage";
 import GuideDetailPage from "../features/guides/pages/GuideDetailPage";
+import BookingDetailsPage from "../pages/BookingDetailsPage";
+import CheckoutPage from "../pages/CheckoutPage";
+import BookingConfirmedPage from "../pages/BookingConfirmedPage";
+import MyBookingsPage from "../pages/MyBookingsPage";
+import CustomerInfoPage from "../pages/CustomerInfoPage";
 
 export default function AppRoutes() {
   return (
@@ -41,6 +46,12 @@ export default function AppRoutes() {
               <Route path="/cars/:id" element={<CarDetailPage />} />
               <Route path="/guides" element={<GuidePage />} />
               <Route path="/guides/:id" element={<GuideDetailPage />} />
+              {/* Booking Flow Routes */}
+              <Route path="/booking/details" element={<BookingDetailsPage />} />
+              <Route path="/checkout" element={<CheckoutPage />} />
+              <Route path="/booking/confirmed" element={<BookingConfirmedPage />} />
+              <Route path="/my-bookings" element={<MyBookingsPage />} />
+              <Route path="/customerinfo" element={<CustomerInfoPage />} />
             </Route>
 
             {/* 2. Authentication Layout: หน้าเข้าสู่ระบบและสมัครสมาชิก */}
