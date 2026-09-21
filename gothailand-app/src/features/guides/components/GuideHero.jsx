@@ -1,12 +1,12 @@
-import { TravelSearchBox } from '../../../components/common';
+import { TravelSearchBox } from "../../../components/common";
 
 const POPULAR_PROVINCE_IDS = [
-  { id: 'Chiang Mai', label: 'Chiang Mai', icon: '⛰️' },
-  { id: 'Bangkok', label: 'Bangkok', icon: '🏙️' },
-  { id: 'Phuket', label: 'Phuket', icon: '🏖️' },
-  { id: 'Phra Nakhon Si Ayutthaya', label: 'Ayutthaya', icon: '🛕' },
-  { id: 'Krabi', label: 'Krabi', icon: '⛵' },
-  { id: 'Surat Thani', label: 'Surat Thani', icon: '🌴' },
+  { id: "Chiang Mai", label: "Chiang Mai", icon: "⛰️" },
+  { id: "Bangkok", label: "Bangkok", icon: "🏙️" },
+  { id: "Phuket", label: "Phuket", icon: "🏖️" },
+  { id: "Phra Nakhon Si Ayutthaya", label: "Ayutthaya", icon: "🛕" },
+  { id: "Krabi", label: "Krabi", icon: "⛵" },
+  { id: "Surat Thani", label: "Surat Thani", icon: "🌴" },
 ];
 
 /**
@@ -20,29 +20,31 @@ const POPULAR_PROVINCE_IDS = [
  * -------------------------------------------------------------
  */
 export default function GuideHero({
-  selectedProvince = '',
+  selectedProvince = "",
   onSelectedProvinceChange,
-  tourDate = '',
+  tourDate = "",
   onTourDateChange,
-  selectedLanguage = 'all',
+  selectedLanguage = "all",
   onSelectedLanguageChange,
   availableProvinces = [],
   availableLanguages = [],
   onSearchSubmit,
 }) {
   const popularPills = POPULAR_PROVINCE_IDS.filter(
-    (p) => availableProvinces.length === 0 || availableProvinces.includes(p.id)
+    (p) => availableProvinces.length === 0 || availableProvinces.includes(p.id),
   );
 
   return (
-    <section className="-mx-4 sm:-mx-6 lg:-mx-8 -mt-6 mb-8 bg-[#0a192f] text-white pt-12 pb-16 px-4 sm:px-6 lg:px-8 shadow-md relative overflow-hidden">
-      {/* Background Image — สไตล์เดียวกับ CarHero */}
-      <img
-        src="https://images.unsplash.com/photo-1528360983277-13d401cdc186?auto=format&fit=crop&w=1800&q=80"
-        alt="Thailand travel guide"
-        className="absolute inset-0 w-full h-full object-cover opacity-20 pointer-events-none"
-      />
-      <div className="absolute inset-0 bg-gradient-to-b from-[#0a192f]/70 via-[#0a192f]/85 to-[#0a192f] pointer-events-none" />
+    <section className="-mx-4 sm:-mx-6 lg:-mx-8 -mt-6 mb-8 bg-[#0a192f] text-white pt-12 pb-16 px-4 sm:px-6 lg:px-8 shadow-md relative overflow-visible z-20">
+      {/* Background Image Container — ตัดขอบภาพล้นเฉพาะในเลเยอร์นี้เพื่อไม่ให้คลิป Popover ปฏิทิน */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <img
+          src="https://images.unsplash.com/photo-1528360983277-13d401cdc186?auto=format&fit=crop&w=1800&q=80"
+          alt="Thailand travel guide"
+          className="w-full h-full object-cover opacity-20"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#0a192f]/70 via-[#0a192f]/85 to-[#0a192f]" />
+      </div>
 
       <div className="max-w-7xl mx-auto relative z-10">
         {/* Title & Subtitle */}
@@ -51,15 +53,16 @@ export default function GuideHero({
             Department of Tourism Licensed Guides
           </span>
           <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-white leading-tight">
-            Explore Thailand with Certified Local Guides
+            Explore Certified Local Guides
           </h1>
           <p className="mt-2.5 text-sm sm:text-base text-slate-300 font-light leading-relaxed">
-            ค้นพบมัคคุเทศก์มืออาชีพที่มีใบอนุญาตถูกต้อง ชำนาญเส้นทาง ประวัติศาสตร์ วัฒนธรรม และอาหารท้องถิ่นทั่วทุกจังหวัด
+            ค้นพบมัคคุเทศก์มืออาชีพที่มีใบอนุญาตถูกต้อง ชำนาญเส้นทาง
+            ประวัติศาสตร์ วัฒนธรรม และอาหารท้องถิ่นทั่วทุกจังหวัด
           </p>
         </div>
 
         {/* Floating Search Bar — ใช้ Shared TravelSearchBox Component */}
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-5xl mx-auto">
           <TravelSearchBox
             defaultService="guides"
             hideTabs={true}
@@ -81,14 +84,16 @@ export default function GuideHero({
         {/* Quick Province Pills */}
         {popularPills.length > 0 && (
           <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
-            <span className="text-xs text-slate-400 font-medium mr-1 hidden sm:inline">Popular:</span>
+            <span className="text-xs text-slate-400 font-medium mr-1 hidden sm:inline">
+              Popular:
+            </span>
             <button
               type="button"
-              onClick={() => onSelectedProvinceChange?.('')}
+              onClick={() => onSelectedProvinceChange?.("")}
               className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-200 cursor-pointer ${
                 !selectedProvince
-                  ? 'bg-amber-400 text-slate-900 shadow-md scale-105'
-                  : 'bg-white/10 hover:bg-white/20 text-slate-200 border border-white/10'
+                  ? "bg-amber-400 text-slate-900 shadow-md scale-105"
+                  : "bg-white/10 hover:bg-white/20 text-slate-200 border border-white/10"
               }`}
             >
               <span>🌏</span>
@@ -101,8 +106,8 @@ export default function GuideHero({
                 onClick={() => onSelectedProvinceChange?.(prov.id)}
                 className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-200 cursor-pointer ${
                   selectedProvince === prov.id
-                    ? 'bg-amber-400 text-slate-900 shadow-md scale-105'
-                    : 'bg-white/10 hover:bg-white/20 text-slate-200 border border-white/10'
+                    ? "bg-amber-400 text-slate-900 shadow-md scale-105"
+                    : "bg-white/10 hover:bg-white/20 text-slate-200 border border-white/10"
                 }`}
               >
                 <span>{prov.icon}</span>

@@ -21,14 +21,16 @@ export default function AccommodationHero({
   onSearchSubmit,
 }) {
   return (
-    <section className="-mx-4 sm:-mx-6 lg:-mx-8 -mt-6 mb-8 bg-[#0a192f] text-white pt-12 pb-16 px-4 sm:px-6 lg:px-8 shadow-md relative overflow-hidden">
-      {/* รูปพื้นหลัง — สไตล์เดียวกับ CarHero */}
-      <img
-        src="https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1800&q=80"
-        alt="Thailand hotel resort"
-        className="absolute inset-0 w-full h-full object-cover opacity-20 pointer-events-none"
-      />
-      <div className="absolute inset-0 bg-gradient-to-b from-[#0a192f]/70 via-[#0a192f]/85 to-[#0a192f] pointer-events-none" />
+    <section className="-mx-4 sm:-mx-6 lg:-mx-8 -mt-6 mb-8 bg-[#0a192f] text-white pt-12 pb-16 px-4 sm:px-6 lg:px-8 shadow-md relative overflow-visible z-20">
+      {/* Background Image Container — ตัดขอบภาพล้นเฉพาะในเลเยอร์นี้เพื่อไม่ให้คลิป Popover ปฏิทิน */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <img
+          src="https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1800&q=80"
+          alt="Thailand hotel resort"
+          className="w-full h-full object-cover opacity-20"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#0a192f]/70 via-[#0a192f]/85 to-[#0a192f]" />
+      </div>
 
       <div className="max-w-7xl mx-auto relative z-10">
         {/* หัวข้อ & คำอธิบายย่อย */}

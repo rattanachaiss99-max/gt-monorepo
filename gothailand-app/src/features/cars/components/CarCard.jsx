@@ -1,6 +1,7 @@
-import { useNavigate } from 'react-router-dom';
-import Button from './Button';
-import { useCart } from '../../../context/CartContext';
+import { useNavigate } from "react-router-dom";
+import Button from "./Button";
+import { QuickAddToCartButton } from "../../../components/common";
+import { useCart } from "../../../context/CartContext";
 
 /**
  * CarCard Component (Guitar x Yok Design System)
@@ -16,7 +17,8 @@ export default function CarCard({ car, onViewDetail }) {
 
   // แมปชื่อฟิลด์ให้รองรับ API จริง และ prioritize slug เพื่อให้ URL สวยงาม (/cars/toyota-fortuner)
   const carId = car.slug || car._id || car.id;
-  const name = car.name || `${car.brand || ''} ${car.model || ''}`.trim() || "Car Model";
+  const name =
+    car.name || `${car.brand || ""} ${car.model || ""}`.trim() || "Car Model";
   const category = car.category || "Economy";
   const rating = car.rating ?? 5.0;
   const reviews = car.reviewCount ?? car.reviews ?? 0;
@@ -24,8 +26,13 @@ export default function CarCard({ car, onViewDetail }) {
   const transmission = car.transmission || "Automatic";
   const fuel = car.fuelType || car.fuel || "Petrol";
   const price = car.pricePerDay || car.price || 0;
-  const localFallback = car.slug ? `/images/cars/${car.slug}.jpg` : "/images/cars/toyota-yaris.jpg";
-  const mainImage = car.mainImage || (car.galleryImages && car.galleryImages[0]) || localFallback;
+  const localFallback = car.slug
+    ? `/images/cars/${car.slug}.jpg`
+    : "/images/cars/toyota-yaris.jpg";
+  const mainImage =
+    car.mainImage ||
+    (car.galleryImages && car.galleryImages[0]) ||
+    localFallback;
 
   const handleDetailClick = () => {
     if (onViewDetail) {
@@ -39,28 +46,29 @@ export default function CarCard({ car, onViewDetail }) {
     if (e?.stopPropagation) e.stopPropagation();
     addToCart(
       {
-        type: 'car',
+        type: "car",
         itemId: carId,
         title: name,
         subtitle: `${category} • ${seats} ที่นั่ง • เกียร์ ${transmission}`,
         image: mainImage,
-        location: car.availableLocations?.[0] || 'Bangkok Suvarnabhumi Airport',
+        location: car.availableLocations?.[0] || "Bangkok Suvarnabhumi Airport",
         unitPrice: price,
-        priceUnitLabel: '/ วัน',
+        priceUnitLabel: "/ วัน",
         quantity: 1,
         dates: {
-          startDate: '2026-10-15',
-          endDate: '2026-10-18',
+          startDate: "2026-10-15",
+          endDate: "2026-10-18",
           durationDays: 3,
         },
         details: {
-          pickupLocation: car.availableLocations?.[0] || 'Bangkok Suvarnabhumi Airport',
+          pickupLocation:
+            car.availableLocations?.[0] || "Bangkok Suvarnabhumi Airport",
           transmission,
           seats,
           fuel,
         },
       },
-      { openDrawer: true }
+      { openDrawer: true },
     );
   };
 
@@ -72,9 +80,9 @@ export default function CarCard({ car, onViewDetail }) {
           <span className="absolute top-3 left-3 bg-[#0a192f]/90 backdrop-blur-xs text-white text-[10px] font-bold px-2.5 py-1 rounded-lg tracking-wider uppercase z-10 shadow-2xs">
             {category}
           </span>
-          <img 
-            src={mainImage} 
-            alt={name} 
+          <img
+            src={mainImage}
+            alt={name}
             loading="lazy"
             onError={(e) => {
               if (!e.currentTarget.dataset.fallbackApplied) {
@@ -84,7 +92,7 @@ export default function CarCard({ car, onViewDetail }) {
                 e.currentTarget.src = "/images/cars/toyota-yaris.jpg";
               }
             }}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           />
         </div>
 
@@ -93,7 +101,7 @@ export default function CarCard({ car, onViewDetail }) {
           <h4 className="font-serif text-base sm:text-lg font-bold text-slate-900 line-clamp-1 group-hover:text-amber-600 transition-colors">
             {name}
           </h4>
-          
+
           <div className="text-xs text-slate-500 mt-1 flex items-center gap-1.5">
             <span className="text-amber-500 font-bold">★ {rating}</span>
             <span className="text-slate-400">({reviews} Reviews)</span>
@@ -118,33 +126,28 @@ export default function CarCard({ car, onViewDetail }) {
         <div className="flex items-baseline justify-between mb-3">
           <div>
             <div className="text-lg sm:text-xl font-bold font-serif text-slate-900">
-              ฿{price.toLocaleString()} <span className="text-xs text-slate-400 font-normal">/ day</span>
+              ฿{price.toLocaleString()}{" "}
+              <span className="text-xs text-slate-400 font-normal">/ day</span>
             </div>
             <div className="text-[10px] text-slate-400">All taxes included</div>
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-2">
+        <div className="flex items-center gap-2">
           <Button
             type="button"
             onClick={handleDetailClick}
             variant="outline"
             size="none"
-            className="w-full font-semibold py-2.5 text-xs tracking-wider transition-all duration-200 shadow-2xs cursor-pointer"
+            className="flex-1 font-semibold py-2.5 text-xs tracking-wider transition-all duration-200 shadow-2xs cursor-pointer"
           >
             <span>รายละเอียด</span>
           </Button>
 
-          <Button
-            type="button"
+          <QuickAddToCartButton
             onClick={handleQuickAdd}
-            variant="primary"
-            size="none"
-            className="w-full font-bold py-2.5 text-xs tracking-wider transition-all duration-200 shadow-2xs gap-1 cursor-pointer"
-          >
-            <span>🛒</span>
-            <span>ใส่ตะกร้า</span>
-          </Button>
+            size="md"
+          />
         </div>
       </div>
     </div>
