@@ -166,13 +166,11 @@ export function CartProvider({ children }) {
 
   // ล้างตะกร้าทั้งหมด
   const clearCart = useCallback(() => {
-    if (window.confirm('คุณต้องการลบรายการทั้งหมดออกจากตะกร้าใช่หรือไม่?')) {
-      setItems([]);
-      setToastMessage({
-        type: 'info',
-        text: 'ล้างรายการในตะกร้าทั้งหมดเรียบร้อยแล้ว',
-      });
-    }
+    setItems([]);
+    setToastMessage({
+      type: 'info',
+      text: 'ล้างรายการในตะกร้าทั้งหมดเรียบร้อยแล้ว',
+    });
   }, []);
 
   // --- 2. [Cart] UPDATE Item in Cart ---

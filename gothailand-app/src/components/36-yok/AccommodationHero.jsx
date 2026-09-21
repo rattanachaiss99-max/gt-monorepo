@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from "react";
 
 /**
  * AccommodationHero Component
@@ -8,11 +8,11 @@ import { useState, useRef, useEffect } from 'react';
  * -------------------------------------------------------------
  */
 export default function AccommodationHero({
-  searchTerm = '',
+  searchTerm = "",
   onSearchTermChange,
-  checkIn = '2026-09-18',
+  checkIn = "2026-09-18",
   onCheckInChange,
-  checkOut = '2026-09-19',
+  checkOut = "2026-09-19",
   onCheckOutChange,
   guestCount = 2,
   onGuestCountChange,
@@ -38,15 +38,21 @@ export default function AccommodationHero({
   // Close dropdowns on outside click
   useEffect(() => {
     function handleClickOutside(event) {
-      if (datePickerRef.current && !datePickerRef.current.contains(event.target)) {
+      if (
+        datePickerRef.current &&
+        !datePickerRef.current.contains(event.target)
+      ) {
         setDatePickerOpen(false);
       }
-      if (guestPickerRef.current && !guestPickerRef.current.contains(event.target)) {
+      if (
+        guestPickerRef.current &&
+        !guestPickerRef.current.contains(event.target)
+      ) {
         setGuestPickerOpen(false);
       }
     }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   // Sync adult count with parent guest count filter
@@ -58,14 +64,14 @@ export default function AccommodationHero({
 
   // Helper to format date string like "Fri, Sep 18"
   const formatDateLabel = (dateStr) => {
-    if (!dateStr) return '';
+    if (!dateStr) return "";
     try {
       const d = new Date(dateStr);
       if (isNaN(d.getTime())) return dateStr;
-      return d.toLocaleDateString('en-US', {
-        weekday: 'short',
-        month: 'short',
-        day: 'numeric',
+      return d.toLocaleDateString("en-US", {
+        weekday: "short",
+        month: "short",
+        day: "numeric",
       });
     } catch {
       return dateStr;
@@ -104,7 +110,8 @@ export default function AccommodationHero({
             Curated stays across Thailand
           </h1>
           <p className="mt-2 text-sm sm:text-base text-slate-300 max-w-2xl font-normal leading-relaxed">
-            Handpicked hotels, villas, and resorts with verified reviews and flexible booking.
+            Handpicked hotels, villas, and resorts with verified reviews and
+            flexible booking.
           </p>
         </div>
 
@@ -144,7 +151,7 @@ export default function AccommodationHero({
             {searchTerm && (
               <button
                 type="button"
-                onClick={() => onSearchTermChange?.('')}
+                onClick={() => onSearchTermChange?.("")}
                 className="text-slate-400 hover:text-slate-600 text-xs px-1 cursor-pointer"
               >
                 ✕
@@ -156,7 +163,10 @@ export default function AccommodationHero({
           <div className="hidden md:block w-px h-7 bg-slate-200" />
 
           {/* Section 2: Dates (Fri, Sep 18 - Sat, Sep 19 + 1 night pill) */}
-          <div className="relative w-full md:w-auto shrink-0" ref={datePickerRef}>
+          <div
+            className="relative w-full md:w-auto shrink-0"
+            ref={datePickerRef}
+          >
             <button
               type="button"
               onClick={() => {
@@ -200,15 +210,15 @@ export default function AccommodationHero({
                 </svg>
 
                 <div className="text-sm font-semibold text-slate-900 whitespace-nowrap">
-                  <span>{formatDateLabel(checkIn) || 'Check in'}</span>
+                  <span>{formatDateLabel(checkIn) || "Check in"}</span>
                   <span className="mx-1.5 text-slate-400">-</span>
-                  <span>{formatDateLabel(checkOut) || 'Check out'}</span>
+                  <span>{formatDateLabel(checkOut) || "Check out"}</span>
                 </div>
               </div>
 
               {/* Night pill badge */}
               <span className="bg-slate-100 text-slate-600 text-xs font-medium px-2.5 py-0.5 rounded-full whitespace-nowrap ml-1">
-                {nights} {nights === 1 ? 'night' : 'nights'}
+                {nights} {nights === 1 ? "night" : "nights"}
               </span>
             </button>
 
@@ -264,7 +274,10 @@ export default function AccommodationHero({
           <div className="hidden md:block w-px h-7 bg-slate-200" />
 
           {/* Section 3: Rooms & Guests (1 room, 2 adults, 0 children) */}
-          <div className="relative w-full md:w-auto shrink-0" ref={guestPickerRef}>
+          <div
+            className="relative w-full md:w-auto shrink-0"
+            ref={guestPickerRef}
+          >
             <button
               type="button"
               onClick={() => {
@@ -287,8 +300,9 @@ export default function AccommodationHero({
                 />
               </svg>
               <span className="text-sm font-semibold text-slate-900 whitespace-nowrap">
-                {rooms} room{rooms > 1 ? 's' : ''}, {adults} adult{adults > 1 ? 's' : ''},{' '}
-                {children} {children === 1 ? 'child' : 'children'}
+                {rooms} room{rooms > 1 ? "s" : ""}, {adults} adult
+                {adults > 1 ? "s" : ""}, {children}{" "}
+                {children === 1 ? "child" : "children"}
               </span>
             </button>
 
@@ -299,8 +313,12 @@ export default function AccommodationHero({
                   {/* Rooms */}
                   <div className="flex items-center justify-between">
                     <div>
-                      <div className="text-sm font-bold text-slate-900">Rooms</div>
-                      <div className="text-xs text-slate-500">Number of rooms</div>
+                      <div className="text-sm font-bold text-slate-900">
+                        Rooms
+                      </div>
+                      <div className="text-xs text-slate-500">
+                        Number of rooms
+                      </div>
                     </div>
                     <div className="flex items-center gap-2.5">
                       <button
@@ -327,8 +345,12 @@ export default function AccommodationHero({
                   {/* Adults */}
                   <div className="flex items-center justify-between">
                     <div>
-                      <div className="text-sm font-bold text-slate-900">Adults</div>
-                      <div className="text-xs text-slate-500">Ages 13 or above</div>
+                      <div className="text-sm font-bold text-slate-900">
+                        Adults
+                      </div>
+                      <div className="text-xs text-slate-500">
+                        Ages 13 or above
+                      </div>
                     </div>
                     <div className="flex items-center gap-2.5">
                       <button
@@ -355,7 +377,9 @@ export default function AccommodationHero({
                   {/* Children */}
                   <div className="flex items-center justify-between">
                     <div>
-                      <div className="text-sm font-bold text-slate-900">Children</div>
+                      <div className="text-sm font-bold text-slate-900">
+                        Children
+                      </div>
                       <div className="text-xs text-slate-500">Ages 0 to 12</div>
                     </div>
                     <div className="flex items-center gap-2.5">

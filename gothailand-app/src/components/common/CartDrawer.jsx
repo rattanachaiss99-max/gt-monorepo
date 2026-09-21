@@ -87,35 +87,27 @@ export default function CartDrawer() {
   };
 
   const handleCheckout = () => {
+    closeDrawer();
+
     if (!isAuthenticated) {
-      const confirmLogin = window.confirm(
-        '💡 คุณยังไม่ได้เข้าสู่ระบบ\n\n' +
-        'กรุณาเข้าสู่ระบบก่อนดำเนินการยืนยันการจองทริป เพื่อบันทึกประวัติการจองและรับเอกสารยืนยัน\n' +
-        '(รายการสินค้าในตะกร้าของคุณจะยังคงอยู่ ไม่สูญหาย)\n\n' +
-        'กด "ตกลง" เพื่อไปยังหน้าเข้าสู่ระบบทันที'
-      );
-      if (confirmLogin) {
-        closeDrawer();
-        navigate('/login?redirect=cart');
-      }
+      navigate('/login?redirect=/booking/details');
       return;
     }
 
-    const customerName = user.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : (user.name || user.email);
-    const roleBadge = user.role === 'admin' ? '👑 ผู้ดูแลระบบ (Admin)' : '👤 สมาชิก (Customer)';
+    // Smart flow: ถ้า login แล้ว + มีข้อมูลพื้นฐาน + ทุก item มี dates ครบ → ข้ามไป /checkout ได้เลย
+    const hasFullProfile = Boolean(
+      user?.name || (user?.firstName && user?.lastName)
+    ) && Boolean(user?.phone);
 
-    alert(
-      `🎉 ขอบคุณ คุณ ${customerName} ที่ร่วมเดินทางกับ Go Thailand!\n\n` +
-      `📋 สรุปรายการจองทริป:\n` +
-      `• ผู้จอง: ${customerName} (${user.email})\n` +
-      `• สถานะบัญชี: ${roleBadge}\n` +
-      `• รายการบริการ: ${totalItemsCount} รายการ\n` +
-      `• ยอดชำระรวม: ฿${grandTotal.toLocaleString()}\n\n` +
-      `✅ บันทึกการจองสำเร็จ! เจ้าหน้าที่จะส่งรายละเอียดและ Voucher ไปยัง ${user.email} เรียบร้อยแล้ว`
+    const allItemsHaveDates = items.every(
+      (item) => item.dates?.startDate && item.dates?.endDate
     );
 
-    clearCart();
-    closeDrawer();
+    if (hasFullProfile && allItemsHaveDates) {
+      navigate('/checkout');
+    } else {
+      navigate('/booking/details');
+    }
   };
 
   return (
@@ -423,14 +415,18 @@ export default function CartDrawer() {
                   onClick={handleCheckout}
                   className="w-full justify-center py-3 font-bold text-sm sm:text-base rounded-xl shadow-md cursor-pointer"
                 >
-                  <span>ยืนยันการจองทริป</span>
+                  <span>ดำเนินการจอง</span>
                   <span>→</span>
                 </Button>
 
                 <div className="flex items-center justify-between pt-1">
                   <button
                     type="button"
-                    onClick={clearCart}
+                    onClick={() => {
+                      if (window.confirm('คุณต้องการลบรายการทั้งหมดออกจากตะกร้าใช่หรือไม่?')) {
+                        clearCart();
+                      }
+                    }}
                     className="text-xs text-rose-500 hover:text-rose-700 font-semibold cursor-pointer underline transition-colors"
                   >
                     ล้างตะกร้าทั้งหมด (Clear Cart)

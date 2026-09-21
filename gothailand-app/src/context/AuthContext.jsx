@@ -259,6 +259,21 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
+  /**
+   * อัปเดตข้อมูลของผู้ใช้ปัจจุบันใน Context & LocalStorage
+   */
+  const updateCurrentUser = useCallback((partialData) => {
+    setUser((prev) => {
+      if (!prev) return null;
+      const next = { ...prev, ...partialData };
+      if (partialData.name && !partialData.firstName) {
+        next.firstName = partialData.name.split(' ')[0];
+        next.lastName = partialData.name.split(' ').slice(1).join(' ');
+      }
+      return next;
+    });
+  }, []);
+
   const isAuthenticated = Boolean(user && token);
   const isAdmin = Boolean(user && user.role === 'admin');
 
@@ -274,8 +289,9 @@ export function AuthProvider({ children }) {
       register,
       logout,
       switchDemoRole,
+      updateCurrentUser,
     }),
-    [user, token, loading, authError, isAuthenticated, isAdmin, login, register, logout, switchDemoRole]
+    [user, token, loading, authError, isAuthenticated, isAdmin, login, register, logout, switchDemoRole, updateCurrentUser]
   );
 
   return <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>;
