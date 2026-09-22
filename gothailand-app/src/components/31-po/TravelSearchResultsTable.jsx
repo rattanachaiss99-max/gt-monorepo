@@ -109,6 +109,8 @@ export default function TravelSearchResultsTable({
         `${car.brand || ""} ${car.model || ""}`.trim() ||
         "รถเช่าขับเอง";
 
+      const candidateIds = [car.id, car._id, car.slug].filter(Boolean);
+
       items.push({
         id: car._id || car.id || car.slug,
         candidateIds,

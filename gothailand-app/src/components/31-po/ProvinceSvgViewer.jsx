@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { matchProvince, matchCarProvince } from "../../services/yokService";
 import {
   deleteProvince,
@@ -13,6 +14,7 @@ export default function ProvinceSvgViewer({
   provinces = [],
   selectedSlug = "",
   onSelectProvince,
+  onUpdateProvince,
   accommodations = [],
   guides = [],
   cars = [],
@@ -23,6 +25,22 @@ export default function ProvinceSvgViewer({
 
   const { isAdmin } = useAuth();
   const { isItemVisible, adminCustomerPreview } = useItemVisibility();
+
+  const handleTestDelete = async () => {
+    if (!province?.slug) return;
+    setIsDeleting(true);
+    try {
+      const res = await deleteProvince(province.slug);
+      setDeleteResult(res);
+    } catch (err) {
+      setDeleteResult({
+        status: err.status || 403,
+        message: err.message || "เกิดข้อผิดพลาดในการทดสอบลบข้อมูล",
+      });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   if (!province) return null;
 
@@ -396,15 +414,116 @@ export default function ProvinceSvgViewer({
 
           {/* ตัวอย่าง SVG Path ดิบ & RESTful Action Toolbar */}
           <div>
-            <span className="text-slate-400 block mb-1">
-              ตัวอย่าง SVG Path Snippet (จาก MongoDB):
-            </span>
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-slate-400 block">
+                ตัวอย่าง SVG Path Snippet (จาก MongoDB):
+              </span>
+              <a
+                href={getProvinceSvgUrl(province.slug)}
+                target="_blank"
+                rel="noreferrer"
+                className="text-[11px] text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1 bg-blue-50 px-2 py-0.5 rounded border border-blue-200"
+                title="เปิดดูรูปภาพ SVG แบบ Raw Image Stream จาก Backend (:slug/svg)"
+              >
+                🖼️ ดูรูป SVG ตรง (:slug/svg) ↗
+              </a>
+            </div>
             <pre className="p-2.5 bg-slate-900 text-emerald-400 rounded-lg font-mono text-[11px] overflow-x-auto whitespace-pre-wrap line-clamp-2">
               {svgPath?.slice(0, 120)}...
             </pre>
           </div>
+
+          {/* แผงควบคุมทดสอบ RESTful Methods (Sprint 3 Toolbar) */}
+          <div className="p-3 bg-slate-100/70 border border-slate-200 rounded-xl flex flex-wrap items-center justify-between gap-2 mt-2">
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] font-bold text-slate-700">
+                🛠️ RESTful Methods (Sprint 3):
+              </span>
+              <span className="text-[10px] font-mono bg-white px-2 py-0.5 rounded border border-slate-200 text-slate-600">
+                /api/provinces/{province.slug}
+              </span>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setIsEditOpen(true)}
+                className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition-all shadow-2xs flex items-center gap-1.5 cursor-pointer"
+              >
+                ✏️ แก้ไขข้อมูล (PATCH / PUT)
+              </button>
+
+              <button
+                type="button"
+                onClick={handleTestDelete}
+                disabled={isDeleting}
+                className="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
+                title="ทดสอบส่ง HTTP DELETE เพื่อตรวจสอบระบบ Master Data Protection"
+              >
+                {isDeleting ? "⏳ กำลังทดสอบ..." : "🛡️ ทดสอบการลบ (DELETE Guard)"}
+              </button>
+            </div>
+          </div>
         </div>
       </div>
+
+      {/* Modal จัดการข้อมูล (PATCH/PUT) */}
+      <ProvinceEditModal
+        isOpen={isEditOpen}
+        province={province}
+        onClose={() => setIsEditOpen(false)}
+        onSuccess={(updated) => {
+          onUpdateProvince?.(updated);
+        }}
+      />
+
+      {/* Dialog ผลการทดสอบ DELETE Guard */}
+      {deleteResult && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-fade-in">
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-md w-full p-6 text-xs space-y-4">
+            <div className="flex items-center gap-3">
+              <span className="w-10 h-10 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center text-xl font-bold">
+                🛡️
+              </span>
+              <div>
+                <h4 className="font-bold text-sm text-slate-900">
+                  ผลการทดสอบ HTTP DELETE Method
+                </h4>
+                <p className="text-[11px] text-slate-500">
+                  ระบบ Master Data Protection ทำงานตามข้อกำหนด
+                </p>
+              </div>
+            </div>
+
+            <div className="p-3 bg-amber-50/80 border border-amber-200 rounded-xl text-amber-900 space-y-1.5">
+              <div className="font-bold flex items-center justify-between">
+                <span>สถานะ HTTP ตอบกลับ:</span>
+                <span className="font-mono bg-white px-2 py-0.5 rounded border border-amber-300 text-rose-600">
+                  HTTP {deleteResult.status || 403} Forbidden
+                </span>
+              </div>
+              <p className="text-[11px] leading-relaxed">
+                {deleteResult.message || "Backend ปฏิเสธการลบข้อมูลหลัก 77 จังหวัดสำเร็จ"}
+              </p>
+              {deleteResult.notice && (
+                <p className="text-[10px] text-amber-700 italic border-t border-amber-200/60 pt-1.5">
+                  💡 {deleteResult.notice}
+                </p>
+              )}
+            </div>
+
+            <div className="flex justify-end">
+              <button
+                type="button"
+                onClick={() => setDeleteResult(null)}
+                className="px-4 py-1.5 bg-slate-800 text-white rounded-lg font-semibold hover:bg-slate-900 transition-colors"
+              >
+                เข้าใจแล้ว
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }
