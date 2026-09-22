@@ -7,11 +7,12 @@
  * 2. AuthLayout: หน้าสำหรับเข้าสู่ระบบและสมัครสมาชิก แบบ Clean & Minimal Focus
  * 3. AdminLayout: แผงควบคุมระบบหลังบ้านสำหรับผู้ดูแลระบบ (Admin Console) พร้อม Sidebar และ Route Guard
  */
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import ScrollToTop from "../components/common/ScrollToTop";
 import { MainLayout, AuthLayout, AdminLayout } from "../layouts";
 import { AuthProvider } from "../context/AuthContext";
 import { CartProvider } from "../context/CartContext";
+import { ItemVisibilityProvider } from "../context/ItemVisibilityContext";
 import ProtectedRoute from "./ProtectedRoute";
 
 import LandingPage from "../pages/LandingPage";
@@ -31,7 +32,8 @@ export default function AppRoutes() {
       <ScrollToTop />
       <AuthProvider>
         <CartProvider>
-          <Routes>
+          <ItemVisibilityProvider>
+            <Routes>
             {/* 1. Public Portal Layout: หน้าสำหรับนักท่องเที่ยวและบริการทั่วไป */}
             <Route element={<MainLayout />}>
               <Route path="/" element={<LandingPage />} />
@@ -58,8 +60,10 @@ export default function AppRoutes() {
               }
             >
               <Route path="/provinces" element={<ProvinceMapPage />} />
+              <Route path="/province" element={<Navigate to="/provinces" replace />} />
             </Route>
           </Routes>
+          </ItemVisibilityProvider>
         </CartProvider>
       </AuthProvider>
     </BrowserRouter>

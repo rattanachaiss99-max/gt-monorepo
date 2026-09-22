@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import AccommodationCard from './AccommodationCard';
 import Button from './Button';
+import { useAuth } from '../../../context/AuthContext';
+import { useItemVisibility } from '../../../context/ItemVisibilityContext';
+import ItemVisibilityBadge from '../../../components/common/ItemVisibilityBadge';
 
 /**
  * ตัวสร้างเลขหน้า pagination อัจฉริยะพร้อมจุดไข่ปลา (ellipsis)
@@ -62,6 +65,10 @@ export default function AccommodationList({
   const [prevAccommodations, setPrevAccommodations] = useState(accommodations);
   const [prevSort, setPrevSort] = useState(sortBy);
   const [prevPageSize, setPrevPageSize] = useState(pageSize);
+
+  // สิทธิ์ Admin และสถานะเปิด/ปิดการแสดงผล
+  const { isAdmin } = useAuth();
+  const { isItemVisible, adminCustomerPreview } = useItemVisibility();
 
   // รีเซ็ตกลับหน้า 1 ทุกครั้งที่ list ที่กรองแล้ว, การเรียงลำดับ หรือขนาดหน้าเปลี่ยน
   // เทียบด้วย reference (ไม่ใช่ length) เพราะ parent จะสร้าง array ใหม่เสมอ
@@ -244,14 +251,31 @@ export default function AccommodationList({
       {/* รายการการ์ดที่พัก (แบ่งหน้าแล้ว) */}
       {!loading && !error && displayedAccommodations.length > 0 && (
         <div className="space-y-5">
-          {displayedAccommodations.map((item) => (
-            <AccommodationCard
-              key={item.id || item._id}
-              accommodation={item}
-              onViewDetails={onViewDetails}
-              onBookNow={onBookNow}
-            />
-          ))}
+          {displayedAccommodations.map((item) => {
+            const accId = item.id || item._id || item.slug;
+            const isVisible = isItemVisible('accommodations', item, [item.id, item._id, item.slug]);
+
+            const isHiddenForAdmin = isAdmin && !adminCustomerPreview && !isVisible;
+
+            return (
+              <div key={accId} className="relative group">
+                <ItemVisibilityBadge
+                  serviceType="accommodations"
+                  item={item}
+                  itemId={accId}
+                  fallbackIds={[item.id, item._id, item.slug]}
+                  variant="card"
+                />
+                <div className={isHiddenForAdmin ? 'opacity-65 grayscale-25 ring-2 ring-rose-400/80 rounded-2xl sm:rounded-3xl transition-all' : 'transition-all'}>
+                  <AccommodationCard
+                    accommodation={item}
+                    onViewDetails={onViewDetails}
+                    onBookNow={onBookNow}
+                  />
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
 

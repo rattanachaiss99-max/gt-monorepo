@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { matchProvince, matchCarProvince } from "../../services/yokService";
+import { useAuth } from "../../context/AuthContext";
+import { useItemVisibility } from "../../context/ItemVisibilityContext";
 
 export default function ProvinceTable({
   provinces = [],
@@ -9,6 +11,8 @@ export default function ProvinceTable({
   guides = [],
   cars = [],
 }) {
+  const { isAdmin } = useAuth();
+  const { isItemVisible, adminCustomerPreview } = useItemVisibility();
   const [search, setSearch] = useState("");
   const [selectedRegion, setSelectedRegion] = useState("all");
 
@@ -87,9 +91,19 @@ export default function ProvinceTable({
           <tbody className="divide-y divide-slate-100 text-slate-700">
             {filteredProvinces.map((prov) => {
               const isSelected = prov.slug === selectedSlug;
-              const hasAcc = accommodations.some((a) => matchProvince(a.location, prov));
-              const hasCar = cars.some((c) => matchCarProvince(c, prov));
-              const hasGuide = guides.some((g) => matchProvince(g.province, prov));
+              const isCustomerView = !isAdmin || adminCustomerPreview;
+              const hasAcc = accommodations.some((a) =>
+                matchProvince(a.location, prov) &&
+                (!isCustomerView || isItemVisible('accommodations', a, [a.id, a._id, a.slug]))
+              );
+              const hasCar = cars.some((c) =>
+                matchCarProvince(c, prov) &&
+                (!isCustomerView || isItemVisible('cars', c, [c._id, c.slug, c.id]))
+              );
+              const hasGuide = guides.some((g) =>
+                matchProvince(g.province, prov) &&
+                (!isCustomerView || isItemVisible('guides', g, [g._id, g.slug, g.id]))
+              );
 
               return (
                 <tr

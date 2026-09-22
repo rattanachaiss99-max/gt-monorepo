@@ -92,23 +92,25 @@ export default function GuideCard({ guide, onViewDetail }) {
         <div className="absolute inset-0 bg-linear-to-t from-black/70 via-black/20 to-transparent pointer-events-none" />
 
         {/* ป้ายด้านบน */}
-        <div className="absolute top-3 left-3 right-3 flex items-center justify-between gap-2 z-10">
-          {guide.verified ? (
-            <span className="inline-flex items-center gap-1 bg-[#0a192f]/90 backdrop-blur-xs text-amber-400 border border-amber-400/30 text-[11px] font-bold px-2.5 py-1 rounded-lg shadow-sm">
-              <span>✓</span>
-              <span>Verified Guide</span>
-            </span>
-          ) : (
-            <span className="bg-white/90 backdrop-blur-xs text-slate-700 text-[11px] font-semibold px-2 py-0.5 rounded-md">
-              Licensed Guide
-            </span>
-          )}
+        <div className="absolute top-3 left-3 right-3 flex items-center justify-between gap-2 z-10 pointer-events-none">
+          <div className="flex items-center gap-1.5 flex-wrap">
+            {guide.verified ? (
+              <span className="inline-flex items-center gap-1 bg-[#0a192f]/90 backdrop-blur-xs text-amber-400 border border-amber-400/30 text-[11px] font-bold px-2.5 py-1 rounded-lg shadow-sm">
+                <span>✓</span>
+                <span>Verified Guide</span>
+              </span>
+            ) : (
+              <span className="bg-white/90 backdrop-blur-xs text-slate-700 text-[11px] font-semibold px-2 py-0.5 rounded-md">
+                Licensed Guide
+              </span>
+            )}
 
-          {guide.province && (
-            <span className="bg-white/95 backdrop-blur-xs text-slate-900 text-xs font-bold px-2.5 py-1 rounded-lg shadow-sm">
-              📍 {guide.province}
-            </span>
-          )}
+            {guide.province && (
+              <span className="bg-white/95 backdrop-blur-xs text-slate-900 text-xs font-bold px-2.5 py-1 rounded-lg shadow-sm">
+                📍 {guide.province}
+              </span>
+            )}
+          </div>
         </div>
 
         {/* Bottom Overlays บนรูป: ชื่อและชื่อเล่น */}

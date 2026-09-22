@@ -2,6 +2,9 @@ import { useState } from "react";
 import { matchProvince, matchCarProvince } from "../../services/yokService";
 import { deleteProvince, getProvinceSvgUrl } from "../../features/provinces/services/provinceService";
 import ProvinceEditModal from "./ProvinceEditModal";
+import { useAuth } from "../../context/AuthContext";
+import { useItemVisibility } from "../../context/ItemVisibilityContext";
+import ItemVisibilityBadge from "../common/ItemVisibilityBadge";
 
 export default function ProvinceSvgViewer({
   province,
@@ -17,6 +20,9 @@ export default function ProvinceSvgViewer({
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteResult, setDeleteResult] = useState(null);
 
+  const { isAdmin } = useAuth();
+  const { isItemVisible, adminCustomerPreview } = useItemVisibility();
+
   if (!province) return null;
 
   // กรองที่พัก รถเช่า และไกด์ของคุณ Yok ที่ตรงกับจังหวัดที่เลือก
@@ -28,6 +34,23 @@ export default function ProvinceSvgViewer({
   );
   const localGuides = guides.filter((g) =>
     matchProvince(g.province, province)
+  );
+
+  // กรองการแสดงผลตามสิทธิ์ Admin / Customer Preview
+  const displayedAccommodations = localAccommodations.filter((acc) =>
+    (!isAdmin || adminCustomerPreview)
+      ? isItemVisible('accommodations', acc, [acc.id, acc._id, acc.slug])
+      : true
+  );
+  const displayedCars = localCars.filter((car) =>
+    (!isAdmin || adminCustomerPreview)
+      ? isItemVisible('cars', car, [car._id, car.slug, car.id])
+      : true
+  );
+  const displayedGuides = localGuides.filter((guide) =>
+    (!isAdmin || adminCustomerPreview)
+      ? isItemVisible('guides', guide, [guide._id, guide.slug, guide.id])
+      : true
   );
 
   // Fallbacks รองรับโครงสร้างข้อมูลทั้งจาก Po API และ Yok Backend
@@ -173,26 +196,53 @@ export default function ProvinceSvgViewer({
             <div className="p-2.5 bg-slate-50 rounded-lg border border-slate-100 flex flex-col justify-between">
               <div>
                 <div className="flex items-center justify-between mb-1.5">
-                  <span className="font-bold text-slate-700 flex items-center gap-1">
+                  <span className="font-bold text-slate-700 flex items-center gap-1 text-xs">
                     🏨 ที่พักในพื้นที่ (Yok API)
                   </span>
-                  <span className="font-semibold text-blue-600 font-mono">
-                    {localAccommodations.length} แห่ง
+                  <span className="font-semibold text-blue-600 font-mono text-xs">
+                    {displayedAccommodations.length} แห่ง
                   </span>
                 </div>
-                {localAccommodations.length > 0 ? (
-                  <ul className="space-y-1 max-h-32 overflow-y-auto pr-0.5">
-                    {localAccommodations.map((acc) => (
-                      <li
-                        key={acc._id}
-                        className="flex items-center justify-between text-[11px] text-slate-600 bg-white px-2 py-1 rounded border border-slate-100"
-                      >
-                        <span className="truncate" title={acc.name}>{acc.name}</span>
-                        <span className="font-medium text-emerald-600 ml-1.5 whitespace-nowrap">
-                          ฿{(acc.price ?? acc.base_price_per_night ?? acc.basePrice)?.toLocaleString()}
-                        </span>
-                      </li>
-                    ))}
+                {displayedAccommodations.length > 0 ? (
+                  <ul className="space-y-1 max-h-36 overflow-y-auto pr-0.5">
+                    {displayedAccommodations.map((acc) => {
+                      const isVisible = isItemVisible('accommodations', acc, [acc.id, acc._id, acc.slug]);
+                      return (
+                        <li
+                          key={acc._id || acc.id || acc.slug}
+                          className={`flex items-center justify-between text-[11px] px-2 py-1 rounded border transition-all ${
+                            !isVisible
+                              ? "bg-rose-50/50 text-slate-400 border-rose-200"
+                              : "bg-white text-slate-600 border-slate-100"
+                          }`}
+                        >
+                          <div className="flex items-center gap-1 truncate max-w-[130px]">
+                            <span className={!isVisible ? "line-through text-slate-400 truncate" : "truncate"} title={acc.name}>
+                              {acc.name}
+                            </span>
+                            {!isVisible && (
+                              <span className="text-[9px] bg-rose-100 text-rose-700 px-1 rounded font-bold shrink-0">
+                                🙈
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-1.5 shrink-0 ml-1">
+                            <span className="font-medium text-emerald-600 font-mono whitespace-nowrap text-[10px]">
+                              ฿{(acc.price ?? acc.base_price_per_night ?? acc.basePrice)?.toLocaleString()}
+                            </span>
+                            {isAdmin && !adminCustomerPreview && (
+                              <ItemVisibilityBadge
+                                serviceType="accommodations"
+                                item={acc}
+                                itemId={acc._id || acc.id}
+                                fallbackIds={[acc.id, acc._id, acc.slug]}
+                                variant="mini"
+                              />
+                            )}
+                          </div>
+                        </li>
+                      );
+                    })}
                   </ul>
                 ) : (
                   <p className="text-[11px] text-slate-400 italic">
@@ -206,26 +256,53 @@ export default function ProvinceSvgViewer({
             <div className="p-2.5 bg-slate-50 rounded-lg border border-slate-100 flex flex-col justify-between">
               <div>
                 <div className="flex items-center justify-between mb-1.5">
-                  <span className="font-bold text-slate-700 flex items-center gap-1">
+                  <span className="font-bold text-slate-700 flex items-center gap-1 text-xs">
                     🚗 รถเช่าในพื้นที่ (Yok API)
                   </span>
-                  <span className="font-semibold text-blue-600 font-mono">
-                    {localCars.length} คัน
+                  <span className="font-semibold text-blue-600 font-mono text-xs">
+                    {displayedCars.length} คัน
                   </span>
                 </div>
-                {localCars.length > 0 ? (
-                  <ul className="space-y-1 max-h-32 overflow-y-auto pr-0.5">
-                    {localCars.map((car) => (
-                      <li
-                        key={car._id || car.slug}
-                        className="flex items-center justify-between text-[11px] text-slate-600 bg-white px-2 py-1 rounded border border-slate-100"
-                      >
-                        <span className="truncate" title={car.name}>{car.name}</span>
-                        <span className="font-medium text-emerald-600 ml-1.5 whitespace-nowrap">
-                          ฿{(car.pricePerDay ?? car.price)?.toLocaleString()}/วัน
-                        </span>
-                      </li>
-                    ))}
+                {displayedCars.length > 0 ? (
+                  <ul className="space-y-1 max-h-36 overflow-y-auto pr-0.5">
+                    {displayedCars.map((car) => {
+                      const isVisible = isItemVisible('cars', car, [car._id, car.slug, car.id]);
+                      return (
+                        <li
+                          key={car._id || car.slug || car.id}
+                          className={`flex items-center justify-between text-[11px] px-2 py-1 rounded border transition-all ${
+                            !isVisible
+                              ? "bg-rose-50/50 text-slate-400 border-rose-200"
+                              : "bg-white text-slate-600 border-slate-100"
+                          }`}
+                        >
+                          <div className="flex items-center gap-1 truncate max-w-[130px]">
+                            <span className={!isVisible ? "line-through text-slate-400 truncate" : "truncate"} title={car.name}>
+                              {car.name}
+                            </span>
+                            {!isVisible && (
+                              <span className="text-[9px] bg-rose-100 text-rose-700 px-1 rounded font-bold shrink-0">
+                                🙈
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-1.5 shrink-0 ml-1">
+                            <span className="font-medium text-emerald-600 font-mono whitespace-nowrap text-[10px]">
+                              ฿{(car.pricePerDay ?? car.price)?.toLocaleString()}
+                            </span>
+                            {isAdmin && !adminCustomerPreview && (
+                              <ItemVisibilityBadge
+                                serviceType="cars"
+                                item={car}
+                                itemId={car._id || car.id || car.slug}
+                                fallbackIds={[car._id, car.slug, car.id]}
+                                variant="mini"
+                              />
+                            )}
+                          </div>
+                        </li>
+                      );
+                    })}
                   </ul>
                 ) : (
                   <p className="text-[11px] text-slate-400 italic">
@@ -239,26 +316,53 @@ export default function ProvinceSvgViewer({
             <div className="p-2.5 bg-slate-50 rounded-lg border border-slate-100 flex flex-col justify-between">
               <div>
                 <div className="flex items-center justify-between mb-1.5">
-                  <span className="font-bold text-slate-700 flex items-center gap-1">
+                  <span className="font-bold text-slate-700 flex items-center gap-1 text-xs">
                     🧭 ไกด์นำเที่ยว (Yok API)
                   </span>
-                  <span className="font-semibold text-blue-600 font-mono">
-                    {localGuides.length} คน
+                  <span className="font-semibold text-blue-600 font-mono text-xs">
+                    {displayedGuides.length} คน
                   </span>
                 </div>
-                {localGuides.length > 0 ? (
-                  <ul className="space-y-1 max-h-32 overflow-y-auto pr-0.5">
-                    {localGuides.map((g) => (
-                      <li
-                        key={g._id}
-                        className="flex items-center justify-between text-[11px] text-slate-600 bg-white px-2 py-1 rounded border border-slate-100"
-                      >
-                        <span className="truncate" title={g.name}>{g.name}</span>
-                        <span className="font-medium text-emerald-600 ml-1.5 whitespace-nowrap">
-                          ฿{g.price?.toLocaleString()}/วัน
-                        </span>
-                      </li>
-                    ))}
+                {displayedGuides.length > 0 ? (
+                  <ul className="space-y-1 max-h-36 overflow-y-auto pr-0.5">
+                    {displayedGuides.map((g) => {
+                      const isVisible = isItemVisible('guides', g, [g._id, g.slug, g.id]);
+                      return (
+                        <li
+                          key={g._id || g.slug || g.id}
+                          className={`flex items-center justify-between text-[11px] px-2 py-1 rounded border transition-all ${
+                            !isVisible
+                              ? "bg-rose-50/50 text-slate-400 border-rose-200"
+                              : "bg-white text-slate-600 border-slate-100"
+                          }`}
+                        >
+                          <div className="flex items-center gap-1 truncate max-w-[130px]">
+                            <span className={!isVisible ? "line-through text-slate-400 truncate" : "truncate"} title={g.name}>
+                              {g.name}
+                            </span>
+                            {!isVisible && (
+                              <span className="text-[9px] bg-rose-100 text-rose-700 px-1 rounded font-bold shrink-0">
+                                🙈
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-1.5 shrink-0 ml-1">
+                            <span className="font-medium text-emerald-600 font-mono whitespace-nowrap text-[10px]">
+                              ฿{g.price?.toLocaleString()}
+                            </span>
+                            {isAdmin && !adminCustomerPreview && (
+                              <ItemVisibilityBadge
+                                serviceType="guides"
+                                item={g}
+                                itemId={g._id || g.id || g.slug}
+                                fallbackIds={[g._id, g.slug, g.id]}
+                                variant="mini"
+                              />
+                            )}
+                          </div>
+                        </li>
+                      );
+                    })}
                   </ul>
                 ) : (
                   <p className="text-[11px] text-slate-400 italic">
@@ -268,6 +372,7 @@ export default function ProvinceSvgViewer({
               </div>
             </div>
           </div>
+
 
           {/* ตัวอย่าง SVG Path ดิบ & RESTful Action Toolbar */}
           <div>

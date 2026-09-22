@@ -2,10 +2,12 @@ import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   GuideHero,
-  GuideFilterSidebar,
   GuideCard,
   Button,
 } from '../components';
+import { TravelFilterSidebar, ItemVisibilityBadge } from '../../../components/common';
+import { useAuth } from '../../../context/AuthContext';
+import { useItemVisibility } from '../../../context/ItemVisibilityContext';
 import { getGuides } from '../services/guideService';
 
 /**
@@ -46,6 +48,10 @@ export default function GuidePage() {
   const [sortBy, setSortBy] = useState('recommended');
   const [pageSize, setPageSize] = useState(6);
   const [currentPage, setCurrentPage] = useState(1);
+
+  // ควบคุมการแสดงผลของ Admin (รูปตา 👁️)
+  const { isAdmin } = useAuth();
+  const { isItemVisible, adminCustomerPreview } = useItemVisibility();
 
   // ดึงข้อมูลไกด์จาก API และรีเซ็ต scroll ไปบนสุด
   useEffect(() => {
@@ -187,6 +193,12 @@ export default function GuidePage() {
           return false;
         }
 
+        // 8. กรองการแสดงผลของ Admin (Item Visibility / รูปตา 👁️)
+        const isVisible = isItemVisible('guides', guide, [guide._id, guide.slug, guide.id]);
+        if ((!isAdmin || adminCustomerPreview) && !isVisible) {
+          return false;
+        }
+
         return true;
       })
       .sort((a, b) => {
@@ -214,6 +226,9 @@ export default function GuidePage() {
     selectedGender,
     verifiedOnly,
     sortBy,
+    isAdmin,
+    adminCustomerPreview,
+    isItemVisible,
   ]);
 
   // การแบ่งหน้า
@@ -260,8 +275,9 @@ export default function GuidePage() {
       {/* 2. ส่วนแสดงผลหลัก: Filter Sidebar (ซ้าย) + Guides List (ขวา) */}
       <div className="pt-2">
         <div className="flex flex-col lg:flex-row gap-8 items-start">
-          {/* แถบตัวกรอง Sidebar */}
-          <GuideFilterSidebar
+          {/* แถบตัวกรองส่วนกลาง (Shared TravelFilterSidebar) */}
+          <TravelFilterSidebar
+            service="guides"
             selectedProvince={selectedProvince}
             onSelectProvince={(prov) => {
               setSelectedProvince(prov);
@@ -397,13 +413,28 @@ export default function GuidePage() {
             {/* Guides Grid */}
             {!loading && !error && filteredGuides.length > 0 && (
               <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
-                {paginatedGuides.map((guide) => (
-                  <GuideCard
-                    key={guide._id || guide.id}
-                    guide={guide}
-                    onViewDetail={handleViewDetail}
-                  />
-                ))}
+                {paginatedGuides.map((guide) => {
+                  const guideId = guide._id || guide.slug || guide.id;
+                  const isVisible = isItemVisible('guides', guide, [guide._id, guide.slug, guide.id]);
+
+                  return (
+                    <div key={guideId} className="relative group">
+                      <ItemVisibilityBadge
+                        serviceType="guides"
+                        item={guide}
+                        itemId={guideId}
+                        fallbackIds={[guide._id, guide.slug, guide.id]}
+                        variant="card"
+                      />
+                      <div className={!isVisible ? 'opacity-65 grayscale-25 ring-2 ring-rose-400/80 rounded-2xl sm:rounded-3xl transition-all' : 'transition-all'}>
+                        <GuideCard
+                          guide={guide}
+                          onViewDetail={handleViewDetail}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             )}
 

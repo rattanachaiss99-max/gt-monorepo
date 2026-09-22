@@ -99,7 +99,32 @@ export default function FilterSidebarShell({
 
         {/* สรุปป้ายตัวกรองที่กำลังเลือกอยู่ */}
         {hasActiveFilters && activePills && (
-          <div className="flex flex-wrap gap-1.5 pb-1">{activePills}</div>
+          <div className="flex flex-wrap gap-1.5 pb-1">
+            {Array.isArray(activePills) &&
+            activePills.length > 0 &&
+            typeof activePills[0] === 'object' &&
+            !activePills[0].$$typeof ? (
+              activePills.map((pill) => (
+                <span
+                  key={pill.id}
+                  className="inline-flex items-center gap-1 text-[11px] font-semibold bg-slate-100 text-slate-700 px-2.5 py-1 rounded-lg"
+                >
+                  <span>{pill.label}</span>
+                  {pill.onRemove && (
+                    <button
+                      type="button"
+                      onClick={pill.onRemove}
+                      className="hover:text-red-500 cursor-pointer ml-0.5 font-bold"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </span>
+              ))
+            ) : (
+              activePills
+            )}
+          </div>
         )}
 
         {children}

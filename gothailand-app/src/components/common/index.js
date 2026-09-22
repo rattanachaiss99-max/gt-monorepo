@@ -5,4 +5,6 @@ export { default as CartDrawer } from "./CartDrawer";
 export { default as CartNavbarButton } from "./CartNavbarButton";
 export { default as UserNavbarWidget } from "./UserNavbarWidget";
 export { default as QuickAddToCartButton } from "./QuickAddToCartButton";
-
+export { default as TravelFilterSidebar } from "./TravelFilterSidebar";
+export { default as FilterSidebarShell } from "./FilterSidebarShell";
+export { default as ItemVisibilityBadge } from "./ItemVisibilityBadge";

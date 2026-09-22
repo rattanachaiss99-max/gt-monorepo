@@ -2,11 +2,13 @@ import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   AccommodationHero,
-  FilterSidebar,
   AccommodationList,
   BrowseByProperty,
   GetInspired,
 } from '../components';
+import { TravelFilterSidebar } from '../../../components/common';
+import { useAuth } from '../../../context/AuthContext';
+import { useItemVisibility } from '../../../context/ItemVisibilityContext';
 import { getAccommodations } from '../services/accommodationService';
 import { getDefaultDateRange } from '../../../utils/date';
 
@@ -156,6 +158,10 @@ export default function AccommodationPage() {
   const [selectedRegion, setSelectedRegion] = useState('central'); // default ภาคกลาง
   const [selectedProvince, setSelectedProvince] = useState(''); // กรองตามจังหวัด
   const [pageSize, setPageSize] = useState(10); // default 10 รายการ/หน้า
+
+  // ควบคุมการแสดงผลของ Admin (รูปตา 👁️)
+  const { isAdmin } = useAuth();
+  const { isItemVisible, adminCustomerPreview } = useItemVisibility();
   // Default dates: วันนี้ + 1 และ วันนี้ + 2
   const defaultStayDates = getDefaultDateRange(1, 2);
 
@@ -431,6 +437,11 @@ export default function AccommodationPage() {
       list.sort((a, b) => Number(b.rating_avg || 0) - Number(a.rating_avg || 0));
     }
 
+    // 10. กรองการแสดงผลของ Admin (Item Visibility / รูปตา 👁️)
+    if (!isAdmin || adminCustomerPreview) {
+      list = list.filter((item) => isItemVisible('accommodations', item, [item.id, item._id, item.slug]));
+    }
+
     return {
       filteredAccommodations: list,
       activeRegionDisplay: effectiveRegion,
@@ -447,6 +458,9 @@ export default function AccommodationPage() {
     selectedCategories,
     selectedFacilities,
     sortBy,
+    isAdmin,
+    adminCustomerPreview,
+    isItemVisible,
   ]);
 
   return (
@@ -505,7 +519,8 @@ export default function AccommodationPage() {
 
           {/* กริด 2 คอลัมน์: แถบตัวกรอง (ซ้าย) + รายการที่พัก (ขวา) */}
           <div className="flex flex-col lg:flex-row gap-8 items-start">
-            <FilterSidebar
+            <TravelFilterSidebar
+              service="accommodations"
               selectedRegion={selectedRegion}
               onSelectRegion={setSelectedRegion}
               selectedProvince={selectedProvince}

@@ -2,10 +2,12 @@ import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   CarHero,
-  CarFilterSidebar,
   CarCard,
   Button,
 } from '../components';
+import { TravelFilterSidebar, ItemVisibilityBadge } from '../../../components/common';
+import { useAuth } from '../../../context/AuthContext';
+import { useItemVisibility } from '../../../context/ItemVisibilityContext';
 import { getCars } from '../services/carService';
 import { getDefaultDateRange, calculateDateSpan } from '../../../utils/date';
 
@@ -51,6 +53,10 @@ export default function CarPage() {
   const [sortBy, setSortBy] = useState('recommended');
   const [pageSize, setPageSize] = useState(6);
   const [currentPage, setCurrentPage] = useState(1);
+
+  // ควบคุมการแสดงผลของ Admin (รูปตา 👁️)
+  const { isAdmin } = useAuth();
+  const { isItemVisible, adminCustomerPreview } = useItemVisibility();
 
   // ดึงข้อมูลรถจาก API และรีเซ็ตตำแหน่ง Scroll ไปบนสุด
   useEffect(() => {
@@ -219,6 +225,12 @@ export default function CarPage() {
           if (!carTrans.includes(selectedTransmission.toLowerCase())) return false;
         }
 
+        // 7. กรองการแสดงผลของ Admin (Item Visibility / รูปตา 👁️)
+        const isVisible = isItemVisible('cars', car, [car._id, car.slug, car.id]);
+        if ((!isAdmin || adminCustomerPreview) && !isVisible) {
+          return false;
+        }
+
         return true;
       })
       .sort((a, b) => {
@@ -243,6 +255,9 @@ export default function CarPage() {
     selectedSeats,
     selectedTransmission,
     sortBy,
+    isAdmin,
+    adminCustomerPreview,
+    isItemVisible,
   ]);
 
   // การแบ่งหน้า
@@ -289,8 +304,9 @@ export default function CarPage() {
       {/* 2. ส่วนแสดงผลหลัก: Filter Sidebar (ซ้าย) + Car List (ขวา) */}
       <div className="pt-2">
         <div className="flex flex-col lg:flex-row gap-8 items-start">
-          {/* แถบตัวกรอง (Sidebar) สไตล์ Yok */}
-          <CarFilterSidebar
+          {/* แถบตัวกรองส่วนกลาง (Shared TravelFilterSidebar) */}
+          <TravelFilterSidebar
+            service="cars"
             selectedCategories={selectedCategories}
             onToggleCategory={handleToggleCategory}
             maxPrice={maxPrice}
@@ -412,13 +428,28 @@ export default function CarPage() {
             {/* กริดรายการรถ */}
             {!loading && !error && filteredCars.length > 0 && (
               <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
-                {paginatedCars.map((car) => (
-                  <CarCard
-                    key={car._id || car.slug || car.id}
-                    car={car}
-                    onViewDetail={handleViewDetail}
-                  />
-                ))}
+                {paginatedCars.map((car) => {
+                  const carId = car._id || car.slug || car.id;
+                  const isVisible = isItemVisible('cars', car, [car._id, car.slug, car.id]);
+
+                  return (
+                    <div key={carId} className="relative group">
+                      <ItemVisibilityBadge
+                        serviceType="cars"
+                        item={car}
+                        itemId={carId}
+                        fallbackIds={[car._id, car.slug, car.id]}
+                        variant="card"
+                      />
+                      <div className={!isVisible ? 'opacity-65 grayscale-25 ring-2 ring-rose-400/80 rounded-2xl sm:rounded-3xl transition-all' : 'transition-all'}>
+                        <CarCard
+                          car={car}
+                          onViewDetail={handleViewDetail}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             )}
 
