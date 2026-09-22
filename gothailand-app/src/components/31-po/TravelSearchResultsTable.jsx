@@ -28,11 +28,8 @@ export default function TravelSearchResultsTable({
 }) {
   const navigate = useNavigate();
   const { isAdmin } = useAuth();
-  const {
-    isItemVisible,
-    adminCustomerPreview,
-    toggleCustomerPreview,
-  } = useItemVisibility();
+  const { isItemVisible, adminCustomerPreview, toggleCustomerPreview } =
+    useItemVisibility();
 
   // ตัวกรองภายในตาราง
   const [tableSearch, setTableSearch] = useState("");
@@ -41,9 +38,15 @@ export default function TravelSearchResultsTable({
   const [visibilityFilter, setVisibilityFilter] = useState("all"); // 'all' | 'visible' | 'hidden'
 
   // จังหวัดที่อ้างอิงจากการค้นหา หรือจาก selectedSlug
-  const targetSlug = searchQuery?.provinceSlug !== undefined ? searchQuery.provinceSlug : selectedSlug;
+  const targetSlug =
+    searchQuery?.provinceSlug !== undefined
+      ? searchQuery.provinceSlug
+      : selectedSlug;
   const currentProvinceObj = provinces.find(
-    (p) => p.slug === targetSlug || p.nameTh === targetSlug || p.nameEn === targetSlug
+    (p) =>
+      p.slug === targetSlug ||
+      p.nameTh === targetSlug ||
+      p.nameEn === targetSlug,
   );
 
   // แปลงรายการทั้งหมดจาก Yok API ให้อยู่ในโครงสร้าง Unified Search Item
@@ -53,7 +56,12 @@ export default function TravelSearchResultsTable({
     // 1. ที่พัก (Accommodations)
     accommodations.forEach((acc) => {
       const matchedProv = provinces.find((p) => matchProvince(acc.location, p));
-      const provNameTh = matchedProv?.nameTh || (typeof acc.location === "object" ? acc.location?.city : acc.location) || "ไม่ระบุ";
+      const provNameTh =
+        matchedProv?.nameTh ||
+        (typeof acc.location === "object"
+          ? acc.location?.city
+          : acc.location) ||
+        "ไม่ระบุ";
       const provNameEn = matchedProv?.nameEn || "";
       const provSlug = matchedProv?.slug || "";
       const price = acc.price ?? acc.base_price_per_night ?? acc.basePrice ?? 0;
@@ -67,14 +75,18 @@ export default function TravelSearchResultsTable({
         serviceIcon: "🏨",
         serviceLabel: "ที่พัก",
         name: acc.name || "ที่พักไม่มีชื่อ",
-        subTitle: acc.category || (acc.rating ? `⭐ ${acc.rating}` : "ที่พักคัดสรร"),
+        subTitle:
+          acc.category || (acc.rating ? `⭐ ${acc.rating}` : "ที่พักคัดสรร"),
         provinceNameTh: provNameTh,
         provinceNameEn: provNameEn,
         provinceSlug: provSlug,
         matchedProv,
         price,
         priceUnit: "/คืน",
-        highlight: acc.facilities?.slice(0, 3).join(", ") || acc.special_options?.slice(0, 2).join(", ") || "สิ่งอำนวยความสะดวกครบครัน",
+        highlight:
+          acc.facilities?.slice(0, 3).join(", ") ||
+          acc.special_options?.slice(0, 2).join(", ") ||
+          "สิ่งอำนวยความสะดวกครบครัน",
         link: `/accommodations/${acc.slug || acc.id || acc._id}`,
       });
     });
@@ -82,12 +94,20 @@ export default function TravelSearchResultsTable({
     // 2. รถเช่า (Cars)
     cars.forEach((car) => {
       const matchedProv = provinces.find((p) => matchCarProvince(car, p));
-      const provNameTh = matchedProv?.nameTh || car.location || (Array.isArray(car.availableLocations) ? car.availableLocations[0] : "") || "ครอบคลุมหลายจังหวัด";
+      const provNameTh =
+        matchedProv?.nameTh ||
+        car.location ||
+        (Array.isArray(car.availableLocations)
+          ? car.availableLocations[0]
+          : "") ||
+        "ครอบคลุมหลายจังหวัด";
       const provNameEn = matchedProv?.nameEn || "";
       const provSlug = matchedProv?.slug || "";
       const price = car.pricePerDay ?? car.price ?? 0;
-      const carTitle = car.name || `${car.brand || ""} ${car.model || ""}`.trim() || "รถเช่าขับเอง";
-      const candidateIds = [car.id, car._id, car.slug].filter(Boolean);
+      const carTitle =
+        car.name ||
+        `${car.brand || ""} ${car.model || ""}`.trim() ||
+        "รถเช่าขับเอง";
 
       items.push({
         id: car._id || car.id || car.slug,
@@ -104,18 +124,23 @@ export default function TravelSearchResultsTable({
         matchedProv,
         price,
         priceUnit: "/วัน",
-        highlight: [
-          car.transmission ? `เกียร์ ${car.transmission}` : "",
-          car.seats ? `${car.seats} ที่นั่ง` : "",
-          car.fuelType ? `เชื้อเพลิง ${car.fuelType}` : "",
-        ].filter(Boolean).join(" • ") || "ประกันภัยชั้น 1",
+        highlight:
+          [
+            car.transmission ? `เกียร์ ${car.transmission}` : "",
+            car.seats ? `${car.seats} ที่นั่ง` : "",
+            car.fuelType ? `เชื้อเพลิง ${car.fuelType}` : "",
+          ]
+            .filter(Boolean)
+            .join(" • ") || "ประกันภัยชั้น 1",
         link: `/cars/${car.slug || car.id || car._id}`,
       });
     });
 
     // 3. ไกด์นำเที่ยว (Guides)
     guides.forEach((guide) => {
-      const matchedProv = provinces.find((p) => matchProvince(guide.province, p));
+      const matchedProv = provinces.find((p) =>
+        matchProvince(guide.province, p),
+      );
       const provNameTh = matchedProv?.nameTh || guide.province || "ทั่วประเทศ";
       const provNameEn = matchedProv?.nameEn || "";
       const provSlug = matchedProv?.slug || "";
@@ -134,7 +159,11 @@ export default function TravelSearchResultsTable({
         serviceIcon: "🧭",
         serviceLabel: "ไกด์",
         name: guide.name || "มัคคุเทศก์ท้องถิ่น",
-        subTitle: guide.licenseCategory ? `ใบอนุญาต: ${guide.licenseCategory}` : (guide.verified ? "✓ ยืนยันตัวตนแล้ว" : "มัคคุเทศก์มีใบอนุญาต"),
+        subTitle: guide.licenseCategory
+          ? `ใบอนุญาต: ${guide.licenseCategory}`
+          : guide.verified
+            ? "✓ ยืนยันตัวตนแล้ว"
+            : "มัคคุเทศก์มีใบอนุญาต",
         provinceNameTh: provNameTh,
         provinceNameEn: provNameEn,
         provinceSlug: provSlug,
@@ -159,7 +188,10 @@ export default function TravelSearchResultsTable({
         if (!item.matchedProv && !item.provinceSlug) return false;
         return (
           item.provinceSlug === searchQuery.provinceSlug ||
-          (item.matchedProv && matchProvince(item.raw.location || item.raw.province, { slug: searchQuery.provinceSlug }))
+          (item.matchedProv &&
+            matchProvince(item.raw.location || item.raw.province, {
+              slug: searchQuery.provinceSlug,
+            }))
         );
       });
     } else if (targetSlug) {
@@ -174,10 +206,14 @@ export default function TravelSearchResultsTable({
 
     // 2. กรองตาม Service Type จาก SearchQuery (เช่น กดค้นหาจากแท็บที่พัก/รถเช่า/ไกด์)
     if (searchQuery?.serviceType && searchQuery.serviceType !== "all") {
-      result = result.filter((item) => item.serviceType === searchQuery.serviceType);
+      result = result.filter(
+        (item) => item.serviceType === searchQuery.serviceType,
+      );
     } else if (searchQuery?.selectedServices) {
       // โหมด All-in-One: กรองตาม checkboxes ที่เลือก
-      result = result.filter((item) => searchQuery.selectedServices[item.serviceType]);
+      result = result.filter(
+        (item) => searchQuery.selectedServices[item.serviceType],
+      );
     }
 
     // 3. กรองตาม Car Category จาก SearchQuery
@@ -194,8 +230,11 @@ export default function TravelSearchResultsTable({
       result = result.filter((item) => {
         if (item.serviceType !== "guides") return true;
         const qLang = searchQuery.guideLanguage.toLowerCase();
-        const itemLangs = (Array.isArray(item.raw?.languages) ? item.raw.languages : [item.raw?.language || ""])
-          .map((l) => String(l).toLowerCase());
+        const itemLangs = (
+          Array.isArray(item.raw?.languages)
+            ? item.raw.languages
+            : [item.raw?.language || ""]
+        ).map((l) => String(l).toLowerCase());
         return itemLangs.some((l) => l.includes(qLang));
       });
     }
@@ -215,7 +254,7 @@ export default function TravelSearchResultsTable({
           item.provinceNameEn.toLowerCase().includes(q) ||
           item.serviceLabel.includes(q) ||
           item.highlight.toLowerCase().includes(q) ||
-          item.subTitle.toLowerCase().includes(q)
+          item.subTitle.toLowerCase().includes(q),
       );
     }
 
@@ -231,13 +270,20 @@ export default function TravelSearchResultsTable({
     // 8. กรองตามการควบคุมการแสดงผลของ Admin (Item Visibility / รูปตา 👁️)
     if (!isAdmin || adminCustomerPreview) {
       // โหมดลูกค้า: ซ่อนรายการที่ Admin ปิดไว้เสมอ
-      result = result.filter((item) => isItemVisible(item.serviceType, item.id, item.candidateIds));
+      result = result.filter((item) =>
+        isItemVisible(item.serviceType, item.id, item.candidateIds),
+      );
     } else {
       // โหมด Admin: กรองตามแท็บสถานะที่เลือก
       if (visibilityFilter === "visible") {
-        result = result.filter((item) => isItemVisible(item.serviceType, item.id, item.candidateIds));
+        result = result.filter((item) =>
+          isItemVisible(item.serviceType, item.id, item.candidateIds),
+        );
       } else if (visibilityFilter === "hidden") {
-        result = result.filter((item) => !isItemVisible(item.serviceType, item.id, item.candidateIds));
+        result = result.filter(
+          (item) =>
+            !isItemVisible(item.serviceType, item.id, item.candidateIds),
+        );
       }
     }
 
@@ -273,7 +319,9 @@ export default function TravelSearchResultsTable({
   const countStats = useMemo(() => {
     return {
       all: filteredItems.length,
-      accommodations: allUnifiedItems.filter((i) => i.serviceType === "accommodations").length,
+      accommodations: allUnifiedItems.filter(
+        (i) => i.serviceType === "accommodations",
+      ).length,
       cars: allUnifiedItems.filter((i) => i.serviceType === "cars").length,
       guides: allUnifiedItems.filter((i) => i.serviceType === "guides").length,
     };
@@ -305,7 +353,9 @@ export default function TravelSearchResultsTable({
               <div>
                 <div className="flex items-center gap-2 flex-wrap">
                   <h4 className="font-serif font-bold text-sm sm:text-base text-white flex items-center gap-1.5">
-                    <span>แผงควบคุมการแสดงผลข้อมูล (Admin Visibility Console)</span>
+                    <span>
+                      แผงควบคุมการแสดงผลข้อมูล (Admin Visibility Console)
+                    </span>
                   </h4>
                   <span className="text-[10px] bg-amber-400/20 text-amber-300 border border-amber-400/40 px-2 py-0.5 rounded-md font-bold">
                     สิทธิ์ Admin
@@ -317,7 +367,8 @@ export default function TravelSearchResultsTable({
                   )}
                 </div>
                 <p className="text-xs text-slate-300 mt-0.5">
-                  คลิกที่ปุ่มรูปตา (👁️ เปิดแสดง / 🙈 ซ่อนอยู่) ในแต่ละแถว เพื่อกำหนดการแสดงผลบริการต่อลูกค้า
+                  คลิกที่ปุ่มรูปตา (👁️ เปิดแสดง / 🙈 ซ่อนอยู่) ในแต่ละแถว
+                  เพื่อกำหนดการแสดงผลบริการต่อลูกค้า
                 </p>
               </div>
             </div>
@@ -333,7 +384,11 @@ export default function TravelSearchResultsTable({
                     : "bg-amber-400 hover:bg-amber-300 text-slate-950 border-amber-400 font-extrabold"
                 }`}
               >
-                <span>{adminCustomerPreview ? "👥 กลับสู่โหมดผู้ดูแล" : "👁️ ดูตัวอย่างมุมมองลูกค้า"}</span>
+                <span>
+                  {adminCustomerPreview
+                    ? "👥 กลับสู่โหมดผู้ดูแล"
+                    : "👁️ ดูตัวอย่างมุมมองลูกค้า"}
+                </span>
               </button>
             </div>
           </div>
@@ -342,7 +397,9 @@ export default function TravelSearchResultsTable({
           {!adminCustomerPreview && (
             <div className="pt-2.5 border-t border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-2.5 text-xs">
               <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                <span className="text-slate-400 text-xs font-medium">กรองตามสถานะ:</span>
+                <span className="text-slate-400 text-xs font-medium">
+                  กรองตามสถานะ:
+                </span>
                 <div className="grid grid-cols-3 sm:inline-flex bg-slate-950/70 p-1 rounded-xl border border-slate-700/80">
                   <button
                     type="button"
@@ -382,7 +439,10 @@ export default function TravelSearchResultsTable({
 
               {visibilityStats.hidden > 0 && (
                 <span className="text-[11px] text-amber-300 bg-amber-400/10 px-2.5 py-1 rounded-lg border border-amber-400/20 inline-flex items-center gap-1">
-                  <span>⚠️ มีบริการถูกซ่อนอยู่ {visibilityStats.hidden} รายการ (ลูกค้าจะไม่เห็นในระบบ)</span>
+                  <span>
+                    ⚠️ มีบริการถูกซ่อนอยู่ {visibilityStats.hidden} รายการ
+                    (ลูกค้าจะไม่เห็นในระบบ)
+                  </span>
                 </span>
               )}
             </div>
@@ -408,7 +468,8 @@ export default function TravelSearchResultsTable({
             )}
           </div>
           <p className="text-xs text-slate-500 mt-1">
-            ผลการค้นหาจาก Yok API ที่เชื่อมโยงกับฐานข้อมูล 77 จังหวัด • คลิกที่แถวเพื่อสลับดูแผนที่ SVG ด้านบน
+            ผลการค้นหาจาก Yok API ที่เชื่อมโยงกับฐานข้อมูล 77 จังหวัด •
+            คลิกที่แถวเพื่อสลับดูแผนที่ SVG ด้านบน
           </p>
         </div>
 
@@ -502,8 +563,13 @@ export default function TravelSearchResultsTable({
       <div className="block sm:hidden space-y-3">
         {filteredItems.length > 0 ? (
           filteredItems.map((item) => {
-            const isCurrentProvince = item.provinceSlug && item.provinceSlug === selectedSlug;
-            const isVisible = isItemVisible(item.serviceType, item.id, item.candidateIds);
+            const isCurrentProvince =
+              item.provinceSlug && item.provinceSlug === selectedSlug;
+            const isVisible = isItemVisible(
+              item.serviceType,
+              item.id,
+              item.candidateIds,
+            );
             const isHiddenByAdmin = !isVisible;
 
             return (
@@ -514,8 +580,8 @@ export default function TravelSearchResultsTable({
                   isCurrentProvince
                     ? "border-blue-400 bg-blue-50/40 ring-1 ring-blue-400"
                     : isHiddenByAdmin
-                    ? "border-rose-300 bg-rose-50/30 opacity-80"
-                    : "border-slate-200/80 hover:border-slate-300"
+                      ? "border-rose-300 bg-rose-50/30 opacity-80"
+                      : "border-slate-200/80 hover:border-slate-300"
                 }`}
               >
                 {/* Header: ป้ายบริการ & ราคา */}
@@ -525,8 +591,8 @@ export default function TravelSearchResultsTable({
                       item.serviceType === "accommodations"
                         ? "bg-blue-50 text-blue-700 border-blue-200"
                         : item.serviceType === "cars"
-                        ? "bg-amber-50 text-amber-800 border-amber-200"
-                        : "bg-emerald-50 text-emerald-800 border-emerald-200"
+                          ? "bg-amber-50 text-amber-800 border-amber-200"
+                          : "bg-emerald-50 text-emerald-800 border-emerald-200"
                     }`}
                   >
                     <span>{item.serviceIcon}</span>
@@ -546,7 +612,11 @@ export default function TravelSearchResultsTable({
                 {/* ชื่อ & รายละเอียดบริการ */}
                 <div>
                   <h4 className="font-bold text-slate-900 text-sm flex items-center gap-1.5 flex-wrap">
-                    <span className={isHiddenByAdmin ? "line-through text-slate-500" : ""}>
+                    <span
+                      className={
+                        isHiddenByAdmin ? "line-through text-slate-500" : ""
+                      }
+                    >
                       {item.name}
                     </span>
                     {isHiddenByAdmin && (
@@ -555,7 +625,9 @@ export default function TravelSearchResultsTable({
                       </span>
                     )}
                   </h4>
-                  <p className="text-[11px] text-slate-400 mt-0.5">{item.subTitle}</p>
+                  <p className="text-[11px] text-slate-400 mt-0.5">
+                    {item.subTitle}
+                  </p>
                 </div>
 
                 {/* จุดหมาย & ไฮไลท์ */}
@@ -632,9 +704,13 @@ export default function TravelSearchResultsTable({
             <tr>
               <th className="py-3 px-3.5 whitespace-nowrap">บริการ</th>
               <th className="py-3 px-3.5 min-w-[200px]">ชื่อบริการ / รายการ</th>
-              <th className="py-3 px-3.5 whitespace-nowrap">จังหวัด / พื้นที่</th>
+              <th className="py-3 px-3.5 whitespace-nowrap">
+                จังหวัด / พื้นที่
+              </th>
               <th className="py-3 px-3.5 min-w-[180px]">รายละเอียด & ไฮไลท์</th>
-              <th className="py-3 px-3.5 text-right whitespace-nowrap">ราคาเริ่มต้น</th>
+              <th className="py-3 px-3.5 text-right whitespace-nowrap">
+                ราคาเริ่มต้น
+              </th>
               {isAdmin && !adminCustomerPreview && (
                 <th className="py-3 px-3.5 text-center whitespace-nowrap bg-amber-50/70 text-amber-900 border-x border-amber-200/80">
                   <span className="flex items-center justify-center gap-1.5">
@@ -643,14 +719,21 @@ export default function TravelSearchResultsTable({
                   </span>
                 </th>
               )}
-              <th className="py-3 px-3.5 text-center whitespace-nowrap">ดำเนินการ</th>
+              <th className="py-3 px-3.5 text-center whitespace-nowrap">
+                ดำเนินการ
+              </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 text-slate-700">
             {filteredItems.length > 0 ? (
               filteredItems.map((item) => {
-                const isCurrentProvince = item.provinceSlug && item.provinceSlug === selectedSlug;
-                const isVisible = isItemVisible(item.serviceType, item.id, item.candidateIds);
+                const isCurrentProvince =
+                  item.provinceSlug && item.provinceSlug === selectedSlug;
+                const isVisible = isItemVisible(
+                  item.serviceType,
+                  item.id,
+                  item.candidateIds,
+                );
                 const isHiddenByAdmin = !isVisible;
 
                 return (
@@ -661,8 +744,8 @@ export default function TravelSearchResultsTable({
                       isCurrentProvince
                         ? "bg-blue-50/60 font-medium text-slate-900"
                         : isHiddenByAdmin
-                        ? "bg-rose-50/40 text-slate-500 opacity-80 hover:bg-rose-50/70 border-l-4 border-l-rose-500"
-                        : "hover:bg-slate-50/80"
+                          ? "bg-rose-50/40 text-slate-500 opacity-80 hover:bg-rose-50/70 border-l-4 border-l-rose-500"
+                          : "hover:bg-slate-50/80"
                     }`}
                   >
                     {/* คอลัมน์ 1: ประเภทบริการ */}
@@ -672,8 +755,8 @@ export default function TravelSearchResultsTable({
                           item.serviceType === "accommodations"
                             ? "bg-blue-50 text-blue-700 border-blue-200"
                             : item.serviceType === "cars"
-                            ? "bg-amber-50 text-amber-800 border-amber-200"
-                            : "bg-emerald-50 text-emerald-800 border-emerald-200"
+                              ? "bg-amber-50 text-amber-800 border-amber-200"
+                              : "bg-emerald-50 text-emerald-800 border-emerald-200"
                         }`}
                       >
                         <span>{item.serviceIcon}</span>
@@ -683,8 +766,15 @@ export default function TravelSearchResultsTable({
 
                     {/* คอลัมน์ 2: ชื่อบริการ */}
                     <td className="py-3 px-3.5">
-                      <div className="font-bold text-slate-800 truncate max-w-xs flex items-center gap-1.5" title={item.name}>
-                        <span className={isHiddenByAdmin ? "line-through text-slate-500" : ""}>
+                      <div
+                        className="font-bold text-slate-800 truncate max-w-xs flex items-center gap-1.5"
+                        title={item.name}
+                      >
+                        <span
+                          className={
+                            isHiddenByAdmin ? "line-through text-slate-500" : ""
+                          }
+                        >
                           {item.name}
                         </span>
                         {isHiddenByAdmin && (
@@ -713,7 +803,10 @@ export default function TravelSearchResultsTable({
 
                     {/* คอลัมน์ 4: จุดเด่น */}
                     <td className="py-3 px-3.5">
-                      <div className="text-[11px] text-slate-600 line-clamp-2" title={item.highlight}>
+                      <div
+                        className="text-[11px] text-slate-600 line-clamp-2"
+                        title={item.highlight}
+                      >
                         {item.highlight}
                       </div>
                     </td>
@@ -757,7 +850,10 @@ export default function TravelSearchResultsTable({
               })
             ) : (
               <tr>
-                <td colSpan={isAdmin && !adminCustomerPreview ? 7 : 6} className="py-10 text-center text-slate-400">
+                <td
+                  colSpan={isAdmin && !adminCustomerPreview ? 7 : 6}
+                  className="py-10 text-center text-slate-400"
+                >
                   <div className="space-y-2">
                     <span className="text-3xl block">🔍</span>
                     <p className="text-xs font-semibold text-slate-700">
@@ -799,4 +895,3 @@ export default function TravelSearchResultsTable({
     </section>
   );
 }
-
