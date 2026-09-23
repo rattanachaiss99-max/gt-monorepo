@@ -5,7 +5,7 @@
  * ทำหน้าที่เป็น "Page Component" ที่ดึงฟีเจอร์จัดการข้อมูลจังหวัดมาแสดงผล
  * เพื่อให้โค้ดเป็นระเบียบและอธิบายการทำงานแบบแยกส่วนได้ง่าย
  */
-import ProvinceMapDemo from "../../../components/31-po/ProvinceMapDemo";
+import ProvinceMapDemo from "../components/ProvinceMapDemo";
 
 export default function ProvinceMapPage() {
   return (

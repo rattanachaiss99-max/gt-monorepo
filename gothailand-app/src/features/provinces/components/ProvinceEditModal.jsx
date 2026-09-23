@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { updateProvince, replaceProvince } from "../../features/provinces/services/provinceService";
+import { updateProvince, replaceProvince } from "../services/provinceService";
 
 /**
  * ProvinceEditModal Component

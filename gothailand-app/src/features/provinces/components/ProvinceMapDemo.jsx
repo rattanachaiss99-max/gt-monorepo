@@ -3,11 +3,10 @@ import Header from "./Header";
 import DatabaseStatus from "./DatabaseStatus";
 import ProvinceSvgViewer from "./ProvinceSvgViewer";
 import ProvinceTable from "./ProvinceTable";
-import TravelSearchResultsTable from "./TravelSearchResultsTable";
 import Footer from "./Footer";
-import { TravelSearchBox } from "../common";
-import { fetchYokServices } from "../../services/yokService";
-import { getProvinceApiUrl } from "../../services/api";
+import { TravelSearchBox, TravelSearchResultsTable } from "../../../components/common";
+import { fetchYokServices } from "../../../services/yokService";
+import { getProvinceApiUrl } from "../../../services/api";
 
 // API ส่ง SVG path มาซ้อนอยู่ใน province.vectorData.d ไม่ใช่ province.d ตรงๆ
 // ทั้ง ProvinceSvgViewer และ ProvinceTable คาดหวัง field แบบ flat จึงต้องแปลงตรงนี้ที่เดียว

@@ -9,3 +9,4 @@ export { default as QuickAddToCartButton } from "./QuickAddToCartButton";
 export { default as TravelFilterSidebar } from "./TravelFilterSidebar";
 export { default as FilterSidebarShell } from "./FilterSidebarShell";
 export { default as ItemVisibilityBadge } from "./ItemVisibilityBadge";
+export { default as TravelSearchResultsTable } from "./TravelSearchResultsTable";

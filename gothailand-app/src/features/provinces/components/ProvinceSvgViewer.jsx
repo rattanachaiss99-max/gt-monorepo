@@ -1,13 +1,13 @@
 import { useState } from "react";
-import { matchProvince, matchCarProvince } from "../../services/yokService";
+import { matchProvince, matchCarProvince } from "../../../services/yokService";
 import {
   deleteProvince,
   getProvinceSvgUrl,
-} from "../../features/provinces/services/provinceService";
+} from "../services/provinceService";
 import ProvinceEditModal from "./ProvinceEditModal";
-import { useAuth } from "../../context/AuthContext";
-import { useItemVisibility } from "../../context/ItemVisibilityContext";
-import ItemVisibilityBadge from "../common/ItemVisibilityBadge";
+import { useAuth } from "../../../context/AuthContext";
+import { useItemVisibility } from "../../../context/ItemVisibilityContext";
+import { ItemVisibilityBadge } from "../../../components/common";
 
 export default function ProvinceSvgViewer({
   province,

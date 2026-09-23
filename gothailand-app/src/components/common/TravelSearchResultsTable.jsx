@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { matchProvince, matchCarProvince } from "../../services/yokService";
 import { useAuth } from "../../context/AuthContext";
 import { useItemVisibility } from "../../context/ItemVisibilityContext";
-import ItemVisibilityBadge from "../common/ItemVisibilityBadge";
+import ItemVisibilityBadge from "./ItemVisibilityBadge";
 
 /**
  * TravelSearchResultsTable Component

@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { matchProvince, matchCarProvince } from "../../services/yokService";
-import { useAuth } from "../../context/AuthContext";
-import { useItemVisibility } from "../../context/ItemVisibilityContext";
+import { matchProvince, matchCarProvince } from "../../../services/yokService";
+import { useAuth } from "../../../context/AuthContext";
+import { useItemVisibility } from "../../../context/ItemVisibilityContext";
 
 export default function ProvinceTable({
   provinces = [],
