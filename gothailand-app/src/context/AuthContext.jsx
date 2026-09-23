@@ -72,7 +72,21 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(getInitialUser);
   const [token, setToken] = useState(getInitialToken);
   const [loading, setLoading] = useState(false);
+  const [checkingSession, setCheckingSession] = useState(true);
   const [authError, setAuthError] = useState(null);
+
+  // ออกจากระบบ (Logout) และเคลียร์ LocalStorage
+  const logout = useCallback(() => {
+    setUser(null);
+    setToken(null);
+    setAuthError(null);
+    try {
+      localStorage.removeItem(TOKEN_KEY);
+      localStorage.removeItem(USER_KEY);
+    } catch (err) {
+      console.error('Failed to clear auth from localStorage:', err);
+    }
+  }, []);
 
   // บันทึกลง LocalStorage เมื่อข้อมูลผู้ใช้หรือ Token เปลี่ยนแปลง
   useEffect(() => {
@@ -93,9 +107,80 @@ export function AuthProvider({ children }) {
     }
   }, [token, user]);
 
+  // ดักจับ Event 'auth:expired' จาก Axios Interceptor (เมื่อพบ HTTP 401) เพื่อเคลียร์ Session อัตโนมัติ
+  useEffect(() => {
+    const handleAuthExpired = () => {
+      console.warn('🔒 [AuthContext] ได้รับสัญญาณ auth:expired -> เคลียร์ Session และ Logout ทันที');
+      logout();
+    };
+    window.addEventListener('auth:expired', handleAuthExpired);
+    return () => window.removeEventListener('auth:expired', handleAuthExpired);
+  }, [logout]);
+
+  // 3. ฟังก์ชันตรวจสอบ Session (ตอนเปิดเว็บขึ้นมา)
+  // ยิง GET /api/auth/me (แนบ Bearer Token) ถ้า Token หมดอายุ (401) ให้ทำการ Logout เคลียร์ Session อัตโนมัติ
+  useEffect(() => {
+    let isMounted = true;
+    const verifySession = async () => {
+      const savedToken = localStorage.getItem(TOKEN_KEY);
+      if (!savedToken) {
+        if (isMounted) setCheckingSession(false);
+        return;
+      }
+
+      // ถ้าเป็น demo token ชั่วคราว ข้ามการตรวจสอบ Backend
+      if (savedToken.startsWith('mock_token_') || savedToken.startsWith('demo_')) {
+        if (isMounted) setCheckingSession(false);
+        return;
+      }
+
+      try {
+        // ยิง GET /auth/me เพื่อยืนยัน Token กับ Backend (api.js แนบ Bearer <token> ให้อัตโนมัติ)
+        const res = await api.get('/auth/me');
+        const currentUser = res.data?.user || res.data?.data?.user || res.data?.data;
+
+        if (currentUser && isMounted) {
+          const isAdminUser = currentUser.role === 'admin';
+          const mappedUser = {
+            _id: currentUser._id || currentUser.id,
+            id: currentUser._id || currentUser.id,
+            name: currentUser.name || '',
+            firstName: currentUser.name ? currentUser.name.split(' ')[0] : (currentUser.firstName || ''),
+            lastName: currentUser.name ? currentUser.name.split(' ').slice(1).join(' ') : (currentUser.lastName || ''),
+            email: currentUser.email,
+            role: isAdminUser ? 'admin' : 'customer',
+            phone: currentUser.phone || '',
+            profileImage: currentUser.profileImage || null,
+            avatarUrl: currentUser.profileImage || currentUser.avatarUrl || (isAdminUser ? DEMO_ACCOUNTS.admin.avatarUrl : DEMO_ACCOUNTS.customer.avatarUrl),
+            membershipTier: isAdminUser ? 'platinum' : 'gold',
+          };
+          setUser(mappedUser);
+        }
+      } catch (err) {
+        console.warn('⚠️ [AuthContext] ตรวจสอบ Session ล้มเหลว:', err.response?.status, err.message);
+        // ถ้าได้ 401 หรือ 403 (เช่น Token หมดอายุ หรือไม่ถูกต้อง) ให้ Logout เคลียร์ Session อัตโนมัติ
+        if (err.response?.status === 401 || err.response?.status === 403) {
+          if (isMounted) {
+            logout();
+          }
+        }
+      } finally {
+        if (isMounted) {
+          setCheckingSession(false);
+        }
+      }
+    };
+
+    verifySession();
+    return () => {
+      isMounted = false;
+    };
+  }, [logout]);
+
   /**
-   * เข้าสู่ระบบ (Login)
-   * ดึงข้อมูลผู้ใช้จริงจาก Backend YOK (/api/users) และตรวจสอบสิทธิ์
+   * 1. ฟังก์ชัน login (เข้าสู่ระบบ)
+   * ยิง POST /api/auth/login ส่ง { email, password } 
+   * แล้วรับ token จริงและข้อมูล user ที่ได้จาก Backend มาเก็บลง State / LocalStorage
    */
   const login = useCallback(async (email, password = '') => {
     setLoading(true);
@@ -109,40 +194,45 @@ export function AuthProvider({ children }) {
     const lowerEmail = email.trim().toLowerCase();
 
     try {
-      // 1. ดึงรายชื่อผู้ใช้จาก Backend YOK (/api/users)
-      const res = await api.get('/users').catch(() => null);
-      const userList = Array.isArray(res?.data) ? res.data : [];
+      // ยิงคำขอไปยัง POST /api/auth/login
+      const res = await api.post('/auth/login', {
+        email: lowerEmail,
+        password,
+      });
 
-      // 2. ตรวจสอบว่ามีอีเมลตรงกับใน Backend YOK หรือไม่
-      const matchedUser = userList.find(
-        (u) => u.email && u.email.trim().toLowerCase() === lowerEmail
-      );
+      const serverToken = res.data?.token || res.data?.accessToken || res.data?.data?.token;
+      const serverUser = res.data?.user || res.data?.data?.user || res.data?.data;
 
-      if (matchedUser) {
-        const isAdminUser = matchedUser.role === 'admin';
-        const mappedUser = {
-          _id: matchedUser._id,
-          id: matchedUser._id,
-          name: matchedUser.name || lowerEmail.split('@')[0],
-          firstName: matchedUser.name ? matchedUser.name.split(' ')[0] : lowerEmail.split('@')[0],
-          lastName: matchedUser.name ? matchedUser.name.split(' ').slice(1).join(' ') : '',
-          email: matchedUser.email,
-          role: isAdminUser ? 'admin' : 'customer',
-          phone: matchedUser.phone || '',
-          profileImage: matchedUser.profileImage || null,
-          avatarUrl: matchedUser.profileImage || (isAdminUser ? DEMO_ACCOUNTS.admin.avatarUrl : DEMO_ACCOUNTS.customer.avatarUrl),
-          membershipTier: isAdminUser ? 'platinum' : 'gold',
-        };
-
-        const tokenString = `yok_token_${matchedUser._id}_${Date.now()}`;
-        setUser(mappedUser);
-        setToken(tokenString);
-        setLoading(false);
-        return mappedUser;
+      if (!serverToken || !serverUser) {
+        throw new Error('เซิร์ฟเวอร์ไม่ได้ส่ง Token หรือข้อมูลผู้ใช้ที่ถูกต้องกลับมา');
       }
 
-      // 3. ตรวจสอบกรณีป้อนบัญชีพิเศษ Admin
-      if (lowerEmail.includes('admin') || lowerEmail === DEMO_ACCOUNTS.admin.email) {
+      const isAdminUser = serverUser.role === 'admin';
+      const mappedUser = {
+        _id: serverUser._id || serverUser.id,
+        id: serverUser._id || serverUser.id,
+        name: serverUser.name || lowerEmail.split('@')[0],
+        firstName: serverUser.name ? serverUser.name.split(' ')[0] : (serverUser.firstName || lowerEmail.split('@')[0]),
+        lastName: serverUser.name ? serverUser.name.split(' ').slice(1).join(' ') : (serverUser.lastName || ''),
+        email: serverUser.email || lowerEmail,
+        role: isAdminUser ? 'admin' : 'customer',
+        phone: serverUser.phone || '',
+        profileImage: serverUser.profileImage || null,
+        avatarUrl: serverUser.profileImage || serverUser.avatarUrl || (isAdminUser ? DEMO_ACCOUNTS.admin.avatarUrl : DEMO_ACCOUNTS.customer.avatarUrl),
+        membershipTier: isAdminUser ? 'platinum' : 'gold',
+      };
+
+      setUser(mappedUser);
+      setToken(serverToken);
+      setLoading(false);
+      return mappedUser;
+    } catch (err) {
+      // Fallback สำหรับบัญชี Demo พิเศษ กรณี Backend ยังไม่มีบัญชีหรือเซิร์ฟเวอร์ยังออฟไลน์
+      if (
+        (lowerEmail === DEMO_ACCOUNTS.admin.email || lowerEmail.includes('admin')) &&
+        (!err.response || err.response.status >= 500 || err.response.status === 404)
+      ) {
+        console.warn('⚠️ [AuthContext] ใช้ Demo Admin Fallback');
         const adminUser = { ...DEMO_ACCOUNTS.admin, email: lowerEmail };
         const demoToken = `mock_token_admin_${Date.now()}`;
         setUser(adminUser);
@@ -151,25 +241,11 @@ export function AuthProvider({ children }) {
         return adminUser;
       }
 
-      // 4. Fallback: หากเป็นบัญชีลูกค้าใหม่ทั่วไป
-      const customerUser = {
-        _id: `usr_${Date.now()}`,
-        id: `usr_${Date.now()}`,
-        name: lowerEmail.split('@')[0],
-        email: lowerEmail,
-        firstName: lowerEmail.split('@')[0],
-        lastName: 'Member',
-        role: 'customer',
-        membershipTier: 'silver',
-        avatarUrl: DEMO_ACCOUNTS.customer.avatarUrl,
-      };
-      const fallbackToken = `token_customer_${Date.now()}`;
-      setUser(customerUser);
-      setToken(fallbackToken);
-      setLoading(false);
-      return customerUser;
-    } catch (err) {
-      const errMsg = err?.response?.data?.message || err?.message || 'การเข้าสู่ระบบขัดข้อง';
+      const errMsg =
+        err?.response?.data?.message ||
+        err?.response?.data?.error ||
+        err?.message ||
+        'การเข้าสู่ระบบขัดข้อง';
       setAuthError(errMsg);
       setLoading(false);
       throw new Error(errMsg, { cause: err });
@@ -177,8 +253,9 @@ export function AuthProvider({ children }) {
   }, []);
 
   /**
-   * สมัครสมาชิกใหม่ (Register)
-   * ส่งคำขอสร้าง User ไปบันทึกลง MongoDB ของ Backend YOK (/api/users)
+   * 2. ฟังก์ชัน register (สมัครสมาชิก)
+   * ยิง POST /api/auth/register ส่ง { name, email, password, phone } 
+   * เพื่อให้ Backend แฮชรหัสผ่าน และส่ง token + user กลับมาพร้อมล็อกอินให้ทันที
    */
   const register = useCallback(async ({ email, password, firstName, lastName, role = 'customer', phone = '' }) => {
     setLoading(true);
@@ -186,64 +263,62 @@ export function AuthProvider({ children }) {
 
     const cleanEmail = email.trim().toLowerCase();
     const fullName = `${firstName.trim()} ${lastName.trim()}`.trim();
-    const backendRole = role === 'admin' ? 'admin' : 'user';
+    const backendRole = role === 'admin' ? 'admin' : 'customer';
 
     try {
-      // 1. ส่งคำขอสร้าง User ใหม่ไปยัง Backend YOK (POST /api/users)
-      const response = await api.post('/users', {
+      // ยิงคำขอไปยัง POST /api/auth/register
+      const res = await api.post('/auth/register', {
         name: fullName,
         email: cleanEmail,
-        password: password || 'Password123!',
+        password,
         phone: phone || '',
         role: backendRole,
-      }).catch((err) => {
-        console.warn('YOK Backend /api/users creation notice:', err?.response?.data || err?.message);
-        return null;
       });
 
-      const serverUser = response?.data;
-      const isAdminUser = role === 'admin' || serverUser?.role === 'admin';
+      const serverToken = res.data?.token || res.data?.accessToken || res.data?.data?.token;
+      const serverUser = res.data?.user || res.data?.data?.user || res.data?.data;
 
-      const newUser = {
-        _id: serverUser?._id || `usr_${Date.now()}`,
-        id: serverUser?._id || `usr_${Date.now()}`,
-        name: fullName,
+      const isAdminUser = role === 'admin' || serverUser?.role === 'admin';
+      const mappedUser = {
+        _id: serverUser?._id || serverUser?.id || `usr_${Date.now()}`,
+        id: serverUser?._id || serverUser?.id || `usr_${Date.now()}`,
+        name: serverUser?.name || fullName,
         firstName: firstName.trim(),
         lastName: lastName.trim(),
         email: cleanEmail,
         role: isAdminUser ? 'admin' : 'customer',
-        phone,
+        phone: serverUser?.phone || phone,
         membershipTier: isAdminUser ? 'platinum' : 'bronze',
         avatarUrl: null,
       };
 
-      const newToken = `yok_token_${newUser.role}_${Date.now()}`;
-      setUser(newUser);
-      setToken(newToken);
+      if (serverToken) {
+        setUser(mappedUser);
+        setToken(serverToken);
+      } else {
+        // หาก Backend ไม่ส่ง Token มา ให้พยายาม login อัตโนมัติ
+        try {
+          const logged = await login(cleanEmail, password);
+          setLoading(false);
+          return logged;
+        } catch {
+          setUser(mappedUser);
+        }
+      }
+
       setLoading(false);
-      return newUser;
+      return mappedUser;
     } catch (err) {
-      const errMsg = err?.response?.data?.message || err?.message || 'การสมัครสมาชิกขัดข้อง';
+      const errMsg =
+        err?.response?.data?.message ||
+        err?.response?.data?.error ||
+        err?.message ||
+        'การสมัครสมาชิกขัดข้อง';
       setAuthError(errMsg);
       setLoading(false);
       throw new Error(errMsg, { cause: err });
     }
-  }, []);
-
-  /**
-   * ออกจากระบบ (Logout)
-   */
-  const logout = useCallback(() => {
-    setUser(null);
-    setToken(null);
-    setAuthError(null);
-    try {
-      localStorage.removeItem(TOKEN_KEY);
-      localStorage.removeItem(USER_KEY);
-    } catch (err) {
-      console.error(err);
-    }
-  }, []);
+  }, [login]);
 
   /**
    * สลับบทบาทเดโม่ (Demo Role Switcher)
@@ -282,6 +357,7 @@ export function AuthProvider({ children }) {
       user,
       token,
       loading,
+      checkingSession,
       authError,
       isAuthenticated,
       isAdmin,
@@ -291,7 +367,7 @@ export function AuthProvider({ children }) {
       switchDemoRole,
       updateCurrentUser,
     }),
-    [user, token, loading, authError, isAuthenticated, isAdmin, login, register, logout, switchDemoRole, updateCurrentUser]
+    [user, token, loading, checkingSession, authError, isAuthenticated, isAdmin, login, register, logout, switchDemoRole, updateCurrentUser]
   );
 
   return <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>;
