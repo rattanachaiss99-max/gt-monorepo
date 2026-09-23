@@ -5,7 +5,7 @@ import {
   CarCard,
   Button,
 } from '../components';
-import { TravelFilterSidebar, ItemVisibilityBadge } from '../../../components/common';
+import { TravelFilterSidebar, ItemVisibilityBadge, AdminVisibilityFilterBar } from '../../../components/common';
 import { useAuth } from '../../../context/AuthContext';
 import { useItemVisibility } from '../../../context/ItemVisibilityContext';
 import { getCars } from '../services/carService';
@@ -24,27 +24,33 @@ import { getDefaultDateRange, calculateDateSpan } from '../../../utils/date';
 export default function CarPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+
+  // URL Query Parameters จากการค้นหาหน้าแรก / Hero
   const paramLocation = searchParams.get('location') || '';
   const paramPickup = searchParams.get('pickupDate');
   const paramReturn = searchParams.get('returnDate');
   const paramCategory = searchParams.get('category') || 'all';
 
-  // ข้อมูลรถจาก API
+  // ค่าวันที่เริ่มต้น (Default: วันนี้ + 1 ถึง วันนี้ + 4 รวม 3 วัน)
+  const defaultDates = getDefaultDateRange(1, 4);
+
+  // สถานะข้อมูลจาก API
   const [cars, setCars] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // ตัวกรองจาก Hero Search Bar
-  const defaultRentalDates = getDefaultDateRange(1, 4);
+  // สถานะช่องค้นหาหลัก (Hero Floating Search)
   const [searchLocation, setSearchLocation] = useState(paramLocation);
-  const [pickupDate, setPickupDate] = useState(paramPickup || defaultRentalDates.start);
-  const [returnDate, setReturnDate] = useState(paramReturn || defaultRentalDates.end);
+  const [pickupDate, setPickupDate] = useState(paramPickup || defaultDates.start);
+  const [returnDate, setReturnDate] = useState(paramReturn || defaultDates.end);
   const [heroCategory, setHeroCategory] = useState(paramCategory);
 
-  // ตัวกรองจาก Sidebar
-  const [selectedCategories, setSelectedCategories] = useState([]);
-  const [maxPrice, setMaxPrice] = useState(5000);
-  const [selectedLocation, setSelectedLocation] = useState('');
+  // สถานะตัวกรองใน Sidebar
+  const [selectedCategories, setSelectedCategories] = useState(
+    paramCategory !== 'all' ? [paramCategory] : []
+  );
+  const [maxPrice, setMaxPrice] = useState(15000);
+  const [selectedLocation, setSelectedLocation] = useState(paramLocation);
   const [selectedFuelTypes, setSelectedFuelTypes] = useState([]);
   const [selectedSeats, setSelectedSeats] = useState(null);
   const [selectedTransmission, setSelectedTransmission] = useState('all');
@@ -57,6 +63,10 @@ export default function CarPage() {
   // ควบคุมการแสดงผลของ Admin (รูปตา 👁️)
   const { isAdmin } = useAuth();
   const { isItemVisible, adminCustomerPreview } = useItemVisibility();
+  const paramVisibility = searchParams.get('visibility');
+  const [visibilityFilter, setVisibilityFilter] = useState(
+    ['all', 'visible', 'hidden'].includes(paramVisibility) ? paramVisibility : 'all'
+  );
 
   // ดึงข้อมูลรถจาก API และรีเซ็ตตำแหน่ง Scroll ไปบนสุด
   useEffect(() => {
@@ -120,17 +130,33 @@ export default function CarPage() {
     setCurrentPage(1);
   };
 
+  // สรุปสถิติสถานะการแสดงผลสำหรับ Admin
+  const visibilityStats = useMemo(() => {
+    let visible = 0;
+    let hidden = 0;
+    cars.forEach((car) => {
+      const isVis = isItemVisible('cars', car, [car._id, car.slug, car.id]);
+      if (isVis) {
+        visible += 1;
+      } else {
+        hidden += 1;
+      }
+    });
+    return { visible, hidden, total: cars.length };
+  }, [cars, isItemVisible]);
+
   // Reset ตัวกรองทั้งหมด
   const handleResetFilters = () => {
     setSearchLocation('');
     setHeroCategory('all');
     setSelectedCategories([]);
-    setMaxPrice(5000);
+    setMaxPrice(15000);
     setSelectedLocation('');
     setSelectedFuelTypes([]);
     setSelectedSeats(null);
     setSelectedTransmission('all');
     setSortBy('recommended');
+    setVisibilityFilter('all');
     setCurrentPage(1);
   };
 
@@ -227,8 +253,11 @@ export default function CarPage() {
 
         // 7. กรองการแสดงผลของ Admin (Item Visibility / รูปตา 👁️)
         const isVisible = isItemVisible('cars', car, [car._id, car.slug, car.id]);
-        if ((!isAdmin || adminCustomerPreview) && !isVisible) {
-          return false;
+        if (!isAdmin || adminCustomerPreview) {
+          if (!isVisible) return false;
+        } else {
+          if (visibilityFilter === 'visible' && !isVisible) return false;
+          if (visibilityFilter === 'hidden' && isVisible) return false;
         }
 
         return true;
@@ -257,6 +286,7 @@ export default function CarPage() {
     sortBy,
     isAdmin,
     adminCustomerPreview,
+    visibilityFilter,
     isItemVisible,
   ]);
 
@@ -328,6 +358,14 @@ export default function CarPage() {
 
           {/* รายการรถยนต์ (Car List Area) */}
           <div className="flex-1 w-full space-y-6">
+            {isAdmin && (
+              <AdminVisibilityFilterBar
+                visibilityFilter={visibilityFilter}
+                onVisibilityFilterChange={setVisibilityFilter}
+                stats={visibilityStats}
+              />
+            )}
+
             {/* Header ควบคุมการเรียงลำดับและจำนวน */}
             <div className="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-2xs flex flex-wrap items-center justify-between gap-4">
               <div>

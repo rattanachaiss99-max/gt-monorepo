@@ -6,7 +6,7 @@ import {
   BrowseByProperty,
   GetInspired,
 } from '../components';
-import { TravelFilterSidebar } from '../../../components/common';
+import { TravelFilterSidebar, AdminVisibilityFilterBar } from '../../../components/common';
 import { useAuth } from '../../../context/AuthContext';
 import { useItemVisibility } from '../../../context/ItemVisibilityContext';
 import { getAccommodations } from '../services/accommodationService';
@@ -162,6 +162,10 @@ export default function AccommodationPage() {
   // ควบคุมการแสดงผลของ Admin (รูปตา 👁️)
   const { isAdmin } = useAuth();
   const { isItemVisible, adminCustomerPreview } = useItemVisibility();
+  const paramVisibility = searchParams.get('visibility');
+  const [visibilityFilter, setVisibilityFilter] = useState(
+    ['all', 'visible', 'hidden'].includes(paramVisibility) ? paramVisibility : 'all'
+  );
   // Default dates: วันนี้ + 1 และ วันนี้ + 2
   const defaultStayDates = getDefaultDateRange(1, 2);
 
@@ -295,6 +299,21 @@ export default function AccommodationPage() {
     );
   };
 
+  // คำนวณสถิติสถานะการแสดงผลสำหรับ Admin
+  const visibilityStats = useMemo(() => {
+    let visible = 0;
+    let hidden = 0;
+    accommodations.forEach((item) => {
+      const isVis = isItemVisible('accommodations', item, [item.id, item._id, item.slug]);
+      if (isVis) {
+        visible += 1;
+      } else {
+        hidden += 1;
+      }
+    });
+    return { visible, hidden, total: accommodations.length };
+  }, [accommodations, isItemVisible]);
+
   const handleResetFilters = () => {
     setSelectedRegion('central');
     setSelectedProvince('');
@@ -309,6 +328,7 @@ export default function AccommodationPage() {
     setSelectedCategories([]);
     setSelectedFacilities([]);
     setSortBy('recommended');
+    setVisibilityFilter('all');
   };
 
   // การกระทำของผู้ใช้: เปลี่ยนจากหน้า 1 (Landing) ไปหน้า 2 (Results)
@@ -440,6 +460,12 @@ export default function AccommodationPage() {
     // 10. กรองการแสดงผลของ Admin (Item Visibility / รูปตา 👁️)
     if (!isAdmin || adminCustomerPreview) {
       list = list.filter((item) => isItemVisible('accommodations', item, [item.id, item._id, item.slug]));
+    } else {
+      if (visibilityFilter === 'visible') {
+        list = list.filter((item) => isItemVisible('accommodations', item, [item.id, item._id, item.slug]));
+      } else if (visibilityFilter === 'hidden') {
+        list = list.filter((item) => !isItemVisible('accommodations', item, [item.id, item._id, item.slug]));
+      }
     }
 
     return {
@@ -460,6 +486,7 @@ export default function AccommodationPage() {
     sortBy,
     isAdmin,
     adminCustomerPreview,
+    visibilityFilter,
     isItemVisible,
   ]);
 
@@ -542,21 +569,31 @@ export default function AccommodationPage() {
               totalCount={accommodations.length}
             />
 
-            <AccommodationList
-              accommodations={filteredAccommodations}
-              loading={loading}
-              error={error}
-              selectedRegion={activeRegionDisplay}
-              selectedProvince={activeProvinceDisplay}
-              pageSize={pageSize}
-              onPageSizeChange={setPageSize}
-              sortBy={sortBy}
-              onSortChange={setSortBy}
-              onRetry={() => setReloadKey((prev) => prev + 1)}
-              onResetFilters={handleResetFilters}
-              onViewDetails={handleViewAccommodation}
-              onBookNow={handleViewAccommodation}
-            />
+            <div className="flex-1 min-w-0 space-y-6">
+              {isAdmin && (
+                <AdminVisibilityFilterBar
+                  visibilityFilter={visibilityFilter}
+                  onVisibilityFilterChange={setVisibilityFilter}
+                  stats={visibilityStats}
+                />
+              )}
+
+              <AccommodationList
+                accommodations={filteredAccommodations}
+                loading={loading}
+                error={error}
+                selectedRegion={activeRegionDisplay}
+                selectedProvince={activeProvinceDisplay}
+                pageSize={pageSize}
+                onPageSizeChange={setPageSize}
+                sortBy={sortBy}
+                onSortChange={setSortBy}
+                onRetry={() => setReloadKey((prev) => prev + 1)}
+                onResetFilters={handleResetFilters}
+                onViewDetails={handleViewAccommodation}
+                onBookNow={handleViewAccommodation}
+              />
+            </div>
           </div>
         </div>
       )}

@@ -5,7 +5,7 @@ import {
   GuideCard,
   Button,
 } from '../components';
-import { TravelFilterSidebar, ItemVisibilityBadge } from '../../../components/common';
+import { TravelFilterSidebar, ItemVisibilityBadge, AdminVisibilityFilterBar } from '../../../components/common';
 import { useAuth } from '../../../context/AuthContext';
 import { useItemVisibility } from '../../../context/ItemVisibilityContext';
 import { getGuides } from '../services/guideService';
@@ -52,6 +52,10 @@ export default function GuidePage() {
   // ควบคุมการแสดงผลของ Admin (รูปตา 👁️)
   const { isAdmin } = useAuth();
   const { isItemVisible, adminCustomerPreview } = useItemVisibility();
+  const paramVisibility = searchParams.get('visibility');
+  const [visibilityFilter, setVisibilityFilter] = useState(
+    ['all', 'visible', 'hidden'].includes(paramVisibility) ? paramVisibility : 'all'
+  );
 
   // ดึงข้อมูลไกด์จาก API และรีเซ็ต scroll ไปบนสุด
   useEffect(() => {
@@ -90,6 +94,21 @@ export default function GuidePage() {
     setCurrentPage(1);
   };
 
+  // สรุปสถิติสถานะการแสดงผลสำหรับ Admin
+  const visibilityStats = useMemo(() => {
+    let visible = 0;
+    let hidden = 0;
+    guides.forEach((guide) => {
+      const isVis = isItemVisible('guides', guide, [guide._id, guide.slug, guide.id]);
+      if (isVis) {
+        visible += 1;
+      } else {
+        hidden += 1;
+      }
+    });
+    return { visible, hidden, total: guides.length };
+  }, [guides, isItemVisible]);
+
   // Reset ตัวกรองทั้งหมด
   const handleResetFilters = () => {
     setSelectedProvince('');
@@ -100,6 +119,7 @@ export default function GuidePage() {
     setSelectedGender('all');
     setVerifiedOnly(false);
     setSortBy('recommended');
+    setVisibilityFilter('all');
     setCurrentPage(1);
   };
 
@@ -195,8 +215,11 @@ export default function GuidePage() {
 
         // 8. กรองการแสดงผลของ Admin (Item Visibility / รูปตา 👁️)
         const isVisible = isItemVisible('guides', guide, [guide._id, guide.slug, guide.id]);
-        if ((!isAdmin || adminCustomerPreview) && !isVisible) {
-          return false;
+        if (!isAdmin || adminCustomerPreview) {
+          if (!isVisible) return false;
+        } else {
+          if (visibilityFilter === 'visible' && !isVisible) return false;
+          if (visibilityFilter === 'hidden' && isVisible) return false;
         }
 
         return true;
@@ -228,6 +251,7 @@ export default function GuidePage() {
     sortBy,
     isAdmin,
     adminCustomerPreview,
+    visibilityFilter,
     isItemVisible,
   ]);
 
@@ -313,6 +337,14 @@ export default function GuidePage() {
 
           {/* รายการมัคคุเทศก์ (Guides Grid Area) */}
           <div className="flex-1 w-full space-y-6">
+            {isAdmin && (
+              <AdminVisibilityFilterBar
+                visibilityFilter={visibilityFilter}
+                onVisibilityFilterChange={setVisibilityFilter}
+                stats={visibilityStats}
+              />
+            )}
+
             {/* Header ควบคุมการเรียงลำดับและจำนวน */}
             <div className="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-2xs flex flex-wrap items-center justify-between gap-4">
               <div>
