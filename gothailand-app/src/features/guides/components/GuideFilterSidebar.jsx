@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import FilterSidebarShell from '../../../components/common/FilterSidebarShell';
+import AdminVisibilityFilterSection from '../../../components/common/AdminVisibilityFilterSection';
 
 /**
  * GuideFilterSidebar Component (Unified Design Pattern)
@@ -30,6 +31,9 @@ export default function GuideFilterSidebar({
   provinceCounts = {},
   languageCounts = {},
   totalCount = 0,
+  visibilityFilter = 'all',
+  onVisibilityFilterChange,
+  visibilityStats,
 }) {
   // สถานะการพับ/ขยายแต่ละ Section
   const [openSections, setOpenSections] = useState({
@@ -66,11 +70,20 @@ export default function GuideFilterSidebar({
     selectedLanguages.length > 0 ||
     (selectedLicenseCategory && selectedLicenseCategory !== 'all') ||
     (selectedGender && selectedGender !== 'all') ||
-    verifiedOnly
+    verifiedOnly ||
+    (visibilityFilter && visibilityFilter !== 'all')
   );
 
   // สร้างรายการ Active Filter Pills
   const activePills = [];
+
+  if (visibilityFilter && visibilityFilter !== 'all') {
+    activePills.push({
+      id: 'visibility',
+      label: visibilityFilter === 'visible' ? '👁️ กำลังแสดง' : '🙈 ซ่อนอยู่',
+      onRemove: () => onVisibilityFilterChange && onVisibilityFilterChange('all'),
+    });
+  }
 
   if (verifiedOnly) {
     activePills.push({
@@ -129,6 +142,13 @@ export default function GuideFilterSidebar({
       onResetFilters={onResetFilters}
       activePills={activePills}
     >
+      {/* ส่วนควบคุมสถานะ Admin (Shared Component - Style เดิม) */}
+      <AdminVisibilityFilterSection
+        visibilityFilter={visibilityFilter}
+        onVisibilityFilterChange={onVisibilityFilterChange}
+        stats={visibilityStats}
+      />
+
       {/* 1. Verified Guide Quick Toggle */}
       <div className="bg-amber-50/60 border border-amber-200/70 p-3.5 rounded-2xl">
         <label className="flex items-center justify-between cursor-pointer">

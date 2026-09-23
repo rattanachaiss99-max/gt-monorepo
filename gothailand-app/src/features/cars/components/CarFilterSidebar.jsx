@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import FilterSidebarShell from '../../../components/common/FilterSidebarShell';
+import AdminVisibilityFilterSection from '../../../components/common/AdminVisibilityFilterSection';
 
 /**
  * CarFilterSidebar Component (Yok Design Pattern)
@@ -33,6 +34,10 @@ export default function CarFilterSidebar({
   fuelCounts = {},
   totalCount = 0,
   locations = [],
+  // การกรองสถานะ Admin
+  visibilityFilter = 'all',
+  onVisibilityFilterChange,
+  visibilityStats,
 }) {
   // การพับ/ขยายส่วนต่างๆ
   const [openSections, setOpenSections] = useState({
@@ -68,10 +73,24 @@ export default function CarFilterSidebar({
     Boolean(selectedLocation) ||
     selectedFuelTypes.length > 0 ||
     selectedSeats !== null ||
-    selectedTransmission !== 'all';
+    selectedTransmission !== 'all' ||
+    (visibilityFilter && visibilityFilter !== 'all');
 
   const activePills = (
     <>
+      {visibilityFilter && visibilityFilter !== 'all' && (
+        <span className="inline-flex items-center gap-1 text-[11px] font-semibold bg-amber-100 text-amber-950 px-2.5 py-1 rounded-lg">
+          <span>{visibilityFilter === 'visible' ? '👁️ กำลังแสดง' : '🙈 ซ่อนอยู่'}</span>
+          <button
+            type="button"
+            onClick={() => onVisibilityFilterChange?.('all')}
+            className="hover:text-red-500 cursor-pointer ml-0.5"
+          >
+            ✕
+          </button>
+        </span>
+      )}
+
       {selectedCategories.map((cat) => (
               <span
                 key={cat}
@@ -154,6 +173,13 @@ export default function CarFilterSidebar({
       onResetFilters={onResetFilters}
       activePills={activePills}
     >
+        {/* ส่วนควบคุมสถานะ Admin (Shared Component - Style เดิม) */}
+        <AdminVisibilityFilterSection
+          visibilityFilter={visibilityFilter}
+          onVisibilityFilterChange={onVisibilityFilterChange}
+          stats={visibilityStats}
+        />
+
         {/* ส่วนที่ 1: ประเภทรถ (หมวดหมู่) */}
         <div className="space-y-2.5">
           <button

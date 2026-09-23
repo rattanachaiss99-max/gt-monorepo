@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import FilterSidebarShell from '../../../components/common/FilterSidebarShell';
+import AdminVisibilityFilterSection from '../../../components/common/AdminVisibilityFilterSection';
 
 /**
  * FilterSidebar Component
@@ -34,6 +35,10 @@ export default function FilterSidebar({
   categoryCounts = {},
   facilityCounts = {},
   totalCount = 0,
+  // สถานะ Admin
+  visibilityFilter = 'all',
+  onVisibilityFilterChange,
+  visibilityStats,
 }) {
   // สถานะการพับ/ขยายแต่ละ section
   const [openSections, setOpenSections] = useState({
@@ -98,7 +103,8 @@ export default function FilterSidebar({
     maxPrice < 20000 ||
     selectedSpecialOptions.length > 0 ||
     selectedCategories.length > 0 ||
-    selectedFacilities.length > 0;
+    selectedFacilities.length > 0 ||
+    (visibilityFilter && visibilityFilter !== 'all');
 
   // จังหวัดในภาคที่กำลังเลือกอยู่
   const activeRegionProvinces =
@@ -117,6 +123,19 @@ export default function FilterSidebar({
 
   const activePills = (
     <>
+      {visibilityFilter && visibilityFilter !== 'all' && (
+        <span className="inline-flex items-center gap-1 text-[11px] font-semibold bg-amber-100 text-amber-950 px-2.5 py-1 rounded-lg">
+          <span>{visibilityFilter === 'visible' ? '👁️ กำลังแสดง' : '🙈 ซ่อนอยู่'}</span>
+          <button
+            type="button"
+            onClick={() => onVisibilityFilterChange?.('all')}
+            className="hover:text-red-500 cursor-pointer ml-0.5"
+          >
+            ✕
+          </button>
+        </span>
+      )}
+
       {selectedRegion !== 'central' && (
               <span className="inline-flex items-center gap-1 text-[11px] font-semibold bg-slate-100 text-slate-700 px-2.5 py-1 rounded-lg">
                 <span>{regionList.find((r) => r.id === selectedRegion)?.label}</span>
@@ -183,6 +202,13 @@ export default function FilterSidebar({
       onResetFilters={onResetFilters}
       activePills={activePills}
     >
+        {/* ส่วนควบคุมสถานะ Admin (Shared Component - Style เดิม) */}
+        <AdminVisibilityFilterSection
+          visibilityFilter={visibilityFilter}
+          onVisibilityFilterChange={onVisibilityFilterChange}
+          stats={visibilityStats}
+        />
+
         {/* 1. Region & Province (ภาค และ จังหวัด) */}
         <div className="space-y-3">
           <div

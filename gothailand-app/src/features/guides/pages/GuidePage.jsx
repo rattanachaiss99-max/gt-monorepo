@@ -135,12 +135,26 @@ export default function GuidePage() {
     window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
   };
 
-  // คำนวณจำนวนไกด์แยกตามจังหวัดและภาษา
+  // 1. รายการตามสิทธิ์ Admin / สถานะ Visibility ที่เลือก (Base Scope for Counts & Filtering)
+  const baseAdminGuides = useMemo(() => {
+    if (!isAdmin || adminCustomerPreview) {
+      return guides.filter((g) => isItemVisible('guides', g, [g._id, g.slug, g.id]));
+    }
+    if (visibilityFilter === 'visible') {
+      return guides.filter((g) => isItemVisible('guides', g, [g._id, g.slug, g.id]));
+    }
+    if (visibilityFilter === 'hidden') {
+      return guides.filter((g) => !isItemVisible('guides', g, [g._id, g.slug, g.id]));
+    }
+    return guides;
+  }, [guides, isAdmin, adminCustomerPreview, visibilityFilter, isItemVisible]);
+
+  // คำนวณจำนวนไกด์แยกตามจังหวัดและภาษา จาก Scope ปัจจุบัน
   const { provinceCounts, languageCounts } = useMemo(() => {
     const provAcc = {};
     const langAcc = {};
 
-    guides.forEach((g) => {
+    baseAdminGuides.forEach((g) => {
       if (g.province) {
         provAcc[g.province] = (provAcc[g.province] || 0) + 1;
       }
@@ -155,7 +169,7 @@ export default function GuidePage() {
     });
 
     return { provinceCounts: provAcc, languageCounts: langAcc };
-  }, [guides]);
+  }, [baseAdminGuides]);
 
   // รายชื่อจังหวัดและภาษาทั้งหมดจาก API (เรียงตัวอักษร)
   const availableProvinces = Object.keys(provinceCounts).sort();
@@ -163,7 +177,7 @@ export default function GuidePage() {
 
   // กรองและเรียงลำดับรายการไกด์
   const filteredGuides = useMemo(() => {
-    return guides
+    return baseAdminGuides
       .filter((guide) => {
         const fee = guide.daily_fee || guide.pricePerDay || 0;
         const prov = (guide.province || '').toLowerCase();
@@ -213,15 +227,6 @@ export default function GuidePage() {
           return false;
         }
 
-        // 8. กรองการแสดงผลของ Admin (Item Visibility / รูปตา 👁️)
-        const isVisible = isItemVisible('guides', guide, [guide._id, guide.slug, guide.id]);
-        if (!isAdmin || adminCustomerPreview) {
-          if (!isVisible) return false;
-        } else {
-          if (visibilityFilter === 'visible' && !isVisible) return false;
-          if (visibilityFilter === 'hidden' && isVisible) return false;
-        }
-
         return true;
       })
       .sort((a, b) => {
@@ -240,7 +245,7 @@ export default function GuidePage() {
         return (ratingB * (b.total_reviews || 1)) - (ratingA * (a.total_reviews || 1));
       });
   }, [
-    guides,
+    baseAdminGuides,
     maxDailyRate,
     selectedProvince,
     selectedLanguage,
@@ -249,10 +254,6 @@ export default function GuidePage() {
     selectedGender,
     verifiedOnly,
     sortBy,
-    isAdmin,
-    adminCustomerPreview,
-    visibilityFilter,
-    isItemVisible,
   ]);
 
   // การแบ่งหน้า
@@ -332,7 +333,10 @@ export default function GuidePage() {
             onResetFilters={handleResetFilters}
             provinceCounts={provinceCounts}
             languageCounts={languageCounts}
-            totalCount={guides.length}
+            totalCount={baseAdminGuides.length}
+            visibilityFilter={visibilityFilter}
+            onVisibilityFilterChange={setVisibilityFilter}
+            visibilityStats={visibilityStats}
           />
 
           {/* รายการมัคคุเทศก์ (Guides Grid Area) */}

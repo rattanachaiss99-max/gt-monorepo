@@ -205,7 +205,27 @@ export default function AccommodationPage() {
     return () => { ignore = true; };
   }, [reloadKey]);
 
-  // คำนวณจำนวนของแต่ละตัวเลือกแบบไดนามิกจาก list ที่พัก
+  // 1. รายการตามสิทธิ์ Admin / สถานะ Visibility ที่เลือก (Base Scope for Counts & Filtering)
+  const baseAdminAccommodations = useMemo(() => {
+    if (!isAdmin || adminCustomerPreview) {
+      return accommodations.filter((item) =>
+        isItemVisible('accommodations', item, [item.id, item._id, item.slug])
+      );
+    }
+    if (visibilityFilter === 'visible') {
+      return accommodations.filter((item) =>
+        isItemVisible('accommodations', item, [item.id, item._id, item.slug])
+      );
+    }
+    if (visibilityFilter === 'hidden') {
+      return accommodations.filter((item) =>
+        !isItemVisible('accommodations', item, [item.id, item._id, item.slug])
+      );
+    }
+    return accommodations;
+  }, [accommodations, isAdmin, adminCustomerPreview, visibilityFilter, isItemVisible]);
+
+  // คำนวณจำนวนของแต่ละตัวเลือกแบบไดนามิกจาก baseAdminAccommodations
   const {
     optionCounts,
     categoryCounts,
@@ -221,7 +241,7 @@ export default function AccommodationPage() {
     const regProvsMap = {};
     const destCounts = {};
 
-    accommodations.forEach((item) => {
+    baseAdminAccommodations.forEach((item) => {
       // นับจำนวนภาค & จังหวัด
       const reg = item.region;
       const city = item.location?.city;
@@ -278,7 +298,7 @@ export default function AccommodationPage() {
       regionProvinces: sortedRegionProvinces,
       destinationCounts: destCounts,
     };
-  }, [accommodations]);
+  }, [baseAdminAccommodations]);
 
   // ฟังก์ชัน toggle สำหรับ checkbox
   const handleToggleSpecialOption = (option) => {
@@ -360,7 +380,7 @@ export default function AccommodationPage() {
 
   // กรองและเรียงลำดับที่พัก
   const { filteredAccommodations, activeRegionDisplay, activeProvinceDisplay } = useMemo(() => {
-    let list = [...accommodations];
+    let list = [...baseAdminAccommodations];
 
     // 1. กรองด้วยคำค้นหา (มีการ normalize อัจฉริยะ เช่น "chiangmai" จับคู่กับ "Chiang Mai", ชื่อเรียกภาษาไทย ฯลฯ)
     const hasSearchTerm = Boolean(searchTerm && searchTerm.trim());
@@ -446,26 +466,15 @@ export default function AccommodationPage() {
     if (sortBy === 'price_asc') {
       list.sort(
         (a, b) =>
-          Number(a.base_price_per_night || 0) - Number(b.base_price_per_night || 0)
+            Number(a.base_price_per_night || 0) - Number(b.base_price_per_night || 0)
       );
     } else if (sortBy === 'price_desc') {
       list.sort(
         (a, b) =>
-          Number(b.base_price_per_night || 0) - Number(a.base_price_per_night || 0)
+            Number(b.base_price_per_night || 0) - Number(a.base_price_per_night || 0)
       );
     } else if (sortBy === 'rating_desc') {
       list.sort((a, b) => Number(b.rating_avg || 0) - Number(a.rating_avg || 0));
-    }
-
-    // 10. กรองการแสดงผลของ Admin (Item Visibility / รูปตา 👁️)
-    if (!isAdmin || adminCustomerPreview) {
-      list = list.filter((item) => isItemVisible('accommodations', item, [item.id, item._id, item.slug]));
-    } else {
-      if (visibilityFilter === 'visible') {
-        list = list.filter((item) => isItemVisible('accommodations', item, [item.id, item._id, item.slug]));
-      } else if (visibilityFilter === 'hidden') {
-        list = list.filter((item) => !isItemVisible('accommodations', item, [item.id, item._id, item.slug]));
-      }
     }
 
     return {
@@ -474,7 +483,7 @@ export default function AccommodationPage() {
       activeProvinceDisplay: effectiveProvince,
     };
   }, [
-    accommodations,
+    baseAdminAccommodations,
     selectedRegion,
     selectedProvince,
     searchTerm,
@@ -484,10 +493,6 @@ export default function AccommodationPage() {
     selectedCategories,
     selectedFacilities,
     sortBy,
-    isAdmin,
-    adminCustomerPreview,
-    visibilityFilter,
-    isItemVisible,
   ]);
 
   return (
@@ -566,7 +571,10 @@ export default function AccommodationPage() {
               optionCounts={optionCounts}
               categoryCounts={categoryCounts}
               facilityCounts={facilityCounts}
-              totalCount={accommodations.length}
+              totalCount={baseAdminAccommodations.length}
+              visibilityFilter={visibilityFilter}
+              onVisibilityFilterChange={setVisibilityFilter}
+              visibilityStats={visibilityStats}
             />
 
             <div className="flex-1 min-w-0 space-y-6">

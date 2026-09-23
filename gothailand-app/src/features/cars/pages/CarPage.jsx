@@ -175,21 +175,35 @@ export default function CarPage() {
   // คำนวณจำนวนวันเช่า
   const rentalDays = calculateDateSpan(pickupDate, returnDate);
 
-  // รวบรวมรายชื่อจุดรับรถทั้งหมด (Unique Locations)
+  // 1. รายการตามสิทธิ์ Admin / สถานะ Visibility ที่เลือก (Base Scope for Counts & Filtering)
+  const baseAdminCars = useMemo(() => {
+    if (!isAdmin || adminCustomerPreview) {
+      return cars.filter((c) => isItemVisible('cars', c, [c._id, c.slug, c.id]));
+    }
+    if (visibilityFilter === 'visible') {
+      return cars.filter((c) => isItemVisible('cars', c, [c._id, c.slug, c.id]));
+    }
+    if (visibilityFilter === 'hidden') {
+      return cars.filter((c) => !isItemVisible('cars', c, [c._id, c.slug, c.id]));
+    }
+    return cars;
+  }, [cars, isAdmin, adminCustomerPreview, visibilityFilter, isItemVisible]);
+
+  // รวบรวมรายชื่อจุดรับรถทั้งหมด (Unique Locations) จาก Scope ปัจจุบัน
   const allLocations = useMemo(() => {
     const set = new Set();
-    cars.forEach((car) => {
+    baseAdminCars.forEach((car) => {
       (car.availableLocations || []).forEach((loc) => set.add(loc));
     });
     return Array.from(set).sort();
-  }, [cars]);
+  }, [baseAdminCars]);
 
-  // คำนวณจำนวนรถตาม Category และ Fuel Type
+  // คำนวณจำนวนรถตาม Category และ Fuel Type อ้างอิงตาม Admin Scope
   const { categoryCounts, fuelCounts } = useMemo(() => {
     const catAcc = {};
     const fuelAcc = {};
 
-    cars.forEach((car) => {
+    baseAdminCars.forEach((car) => {
       const cat = car.category || 'Economy';
       catAcc[cat] = (catAcc[cat] || 0) + 1;
 
@@ -198,11 +212,11 @@ export default function CarPage() {
     });
 
     return { categoryCounts: catAcc, fuelCounts: fuelAcc };
-  }, [cars]);
+  }, [baseAdminCars]);
 
   // กรองและเรียงลำดับรายการรถ
   const filteredCars = useMemo(() => {
-    return cars
+    return baseAdminCars
       .filter((car) => {
         const carPrice = car.pricePerDay || car.price || 0;
         const carCategory = (car.category || '').toLowerCase();
@@ -251,15 +265,6 @@ export default function CarPage() {
           if (!carTrans.includes(selectedTransmission.toLowerCase())) return false;
         }
 
-        // 7. กรองการแสดงผลของ Admin (Item Visibility / รูปตา 👁️)
-        const isVisible = isItemVisible('cars', car, [car._id, car.slug, car.id]);
-        if (!isAdmin || adminCustomerPreview) {
-          if (!isVisible) return false;
-        } else {
-          if (visibilityFilter === 'visible' && !isVisible) return false;
-          if (visibilityFilter === 'hidden' && isVisible) return false;
-        }
-
         return true;
       })
       .sort((a, b) => {
@@ -275,7 +280,7 @@ export default function CarPage() {
         return (ratingB * (b.reviewCount || 1)) - (ratingA * (a.reviewCount || 1));
       });
   }, [
-    cars,
+    baseAdminCars,
     maxPrice,
     selectedCategories,
     searchLocation,
@@ -284,10 +289,6 @@ export default function CarPage() {
     selectedSeats,
     selectedTransmission,
     sortBy,
-    isAdmin,
-    adminCustomerPreview,
-    visibilityFilter,
-    isItemVisible,
   ]);
 
   // การแบ่งหน้า
@@ -352,8 +353,11 @@ export default function CarPage() {
             onResetFilters={handleResetFilters}
             categoryCounts={categoryCounts}
             fuelCounts={fuelCounts}
-            totalCount={cars.length}
+            totalCount={baseAdminCars.length}
             locations={allLocations}
+            visibilityFilter={visibilityFilter}
+            onVisibilityFilterChange={setVisibilityFilter}
+            visibilityStats={visibilityStats}
           />
 
           {/* รายการรถยนต์ (Car List Area) */}

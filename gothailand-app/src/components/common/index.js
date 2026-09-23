@@ -10,4 +10,5 @@ export { default as TravelFilterSidebar } from "./TravelFilterSidebar";
 export { default as FilterSidebarShell } from "./FilterSidebarShell";
 export { default as ItemVisibilityBadge } from "./ItemVisibilityBadge";
 export { default as AdminVisibilityFilterBar } from "./AdminVisibilityFilterBar";
+export { default as AdminVisibilityFilterSection } from "./AdminVisibilityFilterSection";
 export { default as TravelSearchResultsTable } from "./TravelSearchResultsTable";
