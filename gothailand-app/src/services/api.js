@@ -25,10 +25,6 @@ export const getYokApiUrl = () => {
     const raw = import.meta.env.VITE_YOK_API_URL.replace(/\/+$/, "");
     return raw.endsWith("/api") ? raw : `${raw}/api`;
   }
-  if (import.meta.env.VITE_API_URL) {
-    const raw = import.meta.env.VITE_API_URL.replace(/\/+$/, "");
-    return raw.endsWith("/api") ? raw : `${raw}/api`;
-  }
   // บน Vercel Production ให้วิ่งผ่าน Proxy /api/yok ตามที่กำหนดใน vercel.json
   if (
     typeof window !== "undefined" &&
@@ -43,7 +39,10 @@ export const getProvinceApiUrl = () => {
   const raw =
     import.meta.env.VITE_PROVINCE_API_URL ||
     import.meta.env.VITE_API_URL ||
-    "https://gothailand-api.onrender.com/api";
+    (typeof window !== "undefined" &&
+    !window.location.hostname.includes("localhost")
+      ? "https://gothailand-31-po.onrender.com/api"
+      : "https://gothailand-api.onrender.com/api");
   const clean = raw.replace(/\/+$/, "");
   return clean.endsWith("/api") ? clean : `${clean}/api`;
 };
