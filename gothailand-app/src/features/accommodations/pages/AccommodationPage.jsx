@@ -158,6 +158,7 @@ export default function AccommodationPage() {
   const [selectedRegion, setSelectedRegion] = useState('central'); // default ภาคกลาง
   const [selectedProvince, setSelectedProvince] = useState(''); // กรองตามจังหวัด
   const [pageSize, setPageSize] = useState(10); // default 10 รายการ/หน้า
+  const [currentPage, setCurrentPage] = useState(1); // ควบคุม Pagination ที่ระดับ Page (Single Source of Truth)
 
   // ควบคุมการแสดงผลของ Admin (รูปตา 👁️)
   const { isAdmin } = useAuth();
@@ -178,6 +179,23 @@ export default function AccommodationPage() {
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [selectedFacilities, setSelectedFacilities] = useState([]);
   const [sortBy, setSortBy] = useState('recommended');
+
+  // รีเซ็ตหน้ากลับเป็น 1 เสมอเมื่อฟิลเตอร์หรือการเรียงลำดับเปลี่ยน ป้องกันข้อมูลคลาดเคลื่อนระหว่างหน้า
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [
+    selectedRegion,
+    selectedProvince,
+    searchTerm,
+    maxPrice,
+    guestCount,
+    selectedSpecialOptions,
+    selectedCategories,
+    selectedFacilities,
+    sortBy,
+    pageSize,
+    visibilityFilter,
+  ]);
 
   // ดึงข้อมูลจาก API ผ่าน accommodationService
   useEffect(() => {
@@ -349,6 +367,7 @@ export default function AccommodationPage() {
     setSelectedFacilities([]);
     setSortBy('recommended');
     setVisibilityFilter('all');
+    setCurrentPage(1);
   };
 
   // การกระทำของผู้ใช้: เปลี่ยนจากหน้า 1 (Landing) ไปหน้า 2 (Results)
@@ -358,6 +377,7 @@ export default function AccommodationPage() {
       setSelectedRegion('all');
       setSelectedProvince('');
     }
+    setCurrentPage(1);
     setViewMode('results');
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
   };
@@ -366,6 +386,7 @@ export default function AccommodationPage() {
     setSelectedRegion('all');
     setSelectedProvince('');
     setSelectedCategories([category]);
+    setCurrentPage(1);
     setViewMode('results');
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
   };
@@ -374,6 +395,7 @@ export default function AccommodationPage() {
     if (region) setSelectedRegion(region);
     setSelectedProvince(city);
     setSelectedCategories([]);
+    setCurrentPage(1);
     setViewMode('results');
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
   };
@@ -529,9 +551,9 @@ export default function AccommodationPage() {
 
       {/* หน้า 2: ผลการค้นหา & มุมมองรายการพร้อมตัวกรอง */}
       {viewMode === 'results' && (
-        <div>
+        <div className="w-full max-w-full min-w-0 overflow-hidden">
           {/* ปุ่มย้อนกลับไปหน้า Landing */}
-          <div className="mb-6 flex items-center justify-between">
+          <div className="mb-4 sm:mb-6 flex items-center justify-between gap-3 min-w-0 max-w-full">
             <button
               type="button"
               onClick={() => {
@@ -550,7 +572,7 @@ export default function AccommodationPage() {
           </div>
 
           {/* กริด 2 คอลัมน์: แถบตัวกรอง (ซ้าย) + รายการที่พัก (ขวา) */}
-          <div className="flex flex-col lg:flex-row gap-8 items-start">
+          <div className="flex flex-col lg:flex-row gap-4 sm:gap-6 lg:gap-8 items-start w-full max-w-full min-w-0">
             <TravelFilterSidebar
               service="accommodations"
               selectedRegion={selectedRegion}
@@ -577,7 +599,7 @@ export default function AccommodationPage() {
               visibilityStats={visibilityStats}
             />
 
-            <div className="flex-1 min-w-0 space-y-6">
+            <div className="flex-1 w-full max-w-full min-w-0 space-y-6">
               {isAdmin && (
                 <AdminVisibilityFilterBar
                   visibilityFilter={visibilityFilter}
@@ -592,6 +614,8 @@ export default function AccommodationPage() {
                 error={error}
                 selectedRegion={activeRegionDisplay}
                 selectedProvince={activeProvinceDisplay}
+                currentPage={currentPage}
+                onPageChange={setCurrentPage}
                 pageSize={pageSize}
                 onPageSizeChange={setPageSize}
                 sortBy={sortBy}

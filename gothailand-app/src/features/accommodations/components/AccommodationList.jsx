@@ -52,6 +52,8 @@ export default function AccommodationList({
   error = null,
   selectedRegion = 'central',
   selectedProvince = '',
+  currentPage: controlledPage,
+  onPageChange,
   pageSize = 10,
   onPageSizeChange,
   sortBy = 'recommended',
@@ -61,7 +63,10 @@ export default function AccommodationList({
   onViewDetails,
   onBookNow,
 }) {
-  const [currentPage, setCurrentPage] = useState(1);
+  const [localPage, setLocalPage] = useState(1);
+  const isControlled = controlledPage !== undefined;
+  const currentPage = isControlled ? controlledPage : localPage;
+
   const [prevAccommodations, setPrevAccommodations] = useState(accommodations);
   const [prevSort, setPrevSort] = useState(sortBy);
   const [prevPageSize, setPrevPageSize] = useState(pageSize);
@@ -70,18 +75,17 @@ export default function AccommodationList({
   const { isAdmin } = useAuth();
   const { isItemVisible, adminCustomerPreview } = useItemVisibility();
 
-  // รีเซ็ตกลับหน้า 1 ทุกครั้งที่ list ที่กรองแล้ว, การเรียงลำดับ หรือขนาดหน้าเปลี่ยน
-  // เทียบด้วย reference (ไม่ใช่ length) เพราะ parent จะสร้าง array ใหม่เสมอ
-  // เมื่อฟิลเตอร์เปลี่ยน แม้ว่าจำนวนผลลัพธ์จะเท่าเดิมก็ตาม
+  // รีเซ็ตกลับหน้า 1 ในกรณี uncontrolled เมื่อข้อมูลหรือการตั้งค่าเปลี่ยน
   if (
-    prevAccommodations !== accommodations ||
-    prevSort !== sortBy ||
-    prevPageSize !== pageSize
+    !isControlled &&
+    (prevAccommodations !== accommodations ||
+      prevSort !== sortBy ||
+      prevPageSize !== pageSize)
   ) {
     setPrevAccommodations(accommodations);
     setPrevSort(sortBy);
     setPrevPageSize(pageSize);
-    setCurrentPage(1);
+    setLocalPage(1);
   }
 
   const totalCount = accommodations.length;
@@ -94,7 +98,11 @@ export default function AccommodationList({
 
   const handlePageChange = (newPage) => {
     if (newPage < 1 || newPage > totalPages) return;
-    setCurrentPage(newPage);
+    if (onPageChange) {
+      onPageChange(newPage);
+    } else {
+      setLocalPage(newPage);
+    }
     window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
   };
 
@@ -108,29 +116,29 @@ export default function AccommodationList({
     : 'Thailand';
 
   return (
-    <section className="flex-1 min-w-0 space-y-5">
+    <section className="w-full max-w-full min-w-0 space-y-5">
       {/* แถบควบคุมด้านบน: จำนวนผลลัพธ์, ตัวเลือกขนาดหน้า, & การเรียงลำดับ */}
-      <div className="bg-white rounded-2xl border border-slate-200/80 px-5 py-3.5 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-2xs">
-        <div className="text-sm sm:text-base font-semibold text-slate-800">
+      <div className="w-full max-w-full min-w-0 bg-white rounded-2xl border border-slate-200/80 px-3 sm:px-5 py-3 sm:py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 shadow-2xs overflow-hidden">
+        <div className="text-xs sm:text-sm md:text-base font-semibold text-slate-800 min-w-0">
           {loading ? (
             <span className="text-slate-400">Loading stays...</span>
           ) : (
-            <span>
+            <span className="leading-snug">
               Showing{' '}
               {totalCount > pageSize ? (
                 <>
-                  <span className="font-bold text-slate-900 font-serif text-base sm:text-lg">
+                  <span className="font-bold text-slate-900 font-serif text-sm sm:text-base md:text-lg">
                     {startIndex + 1}–{endIndex}
                   </span>{' '}
                   of{' '}
-                  <span className="font-bold text-slate-900 font-serif text-base sm:text-lg">
+                  <span className="font-bold text-slate-900 font-serif text-sm sm:text-base md:text-lg">
                     {totalCount}
                   </span>{' '}
                   stays in {locationLabel}
                 </>
               ) : (
                 <>
-                  <span className="font-bold text-slate-900 font-serif text-base sm:text-lg">
+                  <span className="font-bold text-slate-900 font-serif text-sm sm:text-base md:text-lg">
                     {totalCount}
                   </span>{' '}
                   {totalCount === 1 ? 'stay' : 'stays'} in {locationLabel}
@@ -141,20 +149,20 @@ export default function AccommodationList({
         </div>
 
         {/* ตัวควบคุม: ขนาดหน้า & การเรียงลำดับ */}
-        <div className="flex flex-wrap items-center gap-3 text-xs sm:text-sm self-end md:self-auto">
+        <div className="w-full sm:w-auto flex flex-wrap sm:flex-nowrap items-center justify-between sm:justify-end gap-2.5 sm:gap-3 text-xs sm:text-sm pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100 min-w-0">
           {/* ตัวเลือกขนาดหน้า */}
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5 shrink-0">
             <label
               htmlFor="page-size-select"
-              className="text-slate-500 font-medium whitespace-nowrap"
+              className="text-slate-500 font-medium whitespace-nowrap text-xs sm:text-sm"
             >
-              Show:
+              Per page:
             </label>
             <select
               id="page-size-select"
               value={pageSize}
               onChange={(e) => onPageSizeChange?.(Number(e.target.value))}
-              className="bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl px-2.5 py-1.5 font-semibold text-slate-800 text-xs sm:text-sm outline-none focus:ring-2 focus:ring-amber-400 cursor-pointer transition-colors"
+              className="bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl px-2 sm:px-2.5 py-1.5 font-semibold text-slate-800 text-xs sm:text-sm outline-none focus:ring-2 focus:ring-amber-400 cursor-pointer transition-colors"
             >
               <option value={10}>10 / page</option>
               <option value={20}>20 / page</option>
@@ -164,10 +172,10 @@ export default function AccommodationList({
           </div>
 
           {/* ตัวเลือกการเรียงลำดับ */}
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5 min-w-0 shrink">
             <label
               htmlFor="sort-select"
-              className="text-slate-500 font-medium whitespace-nowrap"
+              className="text-slate-500 font-medium whitespace-nowrap text-xs sm:text-sm shrink-0"
             >
               Sort by:
             </label>
@@ -175,7 +183,7 @@ export default function AccommodationList({
               id="sort-select"
               value={sortBy}
               onChange={(e) => onSortChange?.(e.target.value)}
-              className="bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl px-3 py-1.5 font-semibold text-slate-800 text-xs sm:text-sm outline-none focus:ring-2 focus:ring-amber-400 cursor-pointer transition-colors"
+              className="bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl px-2.5 sm:px-3 py-1.5 font-semibold text-slate-800 text-xs sm:text-sm outline-none focus:ring-2 focus:ring-amber-400 cursor-pointer transition-colors max-w-[150px] xs:max-w-none truncate"
             >
               <option value="recommended">Recommended</option>
               <option value="price_asc">Price: Low to High</option>
@@ -192,22 +200,20 @@ export default function AccommodationList({
           {[1, 2, 3].map((n) => (
             <div
               key={n}
-              className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200/80 p-6 flex flex-col md:flex-row gap-6 animate-pulse"
+              className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200/80 p-3 sm:p-5 flex flex-row gap-3 sm:gap-5 animate-pulse min-h-[145px] xs:min-h-[175px] sm:min-h-[200px] lg:min-h-[230px]"
             >
-              <div className="w-full md:w-[360px] h-64 md:h-[300px] bg-slate-200 rounded-2xl shrink-0" />
-              <div className="flex-1 space-y-4 py-2">
-                <div className="h-7 bg-slate-200 rounded-md w-3/4" />
-                <div className="h-4 bg-slate-200 rounded-md w-1/3" />
-                <div className="h-16 bg-slate-100 rounded-md w-full" />
-                <div className="flex gap-2">
-                  <div className="h-6 w-24 bg-slate-200 rounded-full" />
-                  <div className="h-6 w-28 bg-slate-200 rounded-full" />
+              <div className="w-[32%] xs:w-[35%] sm:w-[38%] lg:w-[320px] xl:w-[350px] min-w-0 bg-slate-200 rounded-xl sm:rounded-2xl shrink-0 self-stretch" />
+              <div className="flex-1 space-y-2 sm:space-y-3 py-1 min-w-0 flex flex-col justify-between">
+                <div className="space-y-1.5 sm:space-y-2">
+                  <div className="h-4 sm:h-6 bg-slate-200 rounded-md w-3/4" />
+                  <div className="h-3 sm:h-4 bg-slate-200 rounded-md w-1/3" />
+                  <div className="h-6 sm:h-10 bg-slate-100 rounded-md w-full hidden xs:block" />
                 </div>
-                <div className="pt-8 flex justify-between items-end">
-                  <div className="h-8 w-28 bg-slate-200 rounded-md" />
-                  <div className="flex gap-2">
-                    <div className="h-10 w-24 bg-slate-200 rounded-xl" />
-                    <div className="h-10 w-28 bg-slate-200 rounded-xl" />
+                <div className="pt-2 sm:pt-3 border-t border-slate-100 flex justify-between items-end">
+                  <div className="h-5 sm:h-7 w-16 sm:w-24 bg-slate-200 rounded-md" />
+                  <div className="flex gap-1.5">
+                    <div className="h-6 sm:h-8 w-16 sm:w-20 bg-slate-200 rounded-xl" />
+                    <div className="h-6 sm:h-8 w-6 sm:w-8 bg-slate-200 rounded-xl" />
                   </div>
                 </div>
               </div>
@@ -250,7 +256,7 @@ export default function AccommodationList({
 
       {/* รายการการ์ดที่พัก (แบ่งหน้าแล้ว) */}
       {!loading && !error && displayedAccommodations.length > 0 && (
-        <div className="space-y-5">
+        <div className="w-full max-w-full min-w-0 space-y-4 sm:space-y-5 overflow-hidden">
           {displayedAccommodations.map((item) => {
             const accId = item.id || item._id || item.slug;
             const isVisible = isItemVisible('accommodations', item, [item.id, item._id, item.slug]);
@@ -258,7 +264,7 @@ export default function AccommodationList({
             const isHiddenForAdmin = isAdmin && !adminCustomerPreview && !isVisible;
 
             return (
-              <div key={accId} className="relative group">
+              <div key={accId} className="relative group w-full max-w-full min-w-0 overflow-hidden">
                 <ItemVisibilityBadge
                   serviceType="accommodations"
                   item={item}
@@ -266,7 +272,7 @@ export default function AccommodationList({
                   fallbackIds={[item.id, item._id, item.slug]}
                   variant="card"
                 />
-                <div className={isHiddenForAdmin ? 'opacity-65 grayscale-25 ring-2 ring-rose-400/80 rounded-2xl sm:rounded-3xl transition-all' : 'transition-all'}>
+                <div className={`w-full max-w-full min-w-0 overflow-hidden ${isHiddenForAdmin ? 'opacity-65 grayscale-25 ring-2 ring-rose-400/80 rounded-2xl sm:rounded-3xl transition-all' : 'transition-all'}`}>
                   <AccommodationCard
                     accommodation={item}
                     onViewDetails={onViewDetails}
@@ -281,23 +287,23 @@ export default function AccommodationList({
 
       {/* ตัวควบคุม Pagination อัจฉริยะ (เลย์เอาต์แบบ ellipsis ป้องกันล้นจอ) */}
       {!loading && !error && totalPages > 1 && (
-        <div className="bg-white rounded-2xl border border-slate-200/80 px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-2xs mt-6">
-          <div className="text-xs sm:text-sm text-slate-500">
+        <div className="w-full max-w-full min-w-0 bg-white rounded-2xl border border-slate-200/80 px-3 sm:px-6 py-3.5 sm:py-4 flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4 shadow-2xs mt-6 overflow-hidden">
+          <div className="text-xs sm:text-sm text-slate-500 text-center sm:text-left">
             Showing <span className="font-semibold text-slate-900">{startIndex + 1}</span> to{' '}
             <span className="font-semibold text-slate-900">{endIndex}</span> of{' '}
             <span className="font-semibold text-slate-900">{totalCount}</span> stays
           </div>
 
-          <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap justify-center">
+          <div className="flex items-center gap-1 sm:gap-1.5 flex-wrap justify-center min-w-0 max-w-full">
             {/* ปุ่มหน้าก่อนหน้า */}
             <button
               type="button"
               onClick={() => handlePageChange(currentPage - 1)}
               disabled={currentPage === 1}
-              className="px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl border border-slate-200 text-xs sm:text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors flex items-center gap-1 cursor-pointer shadow-2xs"
+              className="px-2 py-1 xs:px-2.5 sm:px-3.5 sm:py-2 rounded-xl border border-slate-200 text-xs sm:text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors flex items-center gap-1 cursor-pointer shadow-2xs shrink-0"
             >
               <span>←</span>
-              <span className="hidden xs:inline">Prev</span>
+              <span className="hidden sm:inline">Prev</span>
             </button>
 
             {/* เลขหน้า (ตัวเลข + จุดไข่ปลา) */}
@@ -306,7 +312,7 @@ export default function AccommodationList({
                 return (
                   <span
                     key={`ellipsis-${index}`}
-                    className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center text-slate-400 font-bold text-xs sm:text-sm select-none"
+                    className="w-7 h-7 sm:w-8 sm:h-8 md:w-9 md:h-9 flex items-center justify-center text-slate-400 font-bold text-xs sm:text-sm select-none"
                   >
                     …
                   </span>
@@ -321,7 +327,7 @@ export default function AccommodationList({
                   key={pageNum}
                   type="button"
                   onClick={() => handlePageChange(pageNum)}
-                  className={`w-8 h-8 sm:w-9 sm:h-9 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer ${
+                  className={`w-7 h-7 sm:w-8 sm:h-8 md:w-9 md:h-9 rounded-xl text-[11px] sm:text-xs md:text-sm font-bold transition-all cursor-pointer ${
                     isActive
                       ? 'bg-[#0a192f] text-white shadow-sm ring-2 ring-[#0a192f]/20'
                       : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200/70'
@@ -337,9 +343,9 @@ export default function AccommodationList({
               type="button"
               onClick={() => handlePageChange(currentPage + 1)}
               disabled={currentPage === totalPages}
-              className="px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl border border-slate-200 text-xs sm:text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors flex items-center gap-1 cursor-pointer shadow-2xs"
+              className="px-2 py-1 xs:px-2.5 sm:px-3.5 sm:py-2 rounded-xl border border-slate-200 text-xs sm:text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors flex items-center gap-1 cursor-pointer shadow-2xs shrink-0"
             >
-              <span className="hidden xs:inline">Next</span>
+              <span className="hidden sm:inline">Next</span>
               <span>→</span>
             </button>
           </div>

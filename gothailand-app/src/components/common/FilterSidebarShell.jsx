@@ -21,11 +21,11 @@ export default function FilterSidebarShell({
   return (
     <aside className="w-full lg:w-76 shrink-0">
       {/* ปุ่ม Toggle บนมือถือ */}
-      <div className="lg:hidden mb-4">
+      <div className="lg:hidden mb-2 sm:mb-3">
         <button
           type="button"
           onClick={() => setMobileOpen((prev) => !prev)}
-          className="w-full bg-white border border-slate-200/80 rounded-2xl px-4 py-3.5 text-sm font-semibold text-slate-800 flex items-center justify-between shadow-2xs cursor-pointer"
+          className="w-full bg-white hover:bg-slate-50 border border-slate-200/80 rounded-2xl px-4 py-3 text-sm font-semibold text-slate-800 flex items-center justify-between shadow-2xs cursor-pointer transition-colors"
         >
           <span className="flex items-center gap-2">
             <svg
@@ -41,13 +41,14 @@ export default function FilterSidebarShell({
                 d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"
               />
             </svg>
-            <span>Filters</span>
+            <span>Filters (ตัวกรองค้นหา)</span>
             {hasActiveFilters && (
               <span className="w-2 h-2 rounded-full bg-amber-500" />
             )}
           </span>
-          <span className="text-slate-400 text-xs font-bold">
-            {mobileOpen ? 'Hide ▲' : 'Show ▼'}
+          <span className="text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200/80 px-3 py-1.5 rounded-xl border border-slate-200/60 flex items-center gap-1.5 transition-colors">
+            <span>{mobileOpen ? 'Hide Filters' : 'Show Filters'}</span>
+            <span className="text-[10px]">{mobileOpen ? '▲' : '▼'}</span>
           </span>
         </button>
       </div>
