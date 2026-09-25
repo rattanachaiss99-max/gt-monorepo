@@ -152,6 +152,9 @@ export default function CheckoutPage() {
       const typePrefix = serviceType === 'car' ? 'CR' : serviceType === 'accommodation' ? 'HT' : 'GD';
       const refId = `GT-${typePrefix}-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 99999)).padStart(5, '0')}`;
 
+      const durationDays = Number(items[0]?.dates?.durationDays || 1);
+      const summaryText = `${durationDays} วัน`;
+
       // Payload สำหรับบันทึกคำสั่งจองลงระบบ
       const bookingPayload = {
         bookingRef: refId,
@@ -169,7 +172,12 @@ export default function CheckoutPage() {
           unitPrice: item.unitPrice,
           priceUnitLabel: item.priceUnitLabel,
           quantity: item.quantity || 1,
-          dates: item.dates,
+          dates: {
+            startDate: item.dates?.startDate || new Date().toISOString().split('T')[0],
+            endDate: item.dates?.endDate || item.dates?.startDate || new Date().toISOString().split('T')[0],
+            durationDays: Number(item.dates?.durationDays || 1),
+            summary: `${item.dates?.durationDays || 1} วัน`,
+          },
           details: item.details,
           itemTotal: item.itemTotal,
         })),
@@ -177,8 +185,11 @@ export default function CheckoutPage() {
         dates: {
           startDate: items[0]?.dates?.startDate || new Date().toISOString().split('T')[0],
           endDate: items[0]?.dates?.endDate || items[0]?.dates?.startDate || new Date().toISOString().split('T')[0],
-          durationDays: items[0]?.dates?.durationDays || 1,
+          durationDays,
+          summary: summaryText,
         },
+        datesSummary: summaryText,
+        durationDays,
         totalPrice: grandTotal,
         pricing: {
           subtotal: grandTotal,
@@ -208,14 +219,23 @@ export default function CheckoutPage() {
       // บันทึกคำสั่งจองผ่าน bookingService (Dual-mode: Backend First + LocalStorage fallback)
       isSuccessRef.current = true;
       const savedBooking = await bookingService.saveBooking(bookingPayload);
-      const finalRefId = savedBooking?.bookingReferenceId || savedBooking?.bookingRef || refId;
+      const finalRefId =
+        savedBooking?.bookingReferenceId ||
+        savedBooking?.booking?.bookingReferenceId ||
+        savedBooking?.bookingRef ||
+        refId;
+      const bookingId =
+        savedBooking?._id ||
+        savedBooking?.booking?._id ||
+        savedBooking?.id ||
+        savedBooking?.booking?.id;
       const confirmedItems = items.map((i) => ({ title: i.title, itemTotal: i.itemTotal }));
 
       clearCart();
       navigate('/booking/confirmed', {
         state: {
           bookingRef: finalRefId,
-          bookingId: savedBooking?._id || savedBooking?.id,
+          bookingId,
           serviceType,
           traveler,
           grandTotal,

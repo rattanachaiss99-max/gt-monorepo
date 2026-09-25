@@ -63,11 +63,27 @@ export async function saveBooking(bookingData) {
     });
     if (response?.data) {
       console.log('✅ [Booking API] บันทึกลง Backend สำเร็จ:', response.data);
-      return response.data;
+      const serverBooking = response.data.booking || response.data;
+      const mergedBooking = {
+        ...newBooking,
+        ...serverBooking,
+        _id: serverBooking?._id || newBooking.id,
+        id: serverBooking?._id || serverBooking?.id || newBooking.id,
+        bookingReferenceId: response.data.bookingReferenceId || serverBooking?.bookingReferenceId || newBooking.bookingRef,
+      };
+
+      // ซิงก์ข้อมูลที่มี MongoDB _id อัปเดตกลับเข้า LocalStorage
+      const syncedBookings = [
+        mergedBooking,
+        ...currentBookings.filter((b) => (b.bookingRef || b.id) !== newBooking.bookingRef),
+      ];
+      setLocalBookings(syncedBookings);
+
+      return mergedBooking;
     }
   } catch (apiErr) {
     // หาก Backend ยังไม่พร้อมหรือส่งกลับ 404/500 ให้ทำงานต่อด้วย LocalStorage
-    console.info('ℹ️ [Booking Service] บันทึกใน LocalStorage เรียบร้อย (Backend API อยู่ระหว่างเชื่อมต่อ):', apiErr.message);
+    console.warn('⚠️ [Booking Service] บันทึก Backend ไม่สำเร็จ (ทำงานต่อด้วย LocalStorage):', apiErr.response?.data?.message || apiErr.message);
   }
 
   return newBooking;
@@ -84,7 +100,11 @@ export async function getUserBookings(userIdentifier) {
   // 1. พยายามดึงจาก Backend API
   try {
     const response = await yokApi.get('/bookings', {
-      params: { user: userIdentifier },
+      params: {
+        userId: userIdentifier,
+        user: userIdentifier,
+        email: userIdentifier,
+      },
       timeout: 5000,
     });
     if (Array.isArray(response?.data)) {
@@ -98,7 +118,14 @@ export async function getUserBookings(userIdentifier) {
   const localList = getLocalBookings();
 
   if (apiBookings && apiBookings.length > 0) {
-    return apiBookings;
+    if (!userIdentifier) return apiBookings;
+    const cleanIdent = String(userIdentifier).toLowerCase();
+    const filtered = apiBookings.filter((b) => {
+      const bEmail = String(b.traveler?.email || b.userEmail || '').toLowerCase();
+      const bUserId = String(b.userId?._id || b.userId || '').toLowerCase();
+      return bEmail === cleanIdent || bUserId === cleanIdent;
+    });
+    return filtered.length > 0 ? filtered : apiBookings;
   }
 
   // กรองจาก LocalStorage ตาม email หรือ userId
@@ -107,7 +134,7 @@ export async function getUserBookings(userIdentifier) {
   const cleanIdent = String(userIdentifier).toLowerCase();
   return localList.filter((b) => {
     const bEmail = String(b.traveler?.email || b.userEmail || '').toLowerCase();
-    const bUserId = String(b.userId || '').toLowerCase();
+    const bUserId = String(b.userId?._id || b.userId || '').toLowerCase();
     return bEmail === cleanIdent || bUserId === cleanIdent;
   });
 }
